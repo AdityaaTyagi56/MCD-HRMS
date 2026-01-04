@@ -49,15 +49,19 @@ export default function FaceRecognition({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animationRef = useRef<number | null>(null);
+  const stableFaceCountRef = useRef<number>(0);
+  const lastCaptureTimeRef = useRef<number>(0);
 
   // State
   const [status, setStatus] = useState<'loading' | 'ready' | 'processing' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Initializing camera...');
   const [faceDetected, setFaceDetected] = useState(false);
+  const [faceStable, setFaceStable] = useState(false);
   const [matchResult, setMatchResult] = useState<FaceMatchResult | null>(null);
   const [enrollmentProgress, setEnrollmentProgress] = useState({ current: 0, required: 3 });
   const [countdown, setCountdown] = useState<number | null>(null);
   const [modelsReady, setModelsReady] = useState(false);
+  const [captureAttempts, setCaptureAttempts] = useState(0);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Initialize camera and models
@@ -129,17 +133,33 @@ export default function FaceRecognition({
     };
   }, [employeeId]);
 
-  // Face detection loop
+  // Face detection loop with stability tracking
   useEffect(() => {
     if (status !== 'ready' || !modelsReady) return;
 
     let isRunning = true;
+    let consecutiveDetections = 0;
+    const STABLE_THRESHOLD = 5; // Need 5 consecutive detections for stable
 
     const detectLoop = async () => {
       if (!isRunning || !videoRef.current || !canvasRef.current) return;
 
       try {
         const result = await detectFaceWithBox(videoRef.current);
+        
+        // Track stability
+        if (result.detected) {
+          consecutiveDetections++;
+          if (consecutiveDetections >= STABLE_THRESHOLD) {
+            stableFaceCountRef.current = consecutiveDetections;
+            setFaceStable(true);
+          }
+        } else {
+          consecutiveDetections = 0;
+          stableFaceCountRef.current = 0;
+          setFaceStable(false);
+        }
+        
         setFaceDetected(result.detected);
 
         // Draw overlay
@@ -209,45 +229,75 @@ export default function FaceRecognition({
     }
   };
 
-  // Handle enrollment capture
+  // Handle enrollment capture with retry logic
   const handleEnrollCapture = async () => {
     if (!videoRef.current || status === 'processing') return;
 
+    // Prevent rapid captures (min 1 second between)
+    const now = Date.now();
+    if (now - lastCaptureTimeRef.current < 1000) {
+      setMessage('Please wait a moment before capturing again...');
+      return;
+    }
+    lastCaptureTimeRef.current = now;
+
     setStatus('processing');
-    setMessage('Capturing face...');
+    setMessage('Analyzing face... Please hold still');
+    setCaptureAttempts(prev => prev + 1);
 
-    try {
-      const canvas = captureFrame(videoRef.current);
-      const result = await enrollFace(employeeId, employeeName, canvas);
-
-      if (result.success) {
-        setEnrollmentProgress({
-          current: result.samplesCount || 0,
-          required: 3,
-        });
-
-        if (result.samplesCount && result.samplesCount >= 3) {
-          setStatus('success');
-          setMessage('✅ Face enrollment complete!');
-          onSuccess?.({
-            matched: true,
-            employeeId,
-            employeeName,
-            confidence: 100,
-            distance: 0,
-            threshold: 0.45,
-          });
-        } else {
-          setStatus('ready');
-          setMessage(result.message);
+    // Try multiple times for better detection
+    let result: { success: boolean; message: string; samplesCount?: number } = { 
+      success: false, 
+      message: 'No face detected', 
+      samplesCount: 0 
+    };
+    
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const canvas = captureFrame(videoRef.current!);
+        result = await enrollFace(employeeId, employeeName, canvas);
+        
+        if (result.success) {
+          break; // Success, no need to retry
         }
+        
+        // Wait a bit before retry
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 300));
+          setMessage(`Retrying capture... (${attempt + 2}/3)`);
+        }
+      } catch (error: any) {
+        console.error(`Capture attempt ${attempt + 1} failed:`, error);
+        if (attempt === 2) {
+          result = { success: false, message: error.message || 'Capture failed', samplesCount: 0 };
+        }
+      }
+    }
+
+    if (result.success) {
+      setEnrollmentProgress({
+        current: result.samplesCount || 0,
+        required: 3,
+      });
+
+      if (result.samplesCount && result.samplesCount >= 3) {
+        setStatus('success');
+        setMessage('✅ Face enrollment complete!');
+        onSuccess?.({
+          matched: true,
+          employeeId,
+          employeeName,
+          confidence: 100,
+          distance: 0,
+          threshold: 0.5,
+        });
       } else {
         setStatus('ready');
-        setMessage(result.message);
+        setMessage(`✅ Sample ${result.samplesCount}/3 captured! Move your head slightly and capture again.`);
       }
-    } catch (error: any) {
+    } else {
       setStatus('ready');
-      setMessage(error.message || 'Capture failed');
+      setMessage(`⚠️ ${result.message}. Please ensure good lighting and face the camera directly.`);
     }
   };
 
@@ -500,6 +550,13 @@ export default function FaceRecognition({
               }}
             />
           </div>
+          {/* Tips for better enrollment */}
+          <div className="mt-2 text-xs text-gray-500 space-y-1">
+            <p>💡 Tips: Good lighting, face camera directly, remove glasses/hat</p>
+            {enrollmentProgress.current > 0 && enrollmentProgress.current < 3 && (
+              <p>🔄 Move your head slightly for the next capture</p>
+            )}
+          </div>
         </div>
       )}
 
@@ -517,17 +574,21 @@ export default function FaceRecognition({
           <button
             onClick={handleEnrollCapture}
             disabled={!faceDetected || status === 'processing' || status === 'loading'}
-            className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className={`flex-1 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${
+              faceStable && faceDetected && status === 'ready'
+                ? 'bg-green-600 hover:bg-green-700 text-white animate-pulse'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
+            }`}
           >
             {status === 'processing' ? (
               <>
                 <Loader className="w-5 h-5 animate-spin" />
-                Capturing...
+                Analyzing Face...
               </>
             ) : (
               <>
                 <Camera className="w-5 h-5" />
-                Capture Sample ({enrollmentProgress.current + 1}/{enrollmentProgress.required})
+                {faceStable ? '✓ Ready - Click to Capture!' : `Capture Sample (${enrollmentProgress.current + 1}/${enrollmentProgress.required})`}
               </>
             )}
           </button>

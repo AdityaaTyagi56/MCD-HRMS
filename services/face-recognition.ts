@@ -38,15 +38,18 @@ export interface FaceDetectionResult {
 
 const CONFIG = {
   // Face matching threshold - lower means stricter matching
-  matchThreshold: 0.45,
-  // Minimum confidence for detection
-  minConfidence: 0.7,
+  matchThreshold: 0.5,
+  // Minimum confidence for detection (lowered for better detection)
+  minConfidence: 0.5,
   // Minimum samples required for reliable enrollment
   minEnrollmentSamples: 3,
   // Maximum samples to store per employee
   maxEnrollmentSamples: 5,
   // Model weights URL (using CDN for face-api.js models)
   modelUrl: 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model',
+  // Detection options
+  inputSize: 416, // Smaller = faster, 320/416/512/608
+  scoreThreshold: 0.5,
 };
 
 // ============================================================================
@@ -132,25 +135,35 @@ export function areModelsLoaded(): boolean {
  * Detect faces in an image/video element
  */
 export async function detectFaces(
-  input: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement
+  input: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement,
+  retries: number = 3
 ): Promise<FaceDetectionResult> {
   if (!modelsLoaded) {
     return { detected: false, faceCount: 0, error: 'Models not loaded' };
   }
 
-  try {
-    const faceapi = await loadFaceApi();
-    
-    // Detect all faces with landmarks and descriptors
-    const detections = await faceapi
-      .detectAllFaces(input, new faceapi.SsdMobilenetv1Options({ minConfidence: CONFIG.minConfidence }))
-      .withFaceLandmarks()
-      .withFaceDescriptors()
-      .withFaceExpressions();
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const faceapi = await loadFaceApi();
+      
+      // Detect all faces with landmarks and descriptors
+      const detections = await faceapi
+        .detectAllFaces(input, new faceapi.SsdMobilenetv1Options({ 
+          minConfidence: CONFIG.minConfidence,
+          maxResults: 10
+        }))
+        .withFaceLandmarks()
+        .withFaceDescriptors()
+        .withFaceExpressions();
 
-    if (!detections || detections.length === 0) {
-      return { detected: false, faceCount: 0 };
-    }
+      if (!detections || detections.length === 0) {
+        if (attempt < retries - 1) {
+          console.log(`Face detection attempt ${attempt + 1} failed, retrying...`);
+          await new Promise(resolve => setTimeout(resolve, 200));
+          continue;
+        }
+        return { detected: false, faceCount: 0 };
+      }
 
     // Get the largest face (assuming it's the main subject)
     const mainDetection = detections.reduce((prev, curr) => {
@@ -171,17 +184,23 @@ export async function detectFaces(
       expressions[key] = value as number;
     });
 
-    return {
-      detected: true,
-      faceCount: detections.length,
-      descriptor,
-      landmarks,
-      expressions,
-    };
-  } catch (error: any) {
-    console.error('Face detection error:', error);
-    return { detected: false, faceCount: 0, error: error.message };
+      return {
+        detected: true,
+        faceCount: detections.length,
+        descriptor,
+        landmarks,
+        expressions,
+      };
+    } catch (error: any) {
+      console.error(`Face detection error (attempt ${attempt + 1}):`, error);
+      if (attempt < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        continue;
+      }
+      return { detected: false, faceCount: 0, error: error.message };
+    }
   }
+  return { detected: false, faceCount: 0 };
 }
 
 /**
