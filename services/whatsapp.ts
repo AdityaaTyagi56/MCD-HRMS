@@ -4,7 +4,8 @@
  */
 
 const TWILIO_ACCOUNT_SID = import.meta.env.VITE_TWILIO_ACCOUNT_SID || '';
-const TWILIO_AUTH_TOKEN = import.meta.env.VITE_TWILIO_AUTH_TOKEN || '';
+// Auth token is now handled securely on the server side
+// const TWILIO_AUTH_TOKEN = import.meta.env.VITE_TWILIO_AUTH_TOKEN || '';
 
 interface WhatsAppMessage {
   to: string; // Employee mobile number (with country code)
@@ -43,10 +44,11 @@ function formatWhatsAppNumber(phone: string): string {
  * Send WhatsApp message via Vercel API
  */
 export async function sendWhatsAppMessage(params: WhatsAppMessage): Promise<SendResult> {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
-    console.warn('Twilio credentials not configured');
-    return { success: false, error: 'WhatsApp service not configured' };
-  }
+  // We now rely on the server to check configuration
+  // if (!TWILIO_ACCOUNT_SID) {
+  //   console.warn('Twilio credentials not configured');
+  //   return { success: false, error: 'WhatsApp service not configured' };
+  // }
 
   const toNumber = formatWhatsAppNumber(params.to);
   
@@ -176,7 +178,9 @@ export async function sendBulkWhatsAppMessages(
  * Check if WhatsApp service is configured
  */
 export function isWhatsAppConfigured(): boolean {
-  return !!(TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN);
+  // Assume configured if we are running (server will handle errors)
+  // Or check only public SID if available
+  return true; 
 }
 
 export const whatsappService = {

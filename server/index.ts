@@ -313,9 +313,9 @@ app.post('/api/payslips', (req, res) => {
 app.post('/api/send-whatsapp', async (req, res) => {
   const { to, message } = req.body;
   
-  const TWILIO_ACCOUNT_SID = process.env.VITE_TWILIO_ACCOUNT_SID;
-  const TWILIO_AUTH_TOKEN = process.env.VITE_TWILIO_AUTH_TOKEN;
-  const TWILIO_WHATSAPP_NUMBER = process.env.VITE_TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
+  const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || process.env.VITE_TWILIO_ACCOUNT_SID;
+  const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || process.env.VITE_TWILIO_AUTH_TOKEN;
+  const TWILIO_WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER || process.env.VITE_TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
 
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
     return res.status(500).json({ error: 'Twilio credentials not configured' });
