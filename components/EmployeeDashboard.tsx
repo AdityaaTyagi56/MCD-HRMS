@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const EmployeeDashboard: React.FC = () => {
-  const { language, setCurrentView, addGrievance, markAttendance } = useApp();
+  const { language, setCurrentView, addGrievance, markAttendance, t } = useApp();
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -115,7 +115,7 @@ const EmployeeDashboard: React.FC = () => {
     const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
     
     if (!SpeechRecognition) {
-      setMicError('ब्राउज़र सपोर्ट नहीं करता');
+      setMicError(t('speech_not_supported'));
       return;
     }
 
@@ -161,16 +161,16 @@ const EmployeeDashboard: React.FC = () => {
       
       switch(event.error) {
         case 'not-allowed':
-          setMicError('माइक्रोफोन अनुमति दें');
+          setMicError(t('mic_permission_required'));
           break;
         case 'no-speech':
-          setMicError('कोई आवाज़ नहीं मिली');
+          setMicError(t('no_speech_detected'));
           break;
         case 'network':
-          setMicError('नेटवर्क त्रुटि');
+          setMicError(t('network_error'));
           break;
         default:
-          setMicError('त्रुटि: ' + event.error);
+          setMicError(`${t('error')}: ${event.error}`);
       }
     };
 
@@ -184,9 +184,9 @@ const EmployeeDashboard: React.FC = () => {
       console.log('🎤 Recognition.start() called');
     } catch (e) {
       console.error('Failed to start:', e);
-      setMicError('शुरू नहीं हो सका');
+      setMicError(t('speech_start_failed'));
     }
-  }, []);
+  }, [t]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
@@ -221,10 +221,10 @@ const EmployeeDashboard: React.FC = () => {
       setShowVoiceModal(false);
       setTranscript('');
       setManualComplaint('');
-      alert('✅ शिकायत दर्ज हो गई!\n\nश्रेणी: ' + analysis.category + '\nप्राथमिकता: ' + analysis.priority);
+      alert(`${t('complaint_submitted_success')}${analysis.category}\n${t('priority')}: ${analysis.priority}`);
     } catch (error) {
       console.error('❌ Submit error:', error);
-      alert('❌ कुछ गलत हुआ');
+      alert(t('something_went_wrong'));
     } finally {
       setProcessing(false);
     }
@@ -235,8 +235,8 @@ const EmployeeDashboard: React.FC = () => {
     if (!isWithinAttendanceWindow()) {
       const hours = currentTime.getHours();
       const message = hours < 7 
-        ? '⏰ उपस्थिति समय अभी शुरू नहीं हुआ!\n\nकृपया सुबह 7 बजे के बाद आएं।'
-        : '⏰ उपस्थिति समय समाप्त हो गया!\n\nउपस्थिति समय: सुबह 7 बजे से शाम 5 बजे तक';
+        ? t('attendance_not_started')
+        : t('attendance_ended');
       alert(message);
       return;
     }
@@ -359,10 +359,10 @@ const EmployeeDashboard: React.FC = () => {
           </div>
           <div>
             <h1 style={{ color: 'white', fontSize: '22px', fontWeight: 'bold', margin: 0 }}>
-              नमस्ते, {employeeData.name.split(' ')[0]}! 👋
+              {`${t('hello')}, ${employeeData.name.split(' ')[0]}! 👋`}
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', margin: '4px 0 0 0' }}>
-              आज का दिन शुभ हो
+              {t('have_good_day')}
             </p>
           </div>
         </div>
@@ -375,7 +375,7 @@ const EmployeeDashboard: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {attendanceMarked ? <CheckCircle size={20} style={{ color: '#4ade80' }} /> : <Clock size={20} style={{ color: 'rgba(255,255,255,0.8)' }} />}
             <span style={{ color: 'white', fontSize: '15px', fontWeight: '500' }}>
-              {attendanceMarked ? `✅ उपस्थिति दर्ज: ${employeeData.checkInTime}` : '⏰ उपस्थिति दर्ज करें'}
+              {attendanceMarked ? `${t('attendance_marked_at')}: ${employeeData.checkInTime}` : t('mark_attendance_now')}
             </span>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -383,7 +383,7 @@ const EmployeeDashboard: React.FC = () => {
               {formatTime(currentTime)}
             </div>
             <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>
-              {isWithinAttendanceWindow() ? '✓ समय सीमा में' : '✗ समय सीमा बाहर'}
+              {isWithinAttendanceWindow() ? t('time_window_in') : t('time_window_out')}
             </div>
           </div>
         </div>
@@ -408,10 +408,10 @@ const EmployeeDashboard: React.FC = () => {
           </div>
           <div style={{ textAlign: 'left', flex: 1 }}>
             <p style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>
-              {attendanceMarked ? '✓ उपस्थिति दर्ज हो गई' : !isWithinAttendanceWindow() ? '⏰ समय सीमा बाहर' : '📍 उपस्थिति दर्ज करें'}
+              {attendanceMarked ? `✓ ${t('attendance_complete')}` : !isWithinAttendanceWindow() ? `⏰ ${t('time_window_out')}` : `📍 ${t('mark_attendance_now')}`}
             </p>
             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', margin: '4px 0 0 0' }}>
-              {attendanceMarked ? 'आज की उपस्थिति पूर्ण' : !isWithinAttendanceWindow() ? 'सुबह 7 बजे से शाम 5 बजे तक' : 'यहाँ दबाएं'}
+              {attendanceMarked ? t('attendance_complete') : !isWithinAttendanceWindow() ? t('time_window_hours') : t('tap_here')}
             </p>
           </div>
         </button>
@@ -424,8 +424,8 @@ const EmployeeDashboard: React.FC = () => {
               <IndianRupee size={26} style={{ color: 'white' }} />
             </div>
             <div style={{ textAlign: 'center' }}>
-              <p style={{ color: '#1e293b', fontSize: '16px', fontWeight: '600', margin: 0 }}>💰 वेतन पर्ची</p>
-              <p style={{ color: '#64748b', fontSize: '12px', margin: '4px 0 0 0' }}>देखें / डाउनलोड</p>
+              <p style={{ color: '#1e293b', fontSize: '16px', fontWeight: '600', margin: 0 }}>💰 {t('salary_slip')}</p>
+              <p style={{ color: '#64748b', fontSize: '12px', margin: '4px 0 0 0' }}>{t('view_download')}</p>
             </div>
           </button>
 
@@ -435,8 +435,8 @@ const EmployeeDashboard: React.FC = () => {
               <Calendar size={26} style={{ color: 'white' }} />
             </div>
             <div style={{ textAlign: 'center' }}>
-              <p style={{ color: '#1e293b', fontSize: '16px', fontWeight: '600', margin: 0 }}>📅 छुट्टी</p>
-              <p style={{ color: '#64748b', fontSize: '12px', margin: '4px 0 0 0' }}>{employeeData.leaveBalance} बाकी</p>
+              <p style={{ color: '#1e293b', fontSize: '16px', fontWeight: '600', margin: 0 }}>📅 {t('leave')}</p>
+              <p style={{ color: '#64748b', fontSize: '12px', margin: '4px 0 0 0' }}>{employeeData.leaveBalance} {t('leave_remaining')}</p>
             </div>
           </button>
         </div>
@@ -448,16 +448,16 @@ const EmployeeDashboard: React.FC = () => {
             <Mic size={26} style={{ color: 'white' }} />
           </div>
           <div style={{ textAlign: 'left' }}>
-            <p style={{ color: 'white', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>🎤 शिकायत दर्ज करें</p>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', margin: '4px 0 0 0' }}>बोलकर या लिखकर</p>
+            <p style={{ color: 'white', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>🎤 {t('file_complaint_voice')}</p>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', margin: '4px 0 0 0' }}>{t('speak_or_type')}</p>
           </div>
         </button>
 
         {/* Help */}
         <div style={{ background: 'white', borderRadius: '16px', padding: '16px', border: '2px solid #e2e8f0', marginTop: '8px' }}>
-          <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 12px 0', fontWeight: '500' }}>📞 मदद चाहिए?</p>
+          <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 12px 0', fontWeight: '500' }}>📞 {t('need_help')}</p>
           <a href="tel:1800-123-4567" style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#1e40af', textDecoration: 'none', fontSize: '16px', fontWeight: '600' }}>
-            <Phone size={20} />1800-123-4567 (टोल फ्री)
+            <Phone size={20} />1800-123-4567 ({t('toll_free')})
           </a>
         </div>
       </div>
@@ -474,9 +474,9 @@ const EmployeeDashboard: React.FC = () => {
                   <Navigation size={36} style={{ color: '#2563eb' }} className="animate-pulse" />
                   <div style={{ position: 'absolute', inset: '-4px', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
                 </div>
-                <h3 style={{ color: '#1e293b', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>📍 स्थान सत्यापन</h3>
+                <h3 style={{ color: '#1e293b', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>📍 {t('location_verification')}</h3>
                 <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>
-                  {locationPings.length === 0 ? 'GPS सिग्नल खोज रहे हैं...' : `${locationPings.length}/4 स्थान रिकॉर्ड किए`}
+                  {locationPings.length === 0 ? t('searching_gps') : `${locationPings.length}/4 ${t('locations_recorded')}`}
                 </p>
                 
                 {/* Progress Bar */}
@@ -497,7 +497,7 @@ const EmployeeDashboard: React.FC = () => {
                 
                 <p style={{ color: '#94a3b8', fontSize: '12px', margin: 0 }}>
                   <Shield size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                  AI स्थान सत्यापन सक्रिय
+                  {t('ai_location_active')}
                 </p>
               </>
             )}
@@ -508,8 +508,8 @@ const EmployeeDashboard: React.FC = () => {
                 <div style={{ width: '80px', height: '80px', background: '#fef3c7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                   <Shield size={36} style={{ color: '#d97706' }} />
                 </div>
-                <h3 style={{ color: '#1e293b', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>🔍 AI सत्यापन जारी</h3>
-                <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>स्थान डेटा का विश्लेषण हो रहा है...</p>
+                <h3 style={{ color: '#1e293b', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>🔍 {t('ai_verification_progress')}</h3>
+                <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>{t('analyzing_location')}</p>
                 
                 <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
                   <div style={{ width: `${verificationProgress}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #d97706)', borderRadius: '4px', transition: 'width 0.3s ease' }}></div>
@@ -523,17 +523,17 @@ const EmployeeDashboard: React.FC = () => {
                 <div style={{ width: '80px', height: '80px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                   <CheckCircle size={40} style={{ color: '#16a34a' }} />
                 </div>
-                <h3 style={{ color: '#16a34a', fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px 0' }}>✅ सत्यापित!</h3>
-                <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>उपस्थिति सफलतापूर्वक दर्ज हो गई</p>
+                <h3 style={{ color: '#16a34a', fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px 0' }}>✅ {t('verified')}</h3>
+                <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>{t('attendance_success')}</p>
                 
                 {verificationResult && (
                   <div style={{ background: '#f0fdf4', borderRadius: '12px', padding: '12px', marginBottom: '12px', textAlign: 'left' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ color: '#166534', fontSize: '12px' }}>विश्वसनीयता स्कोर</span>
+                      <span style={{ color: '#166534', fontSize: '12px' }}>{t('confidence_score')}</span>
                       <span style={{ color: '#166534', fontSize: '14px', fontWeight: 'bold' }}>{verificationResult.confidence}%</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#166534', fontSize: '12px' }}>कार्य क्षेत्र में</span>
+                      <span style={{ color: '#166534', fontSize: '12px' }}>{t('in_office_zone')}</span>
                       <span style={{ color: '#166534', fontSize: '14px', fontWeight: 'bold' }}>{verificationResult.metrics?.zone_percentage || 100}%</span>
                     </div>
                   </div>
@@ -541,7 +541,7 @@ const EmployeeDashboard: React.FC = () => {
                 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#22c55e', fontSize: '12px' }}>
                   <Shield size={14} />
-                  <span>AI द्वारा सत्यापित</span>
+                  <span>{t('verified_by_ai')}</span>
                 </div>
               </>
             )}
@@ -552,12 +552,12 @@ const EmployeeDashboard: React.FC = () => {
                 <div style={{ width: '80px', height: '80px', background: '#fef2f2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                   <AlertTriangle size={40} style={{ color: '#dc2626' }} />
                 </div>
-                <h3 style={{ color: '#dc2626', fontSize: '20px', fontWeight: 'bold', margin: '0 0 8px 0' }}>⚠️ संदिग्ध स्थान!</h3>
-                <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>GPS स्पूफिंग का संदेह है</p>
+                <h3 style={{ color: '#dc2626', fontSize: '20px', fontWeight: 'bold', margin: '0 0 8px 0' }}>⚠️ {t('suspicious_location')}</h3>
+                <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>{t('gps_spoofing_suspected')}</p>
                 
                 {verificationResult && (
                   <div style={{ background: '#fef2f2', borderRadius: '12px', padding: '12px', marginBottom: '16px', textAlign: 'left' }}>
-                    <p style={{ color: '#991b1b', fontSize: '12px', fontWeight: '600', margin: '0 0 8px 0' }}>पाई गई समस्याएं:</p>
+                    <p style={{ color: '#991b1b', fontSize: '12px', fontWeight: '600', margin: '0 0 8px 0' }}>{t('issues_found')}</p>
                     {verificationResult.spoofing_indicators?.map((indicator: string, idx: number) => (
                       <p key={idx} style={{ color: '#b91c1c', fontSize: '11px', margin: '4px 0', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
                         <span>•</span> {indicator}
@@ -572,10 +572,10 @@ const EmployeeDashboard: React.FC = () => {
                 )}
                 
                 <button onClick={() => setShowAttendanceModal(false)} style={{ padding: '12px 24px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', width: '100%' }}>
-                  बंद करें
+                  {t('close')}
                 </button>
                 <p style={{ color: '#94a3b8', fontSize: '11px', marginTop: '12px' }}>
-                  कृपया कार्यालय में जाकर पुनः प्रयास करें
+                  {t('retry_at_office')}
                 </p>
               </>
             )}
@@ -586,9 +586,9 @@ const EmployeeDashboard: React.FC = () => {
                 <div style={{ width: '80px', height: '80px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                   <AlertTriangle size={40} style={{ color: '#dc2626' }} />
                 </div>
-                <h3 style={{ color: '#dc2626', fontSize: '20px', fontWeight: 'bold', margin: '0 0 8px 0' }}>❌ त्रुटि!</h3>
+                <h3 style={{ color: '#dc2626', fontSize: '20px', fontWeight: 'bold', margin: '0 0 8px 0' }}>❌ {t('error_exclamation')}</h3>
                 <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>
-                  {verificationResult?.message || 'स्थान सत्यापन विफल'}
+                  {verificationResult?.message || t('location_verification_failed')}
                 </p>
                 
                 {verificationResult?.risk_factors?.length > 0 && (
@@ -600,7 +600,7 @@ const EmployeeDashboard: React.FC = () => {
                 )}
                 
                 <button onClick={() => setShowAttendanceModal(false)} style={{ padding: '12px 24px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
-                  बंद करें
+                  {t('close')}
                 </button>
               </>
             )}
@@ -613,7 +613,7 @@ const EmployeeDashboard: React.FC = () => {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', zIndex: 100 }}>
           <div style={{ background: 'white', borderRadius: '24px', padding: '24px', width: '100%', maxWidth: '360px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ color: '#1e293b', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>🎤 शिकायत दर्ज करें</h2>
+              <h2 style={{ color: '#1e293b', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>🎤 {t('file_complaint_voice')}</h2>
               <button onClick={() => { stopListening(); setShowVoiceModal(false); setTranscript(''); setManualComplaint(''); setMicError(''); }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
                 <X size={24} style={{ color: '#64748b' }} />
@@ -623,7 +623,7 @@ const EmployeeDashboard: React.FC = () => {
             <textarea
               value={currentText}
               onChange={(e) => { setManualComplaint(e.target.value); setTranscript(''); }}
-              placeholder="यहाँ लिखें या नीचे बटन दबाकर बोलें..."
+              placeholder={t('type_or_speak')}
               style={{ width: '100%', height: '120px', padding: '16px', border: '2px solid #e2e8f0', borderRadius: '16px', fontSize: '16px', resize: 'none', marginBottom: '16px', fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
 
@@ -652,7 +652,7 @@ const EmployeeDashboard: React.FC = () => {
             </div>
 
             <p style={{ textAlign: 'center', color: isListening ? '#dc2626' : '#64748b', fontSize: '14px', fontWeight: '500', marginBottom: '20px' }}>
-              {!speechSupported ? '⚠️ वॉइस सपोर्ट नहीं - टाइप करें' : isListening ? '🔴 सुन रहा हूँ... बोलें' : '🎤 बोलने के लिए बटन दबाएं'}
+              {!speechSupported ? `⚠️ ${t('voice_not_supported')}` : isListening ? `🔴 ${t('listening_speak')}` : `🎤 ${t('press_to_speak')}`}
             </p>
 
             <button
@@ -665,7 +665,7 @@ const EmployeeDashboard: React.FC = () => {
                 cursor: processing || !currentText.trim() ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
               }}>
-              {processing ? (<><Loader2 size={20} className="animate-spin" />भेज रहे हैं...</>) : (<><MessageSquare size={20} />शिकायत भेजें</>)}
+              {processing ? (<><Loader2 size={20} className="animate-spin" />{t('sending')}</>) : (<><MessageSquare size={20} />{t('send_complaint')}</>)}
             </button>
           </div>
         </div>

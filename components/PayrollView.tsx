@@ -7,7 +7,7 @@ import { Payslip } from '../types';
 const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
 
 const PayrollView: React.FC = () => {
-  const { currentRole, payslips, releaseAllSalaries, employees } = useApp();
+  const { currentRole, payslips, releaseAllSalaries, employees, t } = useApp();
   const currentUserId = 1; // Mock Ramesh
   const [isReleasing, setIsReleasing] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -177,12 +177,12 @@ const PayrollView: React.FC = () => {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Compensation</h1>
-            <p className="text-gray-500">View your salary details and download payslips</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('my_compensation')}</h1>
+            <p className="text-gray-500">{t('view_salary_details')}</p>
           </div>
           <div className="flex gap-3">
              <button className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm flex items-center gap-2">
-                <Building2 size={16} /> Tax Documents
+               <Building2 size={16} /> {t('tax_documents')}
              </button>
           </div>
         </div>
@@ -197,7 +197,7 @@ const PayrollView: React.FC = () => {
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-8">
                   <div>
-                    <p className="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">Net Pay for {lastPayslip.month}</p>
+                    <p className="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">{t('net_pay')} - {lastPayslip.month}</p>
                     <h2 className="text-5xl font-bold tracking-tight text-white" style={{ color: '#ffffff' }}>₹{lastPayslip.netSalary.toLocaleString()}</h2>
                   </div>
                   <div className="bg-white/10 p-3 rounded-xl backdrop-blur-md border border-white/10">
@@ -207,25 +207,25 @@ const PayrollView: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-8 mb-8">
                   <div>
-                    <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Earnings</p>
+                    <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">{t('earnings')}</p>
                     <p className="text-xl font-semibold" style={{ color: '#ffffff' }}>₹{lastPayslip.basicSalary.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Deductions</p>
+                    <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">{t('deductions')}</p>
                     <p className="text-xl font-semibold" style={{ color: '#fca5a5' }}>-₹{lastPayslip.deductions.toLocaleString()}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-6 border-t border-white/10">
-                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${lastPayslip.status === 'Paid' ? 'bg-emerald-400' : 'bg-amber-400'} animate-pulse`}></div>
-                    <span className="text-sm font-medium text-slate-300">Status: {lastPayslip.status}</span>
+                    <span className="text-sm font-medium text-slate-300">{t('status')}: {lastPayslip.status}</span>
                   </div>
                   <button 
                     onClick={() => generatePayslipPDF(lastPayslip)}
                     className="flex items-center gap-2 bg-white text-slate-900 px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-50 transition-all hover:scale-105 active:scale-95 shadow-lg"
                   >
-                    <Download size={16} /> Download Slip
+                    <Download size={16} /> {t('download_slip')}
                   </button>
                 </div>
               </div>
@@ -234,11 +234,11 @@ const PayrollView: React.FC = () => {
             {/* Stats Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col justify-between">
                 <div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-4">Salary Structure</h3>
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">{t('salary_structure')}</h3>
                     <div className="space-y-4">
                         <div>
                             <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-600">Basic Pay</span>
+                        <span className="text-gray-600">{t('basic_pay')}</span>
                                 <span className="font-medium">70%</span>
                             </div>
                             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -247,7 +247,7 @@ const PayrollView: React.FC = () => {
                         </div>
                         <div>
                             <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-600">HRA & Allowances</span>
+                            <span className="text-gray-600">{t('hra_allowances')}</span>
                                 <span className="font-medium">20%</span>
                             </div>
                             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -256,7 +256,7 @@ const PayrollView: React.FC = () => {
                         </div>
                         <div>
                             <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-600">PF & Tax</span>
+                            <span className="text-gray-600">{t('pf_tax')}</span>
                                 <span className="font-medium">10%</span>
                             </div>
                             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -268,7 +268,7 @@ const PayrollView: React.FC = () => {
                 <div className="mt-6 pt-6 border-t border-gray-200">
                     <div className="flex items-center gap-3 text-sm text-gray-600">
                         <Calendar size={16} className="text-mcd-blue"/>
-                        <span>Next payday: <span className="font-semibold text-gray-900">{new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></span>
+                        <span>{t('next_payday')}: <span className="font-semibold text-gray-900">{new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></span>
                     </div>
                 </div>
             </div>
@@ -278,21 +278,21 @@ const PayrollView: React.FC = () => {
         {/* History Table */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-lg font-bold text-gray-800">Payment History</h3>
+            <h3 className="text-lg font-bold text-gray-800">{t('payment_history')}</h3>
             <button className="text-sm text-mcd-blue font-medium hover:underline flex items-center gap-1">
-                View All <ArrowRight size={14}/>
+                {t('view_all')} <ArrowRight size={14}/>
             </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
                 <thead className="bg-gray-50/50 text-xs uppercase tracking-wider text-gray-500 font-semibold">
                 <tr>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[140px]">Month/Year</th>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">Earnings</th>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">Deductions</th>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">Net Pay</th>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">Status</th>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[90px]">Action</th>
+                  <th className="px-6 py-4 whitespace-nowrap min-w-[140px]">{t('month_year')}</th>
+                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">{t('earnings')}</th>
+                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">{t('deductions')}</th>
+                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">{t('net_pay')}</th>
+                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">{t('status')}</th>
+                  <th className="px-6 py-4 whitespace-nowrap min-w-[90px]">{t('action')}</th>
                 </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -349,8 +349,8 @@ const PayrollView: React.FC = () => {
         {/* Integrity Shield Card */}
         <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
-            <p className="text-indigo-100 text-sm font-medium relative z-10">Security Core</p>
-            <h2 className="text-2xl font-bold mt-1 relative z-10">Integrity Shield</h2>
+          <p className="text-indigo-100 text-sm font-medium relative z-10">{t('security_core')}</p>
+          <h2 className="text-2xl font-bold mt-1 relative z-10">{t('integrity_shield')}</h2>
             
             <button 
                 onClick={handleIntegrityScan}
@@ -362,33 +362,33 @@ const PayrollView: React.FC = () => {
                 ) : (
                     <ShieldCheck size={16} />
                 )}
-                {isScanning ? 'Scanning...' : 'Run Integrity Scan'}
+            {isScanning ? t('scanning') : t('run_integrity_scan')}
             </button>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full -mr-10 -mt-10 blur-2xl"></div>
-          <p className="text-gray-500 text-sm font-medium relative z-10">Total Disbursed (Oct)</p>
+          <p className="text-gray-500 text-sm font-medium relative z-10">{t('total_disbursed')} (Oct)</p>
           <h2 className="text-3xl font-bold text-gray-900 mt-2 relative z-10">₹{totalProcessed.toLocaleString()}</h2>
           <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1 relative z-10 font-medium">
-             <TrendingUp size={14}/> +12% from last month
+             <TrendingUp size={14}/> +12% {t('from_last_month')}
           </p>
         </div>
         
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-10 -mt-10 blur-2xl"></div>
-           <p className="text-gray-500 text-sm font-medium relative z-10">Pending Processing</p>
+           <p className="text-gray-500 text-sm font-medium relative z-10">{t('pending_processing')}</p>
            <h2 className="text-3xl font-bold text-gray-900 mt-2 relative z-10">{pendingCount}</h2>
            <p className="text-xs text-orange-600 mt-2 flex items-center gap-1 relative z-10 font-medium">
-             <Clock size={14}/> Action Required
+             <Clock size={14}/> {t('action_required')}
            </p>
         </div>
 
         <div className="bg-gradient-to-br from-mcd-blue to-blue-700 p-6 rounded-2xl shadow-lg text-white flex flex-col justify-between relative overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-10 -mt-10 blur-3xl"></div>
             <div>
-                <p className="text-blue-100 text-sm font-medium mb-1">Quick Action</p>
-                <h3 className="text-lg font-bold">Payroll Run: {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</h3>
+                <p className="text-blue-100 text-sm font-medium mb-1">{t('quick_action')}</p>
+                <h3 className="text-lg font-bold">{t('payroll_run')}: {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</h3>
             </div>
             <button 
               onClick={handleReleaseSalaries}
@@ -405,7 +405,7 @@ const PayrollView: React.FC = () => {
                 ) : (
                     <DollarSign size={16} />
                 )}
-                {pendingCount === 0 ? 'All Processed' : isReleasing ? 'Processing...' : 'Release All Salaries'}
+                {pendingCount === 0 ? t('all_processed') : isReleasing ? t('processing_ellipsis') : t('release_all_salaries')}
             </button>
         </div>
       </div>
@@ -415,15 +415,15 @@ const PayrollView: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-in slide-in-from-top-4 duration-500">
             <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                    <ShieldCheck className={scanResult.anomalies_detected > 0 ? "text-amber-500" : "text-emerald-500"} size={20} />
-                    <h3 className="font-bold text-gray-800">Integrity Scan Report</h3>
+              <ShieldCheck className={scanResult.anomalies_detected > 0 ? "text-amber-500" : "text-emerald-500"} size={20} />
+              <h3 className="font-bold text-gray-800">{t('integrity_scan_report')}</h3>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                     scanResult.anomalies_detected > 0 
                     ? "bg-amber-100 text-amber-700" 
                     : "bg-emerald-100 text-emerald-700"
                 }`}>
-                    {scanResult.anomalies_detected > 0 ? 'Action Required' : 'Secure'}
+              {scanResult.anomalies_detected > 0 ? t('action_required') : t('secure')}
                 </span>
             </div>
             
@@ -433,18 +433,18 @@ const PayrollView: React.FC = () => {
                         <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
                             <CheckCircle className="text-emerald-600" size={24} />
                         </div>
-                        <h4 className="text-lg font-bold text-gray-900">No Anomalies Detected</h4>
-                        <p className="text-gray-500 text-sm mt-1">All payroll records passed the integrity check.</p>
+                <h4 className="text-lg font-bold text-gray-900">{t('no_anomalies_detected')}</h4>
+                <p className="text-gray-500 text-sm mt-1">{t('all_records_passed')}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
                         <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100">
                             <AlertTriangle className="text-amber-600 mt-0.5 flex-shrink-0" size={20} />
                             <div>
-                                <h4 className="font-bold text-amber-900">Anomalies Detected</h4>
-                                <p className="text-sm text-amber-700 mt-1">
-                                    The Integrity Engine flagged {scanResult.anomalies_detected} records for review.
-                                </p>
+                    <h4 className="font-bold text-amber-900">{t('anomalies_detected')}</h4>
+                    <p className="text-sm text-amber-700 mt-1">
+                      {t('integrity_engine_flagged').replace('{count}', scanResult.anomalies_detected)}
+                    </p>
                             </div>
                         </div>
 
@@ -461,8 +461,8 @@ const PayrollView: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-sm font-medium text-amber-600">Flagged for Review</div>
-                                        <div className="text-xs text-gray-400">Ghost Employee Check</div>
+                                        <div className="text-sm font-medium text-amber-600">{t('flagged_for_review')}</div>
+                                        <div className="text-xs text-gray-400">{t('ghost_employee_check')}</div>
                                     </div>
                                 </div>
                             ))}
@@ -477,8 +477,8 @@ const PayrollView: React.FC = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center flex-shrink-0 bg-gray-50/50">
             <div>
-                <h3 className="text-lg font-bold text-gray-800">Employee Payroll Status</h3>
-                <p className="text-sm text-gray-500">Manage and track salary disbursements</p>
+                <h3 className="text-lg font-bold text-gray-800">{t('employee_payroll_status')}</h3>
+                <p className="text-sm text-gray-500">{t('manage_track_salaries')}</p>
             </div>
             <div className="flex gap-2">
               <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
@@ -491,11 +491,11 @@ const PayrollView: React.FC = () => {
             <table className="w-full text-left">
                 <thead className="bg-gray-50/50 text-xs uppercase tracking-wider text-gray-500 font-semibold sticky top-0 z-10 backdrop-blur-sm">
                   <tr className="border-b border-gray-200">
-                    <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[220px]">Employee</th>
-                    <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[160px]">Role</th>
-                    <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[140px]">Days Present</th>
-                    <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[140px]">Net Pay</th>
-                    <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[140px]">Status</th>
+                    <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[220px]">{t('employee')}</th>
+                    <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[160px]">{t('role')}</th>
+                    <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[140px]">{t('days_present')}</th>
+                    <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[140px]">{t('net_pay')}</th>
+                    <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[140px]">{t('status')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
