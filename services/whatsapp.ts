@@ -87,7 +87,11 @@ export async function sendWhatsAppMessage(params: WhatsAppMessage): Promise<Send
  * Send attendance reminder to employee
  */
 export async function sendAttendanceReminder(mobile: string, employeeName: string): Promise<SendResult> {
-  const message = `🏢 *MCD HRMS Alert*\n\nनमस्ते ${employeeName},\n\nकृपया आज की उपस्थिति दर्ज करें।\nPlease mark your attendance for today.\n\n📍 Location verification required\n📸 Face authentication required\n\n_Municipal Corporation of Delhi_`;
+  const dashboardUrl = typeof window !== 'undefined' && window.location.origin 
+    ? window.location.origin 
+    : 'https://mcd-hrms.vercel.app';
+    
+  const message = `🏢 *MCD HRMS Alert*\n\nनमस्ते ${employeeName},\n\nकृपया आज की उपस्थिति दर्ज करें।\nPlease mark your attendance for today.\n\n📍 Location verification required\n📸 Face authentication required\n\n👉 Mark Attendance: ${dashboardUrl}\n\n_Municipal Corporation of Delhi_`;
   
   return sendWhatsAppMessage({ to: mobile, message });
 }
