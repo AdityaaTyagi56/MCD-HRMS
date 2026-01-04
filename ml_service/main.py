@@ -1058,6 +1058,89 @@ Respond with ONLY a JSON object:
             "ai_powered": False
         }
 
+# ============ GRIEVANCE TREND ANALYSIS ============
+class GrievanceTrendsRequest(BaseModel):
+    grievances: List[dict]
+
+@app.post("/analytics/grievance-trends")
+async def analyze_grievance_trends(request: GrievanceTrendsRequest):
+    """AI-powered grievance trend analysis for predictive insights"""
+    grievances_data = request.grievances
+    
+    try:
+        prompt = f"""You are an AI analyst for MCD Delhi's HR grievance system. Analyze this grievance data to identify trends and predict issues.
+
+Grievance Data (showing first 20):
+{json.dumps(grievances_data[:20], indent=2)}
+
+Total grievances: {len(grievances_data)}
+
+Provide a JSON response with:
+1. "rising_issues": List of grievance categories showing increasing frequency
+2. "declining_issues": List of improving areas
+3. "predicted_escalations": List of grievance IDs likely to escalate with reasons
+4. "sentiment_score": Overall employee sentiment (0-100, higher is better)
+5. "department_risk": Departments with highest grievance rates
+6. "priority_actions": Top 3 immediate actions for management
+7. "weekly_forecast": Brief prediction for next week's trends
+
+Respond ONLY with valid JSON, no markdown."""
+
+        ai_response = await call_openrouter(prompt, max_tokens=800)
+        
+        # Parse JSON
+        json_str = ai_response.strip()
+        if "```" in json_str:
+            start = json_str.find("{")
+            end = json_str.rfind("}") + 1
+            if start != -1 and end > start:
+                json_str = json_str[start:end]
+        
+        start_idx = json_str.find("{")
+        end_idx = json_str.rfind("}") + 1
+        if start_idx != -1 and end_idx > start_idx:
+            json_str = json_str[start_idx:end_idx]
+            
+        analysis = json.loads(json_str)
+        
+        return {
+            "success": True,
+            "analysis": analysis,
+            "total_analyzed": len(grievances_data),
+            "ai_powered": True
+        }
+        
+    except Exception as e:
+        print(f"Trend analysis error: {e}")
+        # Fallback: basic statistics
+        from collections import Counter
+        
+        categories = Counter([g.get("category", "Unknown") for g in grievances_data])
+        statuses = Counter([g.get("status", "Unknown") for g in grievances_data])
+        priorities = Counter([g.get("priority", "Unknown") for g in grievances_data])
+        
+        pending_count = statuses.get("Pending", 0)
+        high_priority = priorities.get("High", 0)
+        
+        return {
+            "success": True,
+            "analysis": {
+                "rising_issues": [cat for cat, count in categories.most_common(3)],
+                "sentiment_score": max(0, 100 - (pending_count * 5)),
+                "department_risk": ["Operations", "Admin"],
+                "priority_actions": [
+                    f"Address {pending_count} pending grievances",
+                    f"Focus on {high_priority} high-priority cases",
+                    "Improve response time to prevent escalations"
+                ],
+                "weekly_forecast": "Similar grievance volume expected" if pending_count < 10 else "Increased volume predicted",
+                "predicted_escalations": []
+            },
+            "total_analyzed": len(grievances_data),
+            "ai_powered": False,
+            "fallback": True
+        }
+
 # ============ STARTUP ============
 if __name__ == "__main__":
     print("🚀 Starting MCD HRMS ML Service v2.0...")

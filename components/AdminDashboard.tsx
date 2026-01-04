@@ -122,7 +122,14 @@ const AdminDashboard: React.FC = () => {
   const [mlAnalysisResult, setMlAnalysisResult] = useState<any>(null);
   const [mlAnalysisLoading, setMlAnalysisLoading] = useState(false);
   
+  // Analytics & SLA State
+  const [trendAnalysis, setTrendAnalysis] = useState<any>(null);
+  const [slaBreaches, setSlaBreaches] = useState<any[]>([]);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [showSlaAlert, setShowSlaAlert] = useState(true);
+  
   const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8010';
 
   const isHindiText = (text: string) => /[\u0900-\u097F]/.test(text || '');
 
@@ -241,6 +248,59 @@ const AdminDashboard: React.FC = () => {
     { name: 'Engineering', value: employees.filter(e => e.department === 'Engineering').length, color: '#22c55e', performance: 78 },
     { name: 'Health', value: employees.filter(e => e.department === 'Health').length, color: '#8b5cf6', performance: 88 },
   ];
+
+  // Fetch trend analysis and SLA breaches
+  const fetchAnalytics = async () => {
+    setAnalyticsLoading(true);
+    try {
+      // Run trend analysis
+      const runResponse = await fetch(`${API_BASE_URL}/api/analytics/run-trends`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': 'demo-admin-key-12345' },
+        body: JSON.stringify({ grievances: grievances.map(g => ({ 
+          id: g.id, 
+          category: g.category, 
+          priority: g.priority, 
+          status: g.status, 
+          submittedAt: g.submittedAt 
+        })) })
+      });
+      
+      if (runResponse.ok) {
+        // Fetch stored trends
+        const trendsResponse = await fetch(`${API_BASE_URL}/api/analytics/trends`, {
+          headers: { 'x-api-key': 'demo-admin-key-12345' }
+        });
+        if (trendsResponse.ok) {
+          const trends = await trendsResponse.json();
+          setTrendAnalysis(trends);
+        }
+      }
+      
+      // Check SLA breaches
+      const slaResponse = await fetch(`${API_BASE_URL}/api/analytics/check-sla`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': 'demo-admin-key-12345' },
+        body: JSON.stringify({ grievances })
+      });
+      
+      if (slaResponse.ok) {
+        const slaData = await slaResponse.json();
+        setSlaBreaches(slaData.breached || []);
+      }
+    } catch (error) {
+      console.error('Analytics fetch error:', error);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  // Load analytics on mount and when grievances change
+  useEffect(() => {
+    if (grievances.length > 0) {
+      fetchAnalytics();
+    }
+  }, [grievances.length]);
 
   const performanceDistribution = [
     { grade: 'A+', count: employees.filter(e => e.performance.overallGrade === 'A+').length, color: '#22c55e' },
@@ -555,6 +615,172 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* SLA Breach Alert Banner */}
+      {slaBreaches.length > 0 && showSlaAlert && (
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl p-6 shadow-lg relative overflow-hidden">
+          <button
+            onClick={() => setShowSlaAlert(false)}
+            className="absolute top-4 right-4 p-1 rounded-lg hover:bg-white/50 transition-colors"
+          >
+            <X size={18} className="text-red-600" />
+          </button>
+          
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-red-100">
+              <AlertTriangle size={28} className="text-red-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-red-900 mb-2">⚠️ SLA Breach Alert</h3>
+              <p className="text-red-700 mb-4">
+                {slaBreaches.length} grievance{slaBreaches.length > 1 ? 's' : ''} exceeded 72-hour SLA and {slaBreaches.length > 1 ? 'have been' : 'has been'} auto-escalated
+              </p>
+              
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {slaBreaches.slice(0, 5).map((breach: any) => (
+                  <div key={breach.id} className="bg-white rounded-lg p-3 border border-red-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <span className="font-semibold text-red-900">#{breach.id}</span>
+                        <span className="text-sm text-neutral-600 ml-2">{breach.category}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full">
+                          {breach.hoursOverdue}h overdue
+                        </span>
+                        <span className="text-xs font-medium text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
+                          Escalation Level {breach.escalationLevel}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {slaBreaches.length > 5 && (
+                  <p className="text-sm text-neutral-600 text-center pt-2">
+                    +{slaBreaches.length - 5} more breached grievances
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Analytics & Trend Insights */}
+      {trendAnalysis && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Rising Issues Card */}
+          <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 shadow-lg border border-orange-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 rounded-xl bg-orange-100">
+                <TrendingUp size={24} className="text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-orange-900">Rising Issues</h3>
+                <p className="text-sm text-orange-700">Trending complaints</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {trendAnalysis.rising_issues?.slice(0, 3).map((issue: any, idx: number) => (
+                <div key={idx} className="bg-white rounded-lg p-3 border border-orange-200">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-neutral-800">{issue.category || issue}</span>
+                    <span className="text-xs font-medium text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
+                      {issue.count ? `${issue.count} cases` : 'Rising'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {(!trendAnalysis.rising_issues || trendAnalysis.rising_issues.length === 0) && (
+                <p className="text-sm text-neutral-500 text-center py-4">No rising trends detected</p>
+              )}
+            </div>
+          </div>
+
+          {/* Sentiment & Priority Actions */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 shadow-lg border border-blue-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 rounded-xl bg-blue-100">
+                <Activity size={24} className="text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-blue-900">Sentiment Score</h3>
+                <p className="text-sm text-blue-700">Employee satisfaction</p>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <div className="flex items-end justify-between mb-2">
+                <span className="text-4xl font-bold text-blue-900">
+                  {trendAnalysis.sentiment_score || 0}%
+                </span>
+                <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                  (trendAnalysis.sentiment_score || 0) > 70 ? 'bg-green-100 text-green-700' : 
+                  (trendAnalysis.sentiment_score || 0) > 40 ? 'bg-yellow-100 text-yellow-700' : 
+                  'bg-red-100 text-red-700'
+                }`}>
+                  {(trendAnalysis.sentiment_score || 0) > 70 ? 'Good' : 
+                   (trendAnalysis.sentiment_score || 0) > 40 ? 'Fair' : 'Poor'}
+                </span>
+              </div>
+              <div className="w-full bg-neutral-200 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${trendAnalysis.sentiment_score || 0}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            {trendAnalysis.predicted_escalations > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-sm font-medium text-amber-900">
+                  ⚠️ {trendAnalysis.predicted_escalations} cases likely to escalate
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Priority Actions */}
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg border border-purple-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 rounded-xl bg-purple-100">
+                <Target size={24} className="text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-purple-900">Priority Actions</h3>
+                <p className="text-sm text-purple-700">Recommended next steps</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {trendAnalysis.priority_actions?.slice(0, 3).map((action: string, idx: number) => (
+                <div key={idx} className="bg-white rounded-lg p-3 border border-purple-200">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle size={16} className="text-purple-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-neutral-700 font-medium">{action}</p>
+                  </div>
+                </div>
+              ))}
+              {(!trendAnalysis.priority_actions || trendAnalysis.priority_actions.length === 0) && (
+                <p className="text-sm text-neutral-500 text-center py-4">No priority actions at this time</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Analytics Refresh Button */}
+      <div className="flex justify-center">
+        <button
+          onClick={fetchAnalytics}
+          disabled={analyticsLoading}
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw size={18} className={analyticsLoading ? 'animate-spin' : ''} />
+          {analyticsLoading ? 'Analyzing...' : 'Refresh Analytics'}
+        </button>
       </div>
 
       {/* Quick Actions - WhatsApp & AI Integration */}

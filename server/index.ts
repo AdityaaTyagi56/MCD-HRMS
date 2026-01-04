@@ -448,6 +448,125 @@ app.post('/api/voice/webhook', async (req, res) => {
   }
 });
 
+// Analytics: Run trend analysis on grievances
+app.post('/api/analytics/run-trends', authGuard, async (req, res) => {
+  try {
+    const grievanceData = grievances.map(g => ({
+      category: g.category,
+      status: g.status,
+      priority: g.priority,
+      date: g.date,
+      description: g.description
+    }));
+    
+    // Call AI service for trend analysis (if available on backend)
+    const ML_API_URL = process.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
+    
+    try {
+      const analysisRes = await fetch(`${ML_API_URL}/analytics/grievance-trends`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grievances: grievanceData })
+      });
+      
+      if (analysisRes.ok) {
+        const analysis = await analysisRes.json();
+        
+        // Store in a simple file (or use database in production)
+        persist('trend-analysis', {
+          timestamp: new Date().toISOString(),
+          data: analysis
+        });
+        
+        return res.json({ success: true, analysis });
+      }
+    } catch (err) {
+      console.error('ML trend analysis failed:', err);
+    }
+    
+    // Fallback: basic analysis
+    const pending = grievances.filter(g => g.status === 'Pending').length;
+    const highPriority = grievances.filter(g => g.priority === 'High').length;
+    
+    const basicAnalysis = {
+      total_grievances: grievances.length,
+      pending_count: pending,
+      high_priority_count: highPriority,
+      categories: {} as Record<string, number>,
+      recommendation: pending > 10 ? 'High backlog detected - consider additional staff' : 'Grievance load normal'
+    };
+    
+    grievances.forEach(g => {
+      basicAnalysis.categories[g.category] = (basicAnalysis.categories[g.category] || 0) + 1;
+    });
+    
+    persist('trend-analysis', {
+      timestamp: new Date().toISOString(),
+      data: basicAnalysis
+    });
+    
+    res.json({ success: true, analysis: basicAnalysis });
+  } catch (error: any) {
+    console.error('Trend analysis error:', error);
+    res.status(500).json({ message: 'Analytics error', error: error.message });
+  }
+});
+
+// Get latest trend analysis
+app.get('/api/analytics/trends', authGuard, (_req, res) => {
+  const trends = load('trend-analysis', { timestamp: null, data: null });
+  res.json(trends);
+});
+
+// SLA Breach Detection & Auto-Escalation
+app.post('/api/analytics/check-sla', authGuard, (req, res) => {
+  try {
+    const SLA_HOURS = 72; // 72 hours SLA
+    const now = new Date();
+    let escalated = 0;
+    const breachedGrievances = [];
+    
+    for (const g of grievances) {
+      if (g.status === 'Resolved' || g.status === 'Escalated') continue;
+      
+      const grievanceDate = new Date(g.date);
+      const hoursDiff = (now.getTime() - grievanceDate.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursDiff > SLA_HOURS && !g.slaBreach) {
+        g.slaBreach = true;
+        
+        // Auto-escalate
+        if (g.escalationLevel < 2) {
+          g.escalationLevel = (g.escalationLevel + 1) as 0 | 1 | 2;
+          g.status = 'Escalated';
+          escalated++;
+        }
+        
+        breachedGrievances.push({
+          id: g.id,
+          category: g.category,
+          days_old: Math.floor(hoursDiff / 24),
+          escalation_level: g.escalationLevel
+        });
+      }
+    }
+    
+    if (escalated > 0) {
+      persist('grievances', grievances);
+    }
+    
+    res.json({
+      success: true,
+      sla_breaches: breachedGrievances.length,
+      auto_escalated: escalated,
+      details: breachedGrievances
+    });
+  } catch (error: any) {
+    console.error('SLA check error:', error);
+    res.status(500).json({ message: 'SLA check failed', error: error.message });
+  }
+});
+
 app.get('/api/leaves', (_req, res) => {
   res.json(leaves);
 });
