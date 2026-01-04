@@ -51,6 +51,10 @@ export interface Grievance {
   date: string;
   escalationLevel: 0 | 1 | 2; // 0: Zonal, 1: Deputy Comm, 2: Commissioner
   slaBreach: boolean;
+  source?: 'web' | 'whatsapp' | 'voice' | 'ivr'; // Track how complaint was submitted
+  phoneNumber?: string; // For WhatsApp/Voice submissions
+  audioUrl?: string; // For voice complaints
+  transcript?: string; // For voice-to-text
 }
 
 export interface DashboardStats {

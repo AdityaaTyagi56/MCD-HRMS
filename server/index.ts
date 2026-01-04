@@ -289,6 +289,165 @@ app.patch('/api/grievances/:id/status', (req, res) => {
   res.json(grievance);
 });
 
+// WhatsApp Webhook for incoming messages
+app.post('/api/whatsapp/webhook', express.urlencoded({ extended: false }), async (req, res) => {
+  try {
+    const { From, Body, MessageSid, ProfileName } = req.body;
+    
+    console.log('📱 WhatsApp webhook received:', { From, Body, MessageSid });
+    
+    // Basic validation
+    if (!From || !Body) {
+      return res.status(400).send('Invalid webhook payload');
+    }
+    
+    // Extract phone number (remove whatsapp: prefix)
+    const phoneNumber = From.replace('whatsapp:', '');
+    
+    // Try to find employee by phone number
+    const employee = employees.find(e => 
+      e.mobile && (e.mobile.includes(phoneNumber.slice(-10)) || phoneNumber.includes(e.mobile.slice(-10)))
+    );
+    
+    const userId = employee?.id || 0; // 0 for unknown users
+    const userName = employee?.name || ProfileName || 'Unknown User';
+    
+    // Analyze the complaint using NLP (if ML service available)
+    let category = 'General Complaint';
+    let priority: 'High' | 'Medium' | 'Low' = 'Medium';
+    
+    try {
+      const ML_API_URL = process.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
+      const analysisRes = await fetch(`${ML_API_URL}/analyze-grievance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: Body })
+      });
+      
+      if (analysisRes.ok) {
+        const analysis = await analysisRes.json();
+        category = analysis.category || category;
+        priority = analysis.priority || priority;
+      }
+    } catch (err) {
+      console.error('NLP analysis failed for WhatsApp message:', err);
+    }
+    
+    // Create grievance
+    const grievance: Grievance = {
+      id: Date.now(),
+      userId,
+      user: userName,
+      category,
+      description: Body,
+      priority,
+      status: 'Pending',
+      date: new Date().toISOString().split('T')[0],
+      escalationLevel: 0,
+      slaBreach: false,
+      source: 'whatsapp',
+      phoneNumber,
+    };
+    
+    grievances.unshift(grievance);
+    persist('grievances', grievances);
+    
+    // Send acknowledgement back via WhatsApp
+    const ackMessage = `✅ *शिकायत दर्ज / Complaint Registered*\n\n` +
+      `Ticket #${grievance.id}\n` +
+      `Category: ${category}\n` +
+      `Priority: ${priority}\n\n` +
+      `हम जल्द ही आपकी शिकायत पर कार्रवाई करेंगे।\n` +
+      `We will address your complaint soon.\n\n` +
+      `_Municipal Corporation of Delhi_`;
+    
+    // Respond to Twilio immediately with TwiML
+    res.type('text/xml');
+    res.send(`<?xml version="1.0" encoding="UTF-8"?><Response><Message>${ackMessage}</Message></Response>`);
+    
+    console.log('✅ Grievance created from WhatsApp:', grievance.id);
+  } catch (error) {
+    console.error('WhatsApp webhook error:', error);
+    res.status(500).send('Error processing message');
+  }
+});
+
+// Voice/IVR Webhook for transcribed audio complaints
+app.post('/api/voice/webhook', async (req, res) => {
+  try {
+    const { phoneNumber, transcript, audioUrl, userName } = req.body;
+    
+    console.log('🎙️ Voice webhook received:', { phoneNumber, transcript });
+    
+    if (!phoneNumber || !transcript) {
+      return res.status(400).json({ message: 'Phone number and transcript required' });
+    }
+    
+    // Find employee
+    const employee = employees.find(e => 
+      e.mobile && (e.mobile.includes(phoneNumber.slice(-10)) || phoneNumber.includes(e.mobile.slice(-10)))
+    );
+    
+    const userId = employee?.id || 0;
+    const employeeName = employee?.name || userName || 'Unknown User';
+    
+    // Analyze complaint
+    let category = 'General Complaint';
+    let priority: 'High' | 'Medium' | 'Low' = 'Medium';
+    
+    try {
+      const ML_API_URL = process.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
+      const analysisRes = await fetch(`${ML_API_URL}/analyze-grievance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: transcript })
+      });
+      
+      if (analysisRes.ok) {
+        const analysis = await analysisRes.json();
+        category = analysis.category || category;
+        priority = analysis.priority || priority;
+      }
+    } catch (err) {
+      console.error('NLP analysis failed for voice message:', err);
+    }
+    
+    // Create grievance
+    const grievance: Grievance = {
+      id: Date.now(),
+      userId,
+      user: employeeName,
+      category,
+      description: transcript,
+      priority,
+      status: 'Pending',
+      date: new Date().toISOString().split('T')[0],
+      escalationLevel: 0,
+      slaBreach: false,
+      source: 'voice',
+      phoneNumber,
+      audioUrl,
+      transcript,
+    };
+    
+    grievances.unshift(grievance);
+    persist('grievances', grievances);
+    
+    res.status(201).json({
+      success: true,
+      ticketId: grievance.id,
+      category,
+      priority,
+      message: 'Voice complaint registered successfully'
+    });
+    
+    console.log('✅ Grievance created from voice:', grievance.id);
+  } catch (error) {
+    console.error('Voice webhook error:', error);
+    res.status(500).json({ message: 'Error processing voice complaint' });
+  }
+});
+
 app.get('/api/leaves', (_req, res) => {
   res.json(leaves);
 });

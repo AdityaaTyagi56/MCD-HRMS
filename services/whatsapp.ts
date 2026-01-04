@@ -144,6 +144,21 @@ export async function sendGrievanceUpdate(
 }
 
 /**
+ * Send acknowledgement for grievance received via WhatsApp/Voice
+ */
+export async function sendGrievanceAcknowledgement(
+  mobile: string,
+  employeeName: string,
+  ticketId: number,
+  category: string,
+  priority: string
+): Promise<SendResult> {
+  const message = `✅ *शिकायत दर्ज / Complaint Registered*\n\nनमस्ते ${employeeName},\n\nआपकी शिकायत दर्ज हो गई है।\nYour complaint has been registered.\n\n🎫 Ticket: #${ticketId}\n📂 Category: ${category}\n⚡ Priority: ${priority}\n\nहम जल्द ही आपकी शिकायत पर कार्रवाई करेंगे।\nWe will address your complaint soon.\n\n_Municipal Corporation of Delhi_`;
+  
+  return sendWhatsAppMessage({ to: mobile, message });
+}
+
+/**
  * Send emergency/broadcast alert
  */
 export async function sendEmergencyAlert(
@@ -200,6 +215,7 @@ export const whatsappService = {
   sendSalaryNotification,
   sendLeaveStatusUpdate,
   sendGrievanceUpdate,
+  sendGrievanceAcknowledgement,
   sendEmergencyAlert,
   sendBulkMessages: sendBulkWhatsAppMessages,
   isConfigured: isWhatsAppConfigured,
