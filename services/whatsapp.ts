@@ -53,7 +53,12 @@ export async function sendWhatsAppMessage(params: WhatsAppMessage): Promise<Send
   const toNumber = formatWhatsAppNumber(params.to);
   
   try {
-    const response = await fetch('/api/send-whatsapp', {
+    // Use absolute URL for Vercel deployment
+    const apiUrl = typeof window !== 'undefined' && window.location.origin 
+      ? `${window.location.origin}/api/send-whatsapp`
+      : '/api/send-whatsapp';
+      
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -69,9 +74,11 @@ export async function sendWhatsAppMessage(params: WhatsAppMessage): Promise<Send
     if (response.ok && data.success) {
       return { success: true, messageId: data.messageId };
     } else {
+      console.error('WhatsApp API error:', data);
       return { success: false, error: data.error || 'Failed to send message' };
     }
   } catch (error: any) {
+    console.error('WhatsApp send error:', error);
     return { success: false, error: error.message };
   }
 }

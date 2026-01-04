@@ -1,5 +1,6 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -25,7 +26,15 @@ export default async function handler(req: any, res: any) {
   const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || process.env.VITE_TWILIO_AUTH_TOKEN;
   const TWILIO_WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER || process.env.VITE_TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
 
+  console.log('WhatsApp API called', { 
+    to, 
+    hasSID: !!TWILIO_ACCOUNT_SID, 
+    hasToken: !!TWILIO_AUTH_TOKEN,
+    from: TWILIO_WHATSAPP_NUMBER 
+  });
+
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
+    console.error('Missing Twilio credentials');
     return res.status(500).json({ error: 'Twilio credentials not configured in environment variables' });
   }
 
@@ -48,12 +57,16 @@ export default async function handler(req: any, res: any) {
 
     const data = await response.json();
 
+    console.log('Twilio response:', { ok: response.ok, status: response.status, data });
+
     if (response.ok) {
       return res.status(200).json({ success: true, messageId: data.sid });
     } else {
+      console.error('Twilio error:', data);
       return res.status(400).json({ success: false, error: data.message || 'Failed to send message' });
     }
   } catch (error: any) {
+    console.error('WhatsApp API exception:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 }
