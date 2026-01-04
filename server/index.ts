@@ -1848,6 +1848,312 @@ app.get('/api/government/status', authGuard, (req, res) => {
   });
 });
 
+// ========================================
+// FACIAL RECOGNITION ENDPOINTS
+// ========================================
+
+// Face enrollment data storage
+const faceEnrollmentsPath = path.join(__dirname, 'data', 'face-enrollments.json');
+let faceEnrollments: Record<string, { descriptors: number[][], enrolledAt: string, samples: number }> = {};
+
+// Load face enrollments from file
+function loadFaceEnrollments() {
+  try {
+    if (fs.existsSync(faceEnrollmentsPath)) {
+      const data = fs.readFileSync(faceEnrollmentsPath, 'utf-8');
+      faceEnrollments = JSON.parse(data);
+      console.log(`Loaded ${Object.keys(faceEnrollments).length} face enrollments`);
+    }
+  } catch (error) {
+    console.error('Error loading face enrollments:', error);
+    faceEnrollments = {};
+  }
+}
+
+// Save face enrollments to file
+function saveFaceEnrollments() {
+  try {
+    fs.writeFileSync(faceEnrollmentsPath, JSON.stringify(faceEnrollments, null, 2));
+  } catch (error) {
+    console.error('Error saving face enrollments:', error);
+  }
+}
+
+// Initialize face enrollments
+loadFaceEnrollments();
+
+// Enroll face for employee
+app.post('/api/face/enroll', (req: express.Request, res: express.Response) => {
+  try {
+    const { employeeId, descriptors } = req.body;
+
+    if (!employeeId || !descriptors || !Array.isArray(descriptors)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: employeeId and descriptors array',
+      });
+    }
+
+    // Validate descriptors (should be arrays of 128 numbers)
+    for (const descriptor of descriptors) {
+      if (!Array.isArray(descriptor) || descriptor.length !== 128) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid descriptor format. Each descriptor must be an array of 128 numbers.',
+        });
+      }
+    }
+
+    // Store the enrollment
+    faceEnrollments[employeeId] = {
+      descriptors: descriptors,
+      enrolledAt: new Date().toISOString(),
+      samples: descriptors.length,
+    };
+
+    saveFaceEnrollments();
+
+    console.log(`Face enrolled for employee ${employeeId} with ${descriptors.length} samples`);
+
+    res.json({
+      success: true,
+      message: `Face enrolled successfully with ${descriptors.length} samples`,
+      employeeId,
+      samplesStored: descriptors.length,
+    });
+  } catch (error: any) {
+    console.error('Face enrollment error:', error);
+    metrics.api_errors_total++;
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to enroll face',
+    });
+  }
+});
+
+// Get face enrollment for employee
+app.get('/api/face/enrollment/:employeeId', (req: express.Request, res: express.Response) => {
+  try {
+    const { employeeId } = req.params;
+    const enrollment = faceEnrollments[employeeId];
+
+    if (!enrollment) {
+      return res.json({
+        success: true,
+        enrolled: false,
+        employeeId,
+      });
+    }
+
+    res.json({
+      success: true,
+      enrolled: true,
+      employeeId,
+      enrolledAt: enrollment.enrolledAt,
+      samples: enrollment.samples,
+      descriptors: enrollment.descriptors,
+    });
+  } catch (error: any) {
+    console.error('Get face enrollment error:', error);
+    metrics.api_errors_total++;
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get face enrollment',
+    });
+  }
+});
+
+// Verify face against enrolled data
+app.post('/api/face/verify', (req: express.Request, res: express.Response) => {
+  try {
+    const { employeeId, descriptor, threshold = 0.45 } = req.body;
+
+    if (!employeeId || !descriptor) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: employeeId and descriptor',
+      });
+    }
+
+    const enrollment = faceEnrollments[employeeId];
+
+    if (!enrollment) {
+      return res.json({
+        success: false,
+        matched: false,
+        error: 'Employee not enrolled for facial recognition',
+      });
+    }
+
+    // Calculate Euclidean distance between descriptors
+    function euclideanDistance(a: number[], b: number[]): number {
+      let sum = 0;
+      for (let i = 0; i < a.length; i++) {
+        sum += Math.pow(a[i] - b[i], 2);
+      }
+      return Math.sqrt(sum);
+    }
+
+    // Find best match among enrolled descriptors
+    let bestDistance = Infinity;
+    for (const enrolledDescriptor of enrollment.descriptors) {
+      const distance = euclideanDistance(descriptor, enrolledDescriptor);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+      }
+    }
+
+    const matched = bestDistance < threshold;
+    const confidence = Math.max(0, Math.min(1, 1 - bestDistance));
+
+    console.log(`Face verification for ${employeeId}: distance=${bestDistance.toFixed(4)}, matched=${matched}`);
+
+    res.json({
+      success: true,
+      matched,
+      confidence,
+      distance: bestDistance,
+      threshold,
+      employeeId,
+    });
+  } catch (error: any) {
+    console.error('Face verification error:', error);
+    metrics.api_errors_total++;
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to verify face',
+    });
+  }
+});
+
+// Match face against all enrollments (for attendance)
+app.post('/api/face/match', (req: express.Request, res: express.Response) => {
+  try {
+    const { descriptor, threshold = 0.45 } = req.body;
+
+    if (!descriptor || !Array.isArray(descriptor)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: descriptor array',
+      });
+    }
+
+    function euclideanDistance(a: number[], b: number[]): number {
+      let sum = 0;
+      for (let i = 0; i < a.length; i++) {
+        sum += Math.pow(a[i] - b[i], 2);
+      }
+      return Math.sqrt(sum);
+    }
+
+    let bestMatch: { employeeId: string; distance: number; confidence: number } | null = null;
+
+    for (const [employeeId, enrollment] of Object.entries(faceEnrollments)) {
+      for (const enrolledDescriptor of enrollment.descriptors) {
+        const distance = euclideanDistance(descriptor, enrolledDescriptor);
+        if (distance < threshold && (!bestMatch || distance < bestMatch.distance)) {
+          bestMatch = {
+            employeeId,
+            distance,
+            confidence: Math.max(0, Math.min(1, 1 - distance)),
+          };
+        }
+      }
+    }
+
+    if (bestMatch) {
+      const employee = employees.find(e => e.id === bestMatch!.employeeId);
+      console.log(`Face matched to ${bestMatch.employeeId} with confidence ${(bestMatch.confidence * 100).toFixed(1)}%`);
+      
+      res.json({
+        success: true,
+        matched: true,
+        employeeId: bestMatch.employeeId,
+        employeeName: employee?.name || 'Unknown',
+        confidence: bestMatch.confidence,
+        distance: bestMatch.distance,
+      });
+    } else {
+      res.json({
+        success: true,
+        matched: false,
+        message: 'No matching face found in enrolled employees',
+      });
+    }
+  } catch (error: any) {
+    console.error('Face match error:', error);
+    metrics.api_errors_total++;
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to match face',
+    });
+  }
+});
+
+// Delete face enrollment
+app.delete('/api/face/enrollment/:employeeId', (req: express.Request, res: express.Response) => {
+  try {
+    const { employeeId } = req.params;
+
+    if (!faceEnrollments[employeeId]) {
+      return res.status(404).json({
+        success: false,
+        error: 'Face enrollment not found for this employee',
+      });
+    }
+
+    delete faceEnrollments[employeeId];
+    saveFaceEnrollments();
+
+    console.log(`Face enrollment deleted for employee ${employeeId}`);
+
+    res.json({
+      success: true,
+      message: 'Face enrollment deleted successfully',
+      employeeId,
+    });
+  } catch (error: any) {
+    console.error('Delete face enrollment error:', error);
+    metrics.api_errors_total++;
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to delete face enrollment',
+    });
+  }
+});
+
+// List all face enrollments (admin only)
+app.get('/api/face/enrollments', (_req: express.Request, res: express.Response) => {
+  try {
+    const enrollmentList = Object.entries(faceEnrollments).map(([employeeId, data]) => {
+      const employee = employees.find(e => e.id === employeeId);
+      return {
+        employeeId,
+        employeeName: employee?.name || 'Unknown',
+        enrolledAt: data.enrolledAt,
+        samples: data.samples,
+      };
+    });
+
+    res.json({
+      success: true,
+      totalEnrollments: enrollmentList.length,
+      enrollments: enrollmentList,
+    });
+  } catch (error: any) {
+    console.error('List face enrollments error:', error);
+    metrics.api_errors_total++;
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to list face enrollments',
+    });
+  }
+});
+
+// ========================================
+// ERROR HANDLING
+// ========================================
+
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled error', err);
   metrics.api_errors_total++;

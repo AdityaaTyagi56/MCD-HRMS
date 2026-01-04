@@ -15,8 +15,12 @@ import {
   MicOff,
   Shield,
   Navigation,
-  Wifi
+  Wifi,
+  ScanFace,
+  Fingerprint
 } from 'lucide-react';
+import FaceRecognition from './FaceRecognition';
+import { hasEnrolledFace, getEnrollmentStatus } from '../services/face-recognition';
 
 const EmployeeDashboard: React.FC = () => {
   const { language, setCurrentView, addGrievance, markAttendance, t, grievances } = useApp();
@@ -36,12 +40,16 @@ const EmployeeDashboard: React.FC = () => {
   
   // Attendance State
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
-  const [attendanceStep, setAttendanceStep] = useState<'locating' | 'verifying' | 'success' | 'error' | 'spoofing'>('locating');
+  const [attendanceStep, setAttendanceStep] = useState<'locating' | 'face-verify' | 'verifying' | 'success' | 'error' | 'spoofing'>('locating');
   const [attendanceMarked, setAttendanceMarked] = useState(false);
   const [locationPings, setLocationPings] = useState<any[]>([]);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [verificationProgress, setVerificationProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Face Recognition State
+  const [showFaceEnrollment, setShowFaceEnrollment] = useState(false);
+  const [faceVerified, setFaceVerified] = useState(false);
 
   const recognitionRef = useRef<any>(null);
   const locationWatchRef = useRef<number | null>(null);
@@ -251,11 +259,19 @@ const EmployeeDashboard: React.FC = () => {
       return;
     }
 
+    // Check if face is enrolled
+    if (!hasEnrolledFace(employeeData.id)) {
+      // Show enrollment modal instead
+      setShowFaceEnrollment(true);
+      return;
+    }
+
     setShowAttendanceModal(true);
     setAttendanceStep('locating');
     setLocationPings([]);
     setVerificationResult(null);
     setVerificationProgress(0);
+    setFaceVerified(false);
 
     try {
       // Step 1: Collect multiple location pings for verification
@@ -264,7 +280,7 @@ const EmployeeDashboard: React.FC = () => {
       const PING_INTERVAL = 1500; // 1.5 seconds between pings
       
       for (let i = 0; i < PING_COUNT; i++) {
-        setVerificationProgress(Math.round(((i + 1) / PING_COUNT) * 50));
+        setVerificationProgress(Math.round(((i + 1) / PING_COUNT) * 40));
         
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -290,10 +306,23 @@ const EmployeeDashboard: React.FC = () => {
         }
       }
 
-      // Step 2: Verify location with ML service
-      setAttendanceStep('verifying');
-      setVerificationProgress(60);
+      // Step 2: Facial Recognition Verification
+      setAttendanceStep('face-verify');
+      setVerificationProgress(50);
+      
+    } catch (error) {
+      console.error('Attendance error:', error);
+      setAttendanceStep('error');
+    }
+  };
 
+  // Handle face verification success
+  const handleFaceVerificationSuccess = async () => {
+    setFaceVerified(true);
+    setAttendanceStep('verifying');
+    setVerificationProgress(70);
+
+    try {
       const verifyResponse = await fetch(`${ML_API_URL}/location/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -303,17 +332,18 @@ const EmployeeDashboard: React.FC = () => {
           office_lat: OFFICE_LOCATION.lat,
           office_lng: OFFICE_LOCATION.lng,
           office_radius_km: OFFICE_LOCATION.radius,
-          pings: pings,
-          check_in_time: new Date().toISOString()
+          pings: locationPings,
+          check_in_time: new Date().toISOString(),
+          face_verified: true
         })
       });
 
-      setVerificationProgress(80);
+      setVerificationProgress(90);
       const verification = await verifyResponse.json();
       setVerificationResult(verification);
       setVerificationProgress(100);
 
-      // Step 3: Handle verification result
+      // Handle verification result
       if (verification.status === 'SPOOFING_SUSPECTED') {
         setAttendanceStep('spoofing');
         return;
@@ -324,8 +354,8 @@ const EmployeeDashboard: React.FC = () => {
         return;
       }
 
-      // Step 4: Mark attendance if verified
-      const mainPing = pings[0];
+      // Mark attendance if verified
+      const mainPing = locationPings[0];
       await markAttendance(employeeData.id, { lat: mainPing.lat, lng: mainPing.lng });
       
       setAttendanceStep('success');
@@ -333,7 +363,7 @@ const EmployeeDashboard: React.FC = () => {
       setTimeout(() => setShowAttendanceModal(false), 3000);
       
     } catch (error) {
-      console.error('Attendance error:', error);
+      console.error('Verification error:', error);
       setAttendanceStep('error');
     }
   };
@@ -543,6 +573,45 @@ const EmployeeDashboard: React.FC = () => {
       {/* Main Buttons */}
       <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         
+        {/* Face Enrollment Banner (if not enrolled) */}
+        {!hasEnrolledFace(employeeData.id) && (
+          <div style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', borderRadius: '16px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(139,92,246,0.3)' }}
+               onClick={() => setShowFaceEnrollment(true)}>
+            <div style={{ width: '48px', height: '48px', background: 'rgba(255,255,255,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ScanFace size={28} style={{ color: 'white' }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>🔐 {t('setup_face_id') || 'Setup Face ID'}</p>
+              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', margin: '2px 0 0 0' }}>
+                {t('required_for_attendance') || 'Required for secure attendance marking'}
+              </p>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '8px 12px', borderRadius: '8px' }}>
+              <span style={{ color: 'white', fontSize: '12px', fontWeight: '600' }}>{t('enroll_now') || 'Enroll Now'}</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Face ID Status Badge (if enrolled) */}
+        {hasEnrolledFace(employeeData.id) && (
+          <div style={{ background: '#f0fdf4', border: '2px solid #bbf7d0', borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '36px', height: '36px', background: '#dcfce7', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Fingerprint size={20} style={{ color: '#16a34a' }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: '#166534', fontSize: '14px', fontWeight: '600', margin: 0 }}>✅ Face ID Enrolled</p>
+              <p style={{ color: '#22c55e', fontSize: '12px', margin: '2px 0 0 0' }}>
+                {getEnrollmentStatus(employeeData.id).samplesCount} samples registered
+              </p>
+            </div>
+            <button 
+              onClick={() => setShowFaceEnrollment(true)}
+              style={{ background: 'transparent', border: '1px solid #22c55e', color: '#16a34a', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+              Update
+            </button>
+          </div>
+        )}
+        
         {/* Attendance */}
         <button onClick={handleAttendance} disabled={attendanceMarked || !isWithinAttendanceWindow()}
           style={{
@@ -627,10 +696,10 @@ const EmployeeDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Attendance Modal with Location Verification */}
+      {/* Attendance Modal with Location + Face Verification */}
       {showAttendanceModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', zIndex: 100 }}>
-          <div style={{ background: 'white', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '340px', textAlign: 'center' }}>
+          <div style={{ background: 'white', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: attendanceStep === 'face-verify' ? '520px' : '340px', textAlign: 'center' }}>
             
             {/* Locating Step */}
             {attendanceStep === 'locating' && (
@@ -667,6 +736,38 @@ const EmployeeDashboard: React.FC = () => {
               </>
             )}
 
+            {/* Face Verification Step */}
+            {attendanceStep === 'face-verify' && (
+              <>
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <div style={{ width: '32px', height: '32px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <CheckCircle size={18} style={{ color: '#16a34a' }} />
+                    </div>
+                    <span style={{ color: '#16a34a', fontSize: '14px', fontWeight: '600' }}>Location Verified</span>
+                    <span style={{ color: '#94a3b8', fontSize: '12px' }}>→</span>
+                    <div style={{ width: '32px', height: '32px', background: '#dbeafe', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <ScanFace size={18} style={{ color: '#2563eb' }} />
+                    </div>
+                    <span style={{ color: '#2563eb', fontSize: '14px', fontWeight: '600' }}>Face Verification</span>
+                  </div>
+                </div>
+                
+                <FaceRecognition
+                  employeeId={employeeData.id}
+                  employeeName={employeeData.name}
+                  mode="attendance"
+                  onSuccess={handleFaceVerificationSuccess}
+                  onError={(error) => {
+                    console.error('Face verification error:', error);
+                    setAttendanceStep('error');
+                    setVerificationResult({ message: 'Face verification failed: ' + error });
+                  }}
+                  onClose={() => setShowAttendanceModal(false)}
+                />
+              </>
+            )}
+
             {/* Verifying Step */}
             {attendanceStep === 'verifying' && (
               <>
@@ -675,6 +776,17 @@ const EmployeeDashboard: React.FC = () => {
                 </div>
                 <h3 style={{ color: '#1e293b', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>🔍 {t('ai_verification_progress')}</h3>
                 <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>{t('analyzing_location')}</p>
+                
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ background: '#dcfce7', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <CheckCircle size={16} style={{ color: '#16a34a' }} />
+                    <span style={{ color: '#166534', fontSize: '12px', fontWeight: '600' }}>Location ✓</span>
+                  </div>
+                  <div style={{ background: '#dcfce7', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Fingerprint size={16} style={{ color: '#16a34a' }} />
+                    <span style={{ color: '#166534', fontSize: '12px', fontWeight: '600' }}>Face ✓</span>
+                  </div>
+                </div>
                 
                 <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
                   <div style={{ width: `${verificationProgress}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #d97706)', borderRadius: '4px', transition: 'width 0.3s ease' }}></div>
@@ -690,6 +802,18 @@ const EmployeeDashboard: React.FC = () => {
                 </div>
                 <h3 style={{ color: '#16a34a', fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px 0' }}>✅ {t('verified')}</h3>
                 <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>{t('attendance_success')}</p>
+                
+                {/* Verification Badges */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ background: '#dcfce7', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <MapPin size={14} style={{ color: '#16a34a' }} />
+                    <span style={{ color: '#166534', fontSize: '11px', fontWeight: '600' }}>Location ✓</span>
+                  </div>
+                  <div style={{ background: '#dcfce7', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <ScanFace size={14} style={{ color: '#16a34a' }} />
+                    <span style={{ color: '#166534', fontSize: '11px', fontWeight: '600' }}>Face ID ✓</span>
+                  </div>
+                </div>
                 
                 {verificationResult && (
                   <div style={{ background: '#f0fdf4', borderRadius: '12px', padding: '12px', marginBottom: '12px', textAlign: 'left' }}>
@@ -769,6 +893,27 @@ const EmployeeDashboard: React.FC = () => {
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Face Enrollment Modal */}
+      {showFaceEnrollment && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', zIndex: 100 }}>
+          <div style={{ background: 'white', borderRadius: '24px', overflow: 'hidden', width: '100%', maxWidth: '520px' }}>
+            <FaceRecognition
+              employeeId={employeeData.id}
+              employeeName={employeeData.name}
+              mode="enroll"
+              onSuccess={() => {
+                setShowFaceEnrollment(false);
+                alert('✅ Face enrollment successful! You can now mark attendance using Face ID.');
+              }}
+              onError={(error) => {
+                console.error('Enrollment error:', error);
+              }}
+              onClose={() => setShowFaceEnrollment(false)}
+            />
           </div>
         </div>
       )}
