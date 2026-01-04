@@ -45,10 +45,8 @@ function formatWhatsAppNumber(phone: string): string {
  */
 export async function sendWhatsAppMessage(params: WhatsAppMessage): Promise<SendResult> {
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
-    console.log('Twilio credentials not configured - Simulating sent message');
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    return { success: true, messageId: `mock-${Date.now()}` };
+    console.warn('Twilio credentials not configured');
+    return { success: false, error: 'WhatsApp service not configured' };
   }
 
   const toNumber = formatWhatsAppNumber(params.to);
@@ -184,8 +182,7 @@ export async function sendBulkWhatsAppMessages(
  * Check if WhatsApp service is configured
  */
 export function isWhatsAppConfigured(): boolean {
-  // Return true to allow UI to function in demo mode
-  return true; 
+  return !!(TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN);
 }
 
 export const whatsappService = {
