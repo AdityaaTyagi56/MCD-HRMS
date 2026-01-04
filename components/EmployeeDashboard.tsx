@@ -35,6 +35,7 @@ const EmployeeDashboard: React.FC = () => {
   const [locationPings, setLocationPings] = useState<any[]>([]);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [verificationProgress, setVerificationProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const recognitionRef = useRef<any>(null);
   const locationWatchRef = useRef<number | null>(null);
@@ -48,6 +49,30 @@ const EmployeeDashboard: React.FC = () => {
     name: 'Ramesh Gupta',
     checkInTime: '09:15 AM',
     leaveBalance: 8,
+  };
+
+  // Update current time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Check if current time is within attendance window (7 AM - 5 PM)
+  const isWithinAttendanceWindow = () => {
+    const hours = currentTime.getHours();
+    return hours >= 7 && hours < 17; // 7 AM to 5 PM (17:00)
+  };
+
+  // Format time for display
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('hi-IN', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true 
+    });
   };
 
   // NLP Analysis
@@ -206,6 +231,16 @@ const EmployeeDashboard: React.FC = () => {
   };
 
   const handleAttendance = async () => {
+    // Check if within attendance window
+    if (!isWithinAttendanceWindow()) {
+      const hours = currentTime.getHours();
+      const message = hours < 7 
+        ? '⏰ उपस्थिति समय अभी शुरू नहीं हुआ!\n\nकृपया सुबह 7 बजे के बाद आएं।'
+        : '⏰ उपस्थिति समय समाप्त हो गया!\n\nउपस्थिति समय: सुबह 7 बजे से शाम 5 बजे तक';
+      alert(message);
+      return;
+    }
+
     setShowAttendanceModal(true);
     setAttendanceStep('locating');
     setLocationPings([]);
@@ -335,12 +370,22 @@ const EmployeeDashboard: React.FC = () => {
         <div style={{ 
           background: attendanceMarked ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.15)', 
           borderRadius: '12px', padding: '12px 16px',
-          display: 'flex', alignItems: 'center', gap: '10px'
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between'
         }}>
-          {attendanceMarked ? <CheckCircle size={20} style={{ color: '#4ade80' }} /> : <Clock size={20} style={{ color: 'rgba(255,255,255,0.8)' }} />}
-          <span style={{ color: 'white', fontSize: '15px', fontWeight: '500' }}>
-            {attendanceMarked ? `✅ उपस्थिति दर्ज: ${employeeData.checkInTime}` : '⏰ उपस्थिति दर्ज करें'}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {attendanceMarked ? <CheckCircle size={20} style={{ color: '#4ade80' }} /> : <Clock size={20} style={{ color: 'rgba(255,255,255,0.8)' }} />}
+            <span style={{ color: 'white', fontSize: '15px', fontWeight: '500' }}>
+              {attendanceMarked ? `✅ उपस्थिति दर्ज: ${employeeData.checkInTime}` : '⏰ उपस्थिति दर्ज करें'}
+            </span>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ color: 'white', fontSize: '16px', fontWeight: 'bold' }}>
+              {formatTime(currentTime)}
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>
+              {isWithinAttendanceWindow() ? '✓ समय सीमा में' : '✗ समय सीमा बाहर'}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -348,25 +393,25 @@ const EmployeeDashboard: React.FC = () => {
       <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         
         {/* Attendance */}
-        <button onClick={handleAttendance} disabled={attendanceMarked}
+        <button onClick={handleAttendance} disabled={attendanceMarked || !isWithinAttendanceWindow()}
           style={{
             width: '100%', padding: '24px',
-            background: attendanceMarked ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+            background: attendanceMarked ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : !isWithinAttendanceWindow() ? 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
             border: 'none', borderRadius: '20px',
             display: 'flex', alignItems: 'center', gap: '16px',
-            cursor: attendanceMarked ? 'default' : 'pointer',
+            cursor: (attendanceMarked || !isWithinAttendanceWindow()) ? 'not-allowed' : 'pointer',
             boxShadow: '0 8px 24px rgba(59,130,246,0.3)',
-            opacity: attendanceMarked ? 0.8 : 1
+            opacity: (attendanceMarked || !isWithinAttendanceWindow()) ? 0.7 : 1
           }}>
           <div style={{ width: '56px', height: '56px', background: 'rgba(255,255,255,0.2)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {attendanceMarked ? <CheckCircle size={32} style={{ color: 'white' }} /> : <MapPin size={32} style={{ color: 'white' }} />}
           </div>
-          <div style={{ textAlign: 'left' }}>
+          <div style={{ textAlign: 'left', flex: 1 }}>
             <p style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>
-              {attendanceMarked ? '✓ उपस्थिति दर्ज हो गई' : '📍 उपस्थिति दर्ज करें'}
+              {attendanceMarked ? '✓ उपस्थिति दर्ज हो गई' : !isWithinAttendanceWindow() ? '⏰ समय सीमा बाहर' : '📍 उपस्थिति दर्ज करें'}
             </p>
             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', margin: '4px 0 0 0' }}>
-              {attendanceMarked ? 'आज की उपस्थिति पूर्ण' : 'यहाँ दबाएं'}
+              {attendanceMarked ? 'आज की उपस्थिति पूर्ण' : !isWithinAttendanceWindow() ? 'सुबह 7 बजे से शाम 5 बजे तक' : 'यहाँ दबाएं'}
             </p>
           </div>
         </button>
