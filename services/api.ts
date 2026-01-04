@@ -52,6 +52,8 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  attendanceTrends: (range: '7d' | '30d' | '90d') =>
+    apiFetch<Array<{ day: string; present: number; target: number }>>(`/api/attendance/trends?range=${range}`),
   submitGrievance: (payload: { userId: number; category: string; description: string; priority?: 'High' | 'Medium' | 'Low' }) =>
     apiFetch<Grievance>('/api/grievances', { method: 'POST', body: JSON.stringify(payload) }),
   listGrievances: () => apiFetch<Grievance[]>('/api/grievances'),

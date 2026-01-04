@@ -11,6 +11,13 @@ import { z } from 'zod';
 import { INITIAL_EMPLOYEES, INITIAL_GRIEVANCES, INITIAL_LEAVES, INITIAL_PAYSLIPS, INITIAL_WARDS, MCD_ZONE_COORDS } from '../constants';
 import { Employee, Grievance, LeaveRequest, Payslip, Ward } from '../types';
 
+type AttendanceLog = {
+  userId: number;
+  date: string; // YYYY-MM-DD
+  timestamp: string;
+  status: 'Present';
+};
+
 dotenv.config({ path: process.env.DOTENV_CONFIG_PATH || '.env.local' });
 
 const app = express();
@@ -91,6 +98,19 @@ const grievances: Grievance[] = load('grievances', INITIAL_GRIEVANCES.map((g) =>
 const leaves: LeaveRequest[] = load('leaves', INITIAL_LEAVES.map((l) => ({ ...l })));
 let payslips: Payslip[] = load('payslips', INITIAL_PAYSLIPS.map((p) => ({ ...p })));
 const wards: Ward[] = load('wards', INITIAL_WARDS.map((w) => ({ ...w })));
+const attendanceLogs: AttendanceLog[] = load('attendance-log', []);
+
+// Seed today's attendance log from current employee state to avoid empty charts after restart
+const todaySeed = new Date().toISOString().slice(0, 10);
+employees
+  .filter((e) => e.status === 'Present')
+  .forEach((e) => {
+    const exists = attendanceLogs.find((log) => log.userId === e.id && log.date === todaySeed);
+    if (!exists) {
+      attendanceLogs.push({ userId: e.id, date: todaySeed, timestamp: new Date().toISOString(), status: 'Present' });
+    }
+  });
+persist('attendance-log', attendanceLogs);
 
 const authGuard = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const headerKey = req.headers['x-api-key'];
@@ -183,8 +203,48 @@ app.post('/api/attendance', (req, res) => {
   emp.status = 'Present';
   emp.coords = { lat, lng };
   emp.attendanceTime = new Date().toISOString();
+  const today = emp.attendanceTime.slice(0, 10);
+  const existingLog = attendanceLogs.find((log) => log.userId === userId && log.date === today);
+  if (existingLog) {
+    existingLog.timestamp = emp.attendanceTime;
+  } else {
+    attendanceLogs.push({ userId, date: today, timestamp: emp.attendanceTime, status: 'Present' });
+  }
   persist('employees', employees);
+  persist('attendance-log', attendanceLogs);
   res.json({ message: 'Attendance recorded', distanceKm: Number(distanceKm.toFixed(2)) });
+});
+
+app.get('/api/attendance/trends', (req, res) => {
+  const range = typeof req.query.range === 'string' ? req.query.range : '7d';
+  const days = range === '90d' ? 90 : range === '30d' ? 30 : 7;
+  const totalEmployees = employees.length || 1;
+
+  const today = new Date();
+  const start = new Date();
+  start.setDate(today.getDate() - (days - 1));
+
+  const buckets: Record<string, { present: number; target: number; date: string }> = {};
+  for (let i = 0; i < days; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+    buckets[dateStr] = { present: 0, target: totalEmployees, date: label };
+  }
+
+  attendanceLogs.forEach((log) => {
+    if (!buckets[log.date]) return;
+    if (log.status === 'Present') {
+      buckets[log.date].present += 1;
+    }
+  });
+
+  const data = Object.entries(buckets)
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([, bucket]) => ({ day: bucket.date, present: bucket.present, target: bucket.target }));
+
+  res.json(data);
 });
 
 app.get('/api/grievances', (_req, res) => {

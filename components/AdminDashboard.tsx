@@ -81,6 +81,7 @@ const AdminDashboard: React.FC = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const [weather, setWeather] = useState<WeatherSnapshot | null>(null);
   const [wards, setWards] = useState<Ward[]>([]);
+  const [attendanceTrendData, setAttendanceTrendData] = useState<Array<{ day: string; present: number; target: number }>>([]);
   const fallbackAlerts = useMemo(() => [
     "🚨 CRITICAL: Heavy rain forecast in Zone 4 - Deployment increased",
     "⚠️ ALERT: 3 Grievances escalated to Level 2 in Sanitation Dept",
@@ -128,16 +129,26 @@ const AdminDashboard: React.FC = () => {
     emp.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Enhanced Chart Data
-  const attendanceTrendData = [
-    { day: 'Mon', present: 85, target: 90 },
-    { day: 'Tue', present: 88, target: 90 },
-    { day: 'Wed', present: 82, target: 90 },
-    { day: 'Thu', present: 90, target: 90 },
-    { day: 'Fri', present: attendancePercentage, target: 90 },
-    { day: 'Sat', present: 45, target: 50 },
-    { day: 'Sun', present: 20, target: 25 },
-  ];
+  // Live attendance trends from backend; falls back to current-day snapshot
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadTrends = async () => {
+      try {
+        const data = await api.attendanceTrends(selectedTimeRange as '7d' | '30d' | '90d');
+        if (!cancelled) setAttendanceTrendData(data);
+      } catch (error) {
+        console.error('Failed to load attendance trends', error);
+        if (cancelled) return;
+        const todayLabel = new Date().toLocaleDateString('en-US', { weekday: 'short' });
+        const presentCount = employees.filter(e => e.status === 'Present').length;
+        setAttendanceTrendData([{ day: todayLabel, present: presentCount, target: employees.length || 1 }]);
+      }
+    };
+
+    loadTrends();
+    return () => { cancelled = true; };
+  }, [selectedTimeRange, employees]);
 
   const departmentData = [
     { name: 'Sanitation', value: employees.filter(e => e.department === 'Sanitation').length, color: '#0ea5e9', performance: 85 },
@@ -168,8 +179,8 @@ const AdminDashboard: React.FC = () => {
   };
 
   const buildAlerts = (wx: WeatherSnapshot | null, wardList: Ward[]) => {
-    if (!wx || !wardList.length) return fallbackAlerts;
-    const topWard = pickHighestRiskWard(wardList);
+    if (!wx) return fallbackAlerts;
+    const topWard = wardList.length ? pickHighestRiskWard(wardList) : null;
     const zoneLabel = topWard ? `${topWard.zone}` : 'Zone';
     const wardName = topWard ? `${topWard.name}` : 'Priority ward';
 
@@ -197,13 +208,21 @@ const AdminDashboard: React.FC = () => {
   // Fetch weather + wards and build alerts
   useEffect(() => {
     const load = async () => {
-      try {
-        const [wx, wardData] = await Promise.all([fetchDelhiWeather(), api.listWards()]);
-        setWeather(wx);
-        setWards(wardData);
+      const [wxResult, wardResult] = await Promise.allSettled([
+        fetchDelhiWeather(),
+        api.listWards(),
+      ]);
+
+      const wx = wxResult.status === 'fulfilled' ? wxResult.value : null;
+      const wardData = wardResult.status === 'fulfilled' ? wardResult.value : [];
+
+      setWeather(wx);
+      setWards(wardData);
+
+      if (wx) {
         setAlerts(buildAlerts(wx, wardData));
-      } catch (err) {
-        console.warn('Alert sources unavailable, using fallback', err);
+      } else {
+        console.warn('Alert sources unavailable, using fallback');
         setAlerts(fallbackAlerts);
       }
     };
