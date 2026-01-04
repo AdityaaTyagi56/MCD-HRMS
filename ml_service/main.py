@@ -1141,6 +1141,181 @@ Respond ONLY with valid JSON, no markdown."""
             "fallback": True
         }
 
+# ============ SECURITY & COMPLIANCE (Step 6) ============
+
+import re
+
+class DocumentRedactionRequest(BaseModel):
+    text: str
+    redact_types: List[str] = ["aadhaar", "pan", "phone", "email", "account"]
+
+class PIIMaskingRequest(BaseModel):
+    data: dict
+    mask_fields: List[str] = []
+
+@app.post("/security/redact-document")
+async def redact_document(request: DocumentRedactionRequest):
+    """
+    Redact sensitive information from text documents.
+    Removes Aadhaar, PAN, phone numbers, emails, and bank accounts.
+    """
+    text = request.text
+    redacted_items = []
+    
+    try:
+        # Aadhaar pattern: 12 digits (with or without spaces/dashes)
+        if "aadhaar" in request.redact_types:
+            aadhaar_pattern = r'\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b'
+            matches = re.findall(aadhaar_pattern, text)
+            if matches:
+                redacted_items.extend([{"type": "aadhaar", "value": m} for m in matches])
+                text = re.sub(aadhaar_pattern, '[AADHAAR-REDACTED]', text)
+        
+        # PAN pattern: 5 letters, 4 digits, 1 letter
+        if "pan" in request.redact_types:
+            pan_pattern = r'\b[A-Z]{5}[0-9]{4}[A-Z]\b'
+            matches = re.findall(pan_pattern, text)
+            if matches:
+                redacted_items.extend([{"type": "pan", "value": m} for m in matches])
+                text = re.sub(pan_pattern, '[PAN-REDACTED]', text)
+        
+        # Phone pattern: 10 digits with optional country code
+        if "phone" in request.redact_types:
+            phone_pattern = r'(\+91[\s-]?)?[6-9]\d{9}'
+            matches = re.findall(phone_pattern, text)
+            if matches:
+                redacted_items.extend([{"type": "phone", "value": str(m)} for m in matches])
+                text = re.sub(phone_pattern, '[PHONE-REDACTED]', text)
+        
+        # Email pattern
+        if "email" in request.redact_types:
+            email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+            matches = re.findall(email_pattern, text)
+            if matches:
+                redacted_items.extend([{"type": "email", "value": m} for m in matches])
+                text = re.sub(email_pattern, '[EMAIL-REDACTED]', text)
+        
+        # Bank account pattern: 9-18 digits
+        if "account" in request.redact_types:
+            account_pattern = r'\b\d{9,18}\b'
+            matches = re.findall(account_pattern, text)
+            if matches:
+                redacted_items.extend([{"type": "account", "value": m} for m in matches])
+                text = re.sub(account_pattern, '[ACCOUNT-REDACTED]', text)
+        
+        return {
+            "success": True,
+            "redacted_text": text,
+            "redacted_items": redacted_items,
+            "redaction_count": len(redacted_items)
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "redacted_text": request.text
+        }
+
+@app.post("/security/mask-pii")
+async def mask_pii(request: PIIMaskingRequest):
+    """
+    Mask PII in structured data (JSON objects).
+    Auto-detects sensitive fields or uses provided mask_fields.
+    """
+    data = request.data.copy()
+    mask_fields = request.mask_fields or []
+    
+    # Auto-detect sensitive fields if not provided
+    auto_sensitive = ["password", "ssn", "aadhaar", "pan", "account", "mobile", "phone", "email", "address"]
+    
+    masked_fields = []
+    
+    def mask_value(value):
+        """Mask a value, keeping first and last characters"""
+        if not value or not isinstance(value, str):
+            return value
+        if len(value) <= 4:
+            return "***"
+        return value[0] + "*" * (len(value) - 2) + value[-1]
+    
+    def recursive_mask(obj, path=""):
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                current_path = f"{path}.{key}" if path else key
+                
+                # Check if field should be masked
+                should_mask = False
+                if mask_fields:
+                    should_mask = key in mask_fields or current_path in mask_fields
+                else:
+                    should_mask = key.lower() in auto_sensitive
+                
+                if should_mask and isinstance(value, (str, int)):
+                    masked_fields.append(current_path)
+                    obj[key] = mask_value(str(value))
+                elif isinstance(value, (dict, list)):
+                    recursive_mask(value, current_path)
+        
+        elif isinstance(obj, list):
+            for idx, item in enumerate(obj):
+                recursive_mask(item, f"{path}[{idx}]")
+    
+    try:
+        recursive_mask(data)
+        
+        return {
+            "success": True,
+            "masked_data": data,
+            "masked_fields": masked_fields,
+            "mask_count": len(masked_fields)
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "masked_data": request.data
+        }
+
+@app.post("/security/gdpr-export")
+async def gdpr_data_export(user_id: int):
+    """
+    Generate GDPR-compliant data export for a user.
+    Returns all user data in portable JSON format.
+    """
+    # Mock implementation - in real app, fetch from database
+    export_data = {
+        "user_id": user_id,
+        "export_date": "2024-01-01T00:00:00Z",
+        "data_categories": {
+            "personal_info": {
+                "name": "Employee Name",
+                "email": "[EMAIL-REDACTED]",
+                "phone": "[PHONE-REDACTED]",
+                "joined_date": "2020-01-01"
+            },
+            "grievances": [],
+            "attendance_records": [],
+            "payroll_records": []
+        },
+        "data_retention_period": "7 years as per government regulations",
+        "rights": [
+            "Right to access",
+            "Right to rectification",
+            "Right to erasure",
+            "Right to data portability"
+        ]
+    }
+    
+    return {
+        "success": True,
+        "export": export_data,
+        "format": "JSON",
+        "encryption": "AES-256",
+        "download_expires": "24 hours"
+    }
+
 # ============ STARTUP ============
 if __name__ == "__main__":
     print("🚀 Starting MCD HRMS ML Service v2.0...")

@@ -970,6 +970,168 @@ app.get('/graphql/schema', (_req, res) => {
   res.json(schema);
 });
 
+// ============ Security & Compliance (Step 6) ============
+
+// Get audit trail logs
+app.get('/api/audit/logs', authGuard, (req, res) => {
+  const { startDate, endDate, action, user } = req.query;
+  
+  try {
+    const auditLogs = JSON.parse(fs.readFileSync(fileFor('audit_logs') || '[]', 'utf-8'));
+    
+    let filtered = auditLogs;
+    
+    if (startDate) {
+      filtered = filtered.filter((log: any) => new Date(log.timestamp) >= new Date(startDate as string));
+    }
+    
+    if (endDate) {
+      filtered = filtered.filter((log: any) => new Date(log.timestamp) <= new Date(endDate as string));
+    }
+    
+    if (action) {
+      filtered = filtered.filter((log: any) => log.action === action);
+    }
+    
+    if (user) {
+      filtered = filtered.filter((log: any) => log.user === user);
+    }
+    
+    res.json({
+      logs: filtered,
+      total: filtered.length,
+      filtered: filtered.length !== auditLogs.length
+    });
+  } catch (error) {
+    res.json({ logs: [], total: 0 });
+  }
+});
+
+// Download audit trail as CSV
+app.get('/api/audit/download', authGuard, (req, res) => {
+  try {
+    const auditLogs = JSON.parse(fs.readFileSync(fileFor('audit_logs') || '[]', 'utf-8'));
+    
+    // Create CSV
+    const csv = [
+      'Timestamp,Action,User,Grievance ID,Details',
+      ...auditLogs.map((log: any) => 
+        `${log.timestamp},${log.action},${log.user},${log.grievanceId || 'N/A'},"${log.details || ''}"`
+      )
+    ].join('\n');
+    
+    // Log the download action
+    const downloadLog = {
+      action: 'audit-download',
+      user: 'Admin',
+      timestamp: new Date().toISOString(),
+      details: `Downloaded ${auditLogs.length} audit records`
+    };
+    
+    const existingLogs = JSON.parse(fs.readFileSync(fileFor('audit_logs') || '[]', 'utf-8'));
+    existingLogs.push(downloadLog);
+    fs.writeFileSync(fileFor('audit_logs'), JSON.stringify(existingLogs, null, 2));
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=audit-trail-${Date.now()}.csv`);
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to generate audit trail' });
+  }
+});
+
+// PII Masking Middleware for Logs
+const maskPII = (text: string): string => {
+  let masked = text;
+  
+  // Mask phone numbers
+  masked = masked.replace(/\b[6-9]\d{9}\b/g, '[PHONE-REDACTED]');
+  
+  // Mask emails
+  masked = masked.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL-REDACTED]');
+  
+  // Mask Aadhaar
+  masked = masked.replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, '[AADHAAR-REDACTED]');
+  
+  // Mask PAN
+  masked = masked.replace(/\b[A-Z]{5}[0-9]{4}[A-Z]\b/g, '[PAN-REDACTED]');
+  
+  return masked;
+};
+
+// Apply PII masking to Morgan logs
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    const sensitiveFields = ['mobile', 'phone', 'email', 'aadhaar', 'pan', 'account'];
+    
+    for (const field of sensitiveFields) {
+      if (req.body[field]) {
+        req.body[`_original_${field}`] = req.body[field];
+        req.body[field] = maskPII(String(req.body[field]));
+      }
+    }
+  }
+  next();
+});
+
+// GDPR Data Deletion
+app.delete('/api/gdpr/user/:userId', authGuard, (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    // Remove user grievances
+    const userIdNum = Number(userId);
+    const initialCount = grievances.length;
+    const filtered = grievances.filter(g => g.userId !== userIdNum);
+    
+    if (filtered.length < initialCount) {
+      grievances.length = 0;
+      grievances.push(...filtered);
+      persist('grievances', grievances);
+    }
+    
+    // Remove user leaves
+    const filteredLeaves = leaves.filter(l => l.userId !== userIdNum);
+    if (filteredLeaves.length < leaves.length) {
+      leaves.length = 0;
+      leaves.push(...filteredLeaves);
+      persist('leaves', leaves);
+    }
+    
+    // Remove user payslips
+    const filteredPayslips = payslips.filter(p => p.userId !== userIdNum);
+    if (filteredPayslips.length < payslips.length) {
+      payslips = filteredPayslips;
+      persist('payslips', payslips);
+    }
+    
+    // Log the deletion
+    const deletionLog = {
+      action: 'gdpr-deletion',
+      user: 'Admin',
+      userId: userIdNum,
+      timestamp: new Date().toISOString(),
+      details: `GDPR data deletion request processed for user ${userId}`
+    };
+    
+    const existingLogs = JSON.parse(fs.readFileSync(fileFor('audit_logs') || '[]', 'utf-8'));
+    existingLogs.push(deletionLog);
+    fs.writeFileSync(fileFor('audit_logs'), JSON.stringify(existingLogs, null, 2));
+    
+    res.json({
+      success: true,
+      message: `All data for user ${userId} has been deleted`,
+      deletedRecords: {
+        grievances: initialCount - filtered.length,
+        leaves: leaves.length - filteredLeaves.length,
+        payslips: payslips.length - filteredPayslips.length
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled error', err);
   res.status(500).json({ message: 'Internal server error' });
