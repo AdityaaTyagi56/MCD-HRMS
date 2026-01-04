@@ -1,0 +1,167 @@
+[
+  {
+    "id": 200,
+    "userId": 13,
+    "userName": "Divya Malhotra",
+    "startDate": "2026-01-10",
+    "endDate": "2026-01-23",
+    "type": "Privilege",
+    "reason": "Personal requirement",
+    "status": "Approved",
+    "requestDate": "2025-12-27"
+  },
+  {
+    "id": 201,
+    "userId": 1,
+    "userName": "Ramesh Gupta",
+    "startDate": "2026-01-14",
+    "endDate": "2026-01-25",
+    "type": "Privilege",
+    "reason": "Personal requirement",
+    "status": "Pending",
+    "requestDate": "2025-12-28"
+  },
+  {
+    "id": 202,
+    "userId": 1,
+    "userName": "Ramesh Gupta",
+    "startDate": "2026-01-13",
+    "endDate": "2026-01-19",
+    "type": "Medical",
+    "reason": "Personal requirement",
+    "status": "Pending",
+    "requestDate": "2025-12-29"
+  },
+  {
+    "id": 203,
+    "userId": 13,
+    "userName": "Divya Malhotra",
+    "startDate": "2026-01-12",
+    "endDate": "2026-01-19",
+    "type": "Casual",
+    "reason": "Personal requirement",
+    "status": "Pending",
+    "requestDate": "2025-12-30"
+  },
+  {
+    "id": 204,
+    "userId": 46,
+    "userName": "Tarun Mishra",
+    "startDate": "2026-01-08",
+    "endDate": "2026-01-20",
+    "type": "Casual",
+    "reason": "Personal requirement",
+    "status": "Pending",
+    "requestDate": "2025-12-26"
+  },
+  {
+    "id": 205,
+    "userId": 15,
+    "userName": "Suresh Jha",
+    "startDate": "2026-01-07",
+    "endDate": "2026-01-23",
+    "type": "Privilege",
+    "reason": "Personal requirement",
+    "status": "Rejected",
+    "requestDate": "2025-12-30"
+  },
+  {
+    "id": 206,
+    "userId": 19,
+    "userName": "Anju Jha",
+    "startDate": "2026-01-08",
+    "endDate": "2026-01-21",
+    "type": "Casual",
+    "reason": "Personal requirement",
+    "status": "Rejected",
+    "requestDate": "2025-12-22"
+  },
+  {
+    "id": 207,
+    "userId": 46,
+    "userName": "Tarun Mishra",
+    "startDate": "2026-01-13",
+    "endDate": "2026-01-23",
+    "type": "Privilege",
+    "reason": "Personal requirement",
+    "status": "Rejected",
+    "requestDate": "2025-12-26"
+  },
+  {
+    "id": 208,
+    "userId": 8,
+    "userName": "Nehe Das",
+    "startDate": "2026-01-06",
+    "endDate": "2026-01-16",
+    "type": "Privilege",
+    "reason": "Personal requirement",
+    "status": "Pending",
+    "requestDate": "2025-12-24"
+  },
+  {
+    "id": 209,
+    "userId": 17,
+    "userName": "Kavita Das",
+    "startDate": "2026-01-12",
+    "endDate": "2026-01-25",
+    "type": "Privilege",
+    "reason": "Personal requirement",
+    "status": "Approved",
+    "requestDate": "2025-12-30"
+  },
+  {
+    "id": 210,
+    "userId": 24,
+    "userName": "Alok Kumar",
+    "startDate": "2026-01-15",
+    "endDate": "2026-01-24",
+    "type": "Medical",
+    "reason": "Personal requirement",
+    "status": "Pending",
+    "requestDate": "2025-12-22"
+  },
+  {
+    "id": 211,
+    "userId": 48,
+    "userName": "Arun Jha",
+    "startDate": "2026-01-08",
+    "endDate": "2026-01-24",
+    "type": "Medical",
+    "reason": "Personal requirement",
+    "status": "Pending",
+    "requestDate": "2025-12-22"
+  },
+  {
+    "id": 212,
+    "userId": 24,
+    "userName": "Alok Kumar",
+    "startDate": "2026-01-13",
+    "endDate": "2026-01-20",
+    "type": "Casual",
+    "reason": "Personal requirement",
+    "status": "Rejected",
+    "requestDate": "2025-12-23"
+  },
+  {
+    "id": 213,
+    "userId": 9,
+    "userName": "Karan Mishra",
+    "startDate": "2026-01-10",
+    "endDate": "2026-01-25",
+    "type": "Medical",
+    "reason": "Personal requirement",
+    "status": "Rejected",
+    "requestDate": "2025-12-28"
+  },
+  {
+    "id": 214,
+    "userId": 48,
+    "userName": "Arun Jha",
+    "startDate": "2026-01-05",
+    "endDate": "2026-01-21",
+    "type": "Privilege",
+    "reason": "Personal requirement",
+    "status": "Rejected",
+    "requestDate": "2025-12-28"
+  }
+]

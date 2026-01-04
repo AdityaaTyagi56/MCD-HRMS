@@ -1,0 +1,1167 @@
+[
+  {
+    "id": 1,
+    "name": "Ramesh Gupta",
+    "role": "Sanitation Worker",
+    "department": "Sanitation",
+    "mobile": "+918287923955",
+    "status": "Present",
+    "coords": {
+      "lat": 28.699949766605794,
+      "lng": 77.43014436881943
+    },
+    "joiningDate": "2015-06-15",
+    "currentPostingDate": "2020-01-10",
+    "retirementDate": "2035-06-15",
+    "serviceBook": [
+      {
+        "id": 1,
+        "date": "2015-06-15",
+        "type": "Hiring",
+        "description": "Joined as Sanitation Worker",
+        "authority": "MCD North",
+        "hash": "0x123...abc"
+      },
+      {
+        "id": 2,
+        "date": "2018-03-10",
+        "type": "Award",
+        "description": "Best Worker Award",
+        "authority": "Zone Commissioner",
+        "hash": "0x456...def"
+      }
+    ],
+    "performance": {
+      "attendanceScore": 85,
+      "grievanceScore": 90,
+      "taskCompletion": 95,
+      "overallGrade": "A",
+      "lastReviewDate": "2025-12-31"
+    },
+    "attendanceTime": "2026-01-04T08:19:51.502Z"
+  },
+  {
+    "id": 2,
+    "name": "Vikram Saxena",
+    "role": "Health Officer",
+    "department": "Health",
+    "mobile": "+918131225476",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2015-01-15",
+    "currentPostingDate": "2018-05-20",
+    "retirementDate": "2045-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 98,
+      "grievanceScore": 81,
+      "taskCompletion": 78,
+      "overallGrade": "A",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 3,
+    "name": "Manju Mishra",
+    "role": "Helper",
+    "department": "Engineering",
+    "mobile": "+918740198332",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2018-01-15",
+    "currentPostingDate": "2020-05-20",
+    "retirementDate": "2048-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 88,
+      "grievanceScore": 92,
+      "taskCompletion": 70,
+      "overallGrade": "C",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 4,
+    "name": "Seema Sharma",
+    "role": "Sanitation Worker",
+    "department": "Sanitation",
+    "mobile": "+918682840196",
+    "status": "Present",
+    "coords": {
+      "lat": 28.703481903110436,
+      "lng": 77.43386502976463
+    },
+    "attendanceTime": "9:22 AM",
+    "joiningDate": "2022-01-15",
+    "currentPostingDate": "2023-05-20",
+    "retirementDate": "2052-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 79,
+      "grievanceScore": 89,
+      "taskCompletion": 94,
+      "overallGrade": "C",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 5,
+    "name": "Deepak Negi",
+    "role": "Clerk",
+    "department": "Administration",
+    "mobile": "+918878855671",
+    "status": "Present",
+    "coords": {
+      "lat": 28.702981930425565,
+      "lng": 77.42160906709887
+    },
+    "attendanceTime": "10:10 AM",
+    "joiningDate": "2012-01-15",
+    "currentPostingDate": "2022-05-20",
+    "retirementDate": "2042-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 94,
+      "grievanceScore": 71,
+      "taskCompletion": 59,
+      "overallGrade": "D",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 6,
+    "name": "Amit Malhotra",
+    "role": "Sanitation Worker",
+    "department": "Sanitation",
+    "mobile": "+917148794697",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2000-01-15",
+    "currentPostingDate": "2017-05-20",
+    "retirementDate": "2030-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 97,
+      "grievanceScore": 84,
+      "taskCompletion": 93,
+      "overallGrade": "A",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 7,
+    "name": "Deepak Rawat",
+    "role": "Assistant Engineer",
+    "department": "Engineering",
+    "mobile": "+919381385757",
+    "status": "Present",
+    "coords": {
+      "lat": 28.692080753218463,
+      "lng": 77.43448726566585
+    },
+    "attendanceTime": "10:37 AM",
+    "joiningDate": "2014-01-15",
+    "currentPostingDate": "2017-05-20",
+    "retirementDate": "2044-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 70,
+      "grievanceScore": 78,
+      "taskCompletion": 55,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 8,
+    "name": "Vijay Negi",
+    "role": "Clerk",
+    "department": "Administration",
+    "mobile": "+918391649010",
+    "status": "Present",
+    "coords": {
+      "lat": 28.69513083551131,
+      "lng": 77.43837184751823
+    },
+    "attendanceTime": "8:37 AM",
+    "joiningDate": "2008-01-15",
+    "currentPostingDate": "2009-05-20",
+    "retirementDate": "2038-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 67,
+      "grievanceScore": 73,
+      "taskCompletion": 60,
+      "overallGrade": "B",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 9,
+    "name": "Vivek Patel",
+    "role": "Data Entry Operator",
+    "department": "Administration",
+    "mobile": "+919063990816",
+    "status": "Present",
+    "coords": {
+      "lat": 28.70897283490372,
+      "lng": 77.43781267001896
+    },
+    "attendanceTime": "10:46 AM",
+    "joiningDate": "2011-01-15",
+    "currentPostingDate": "2017-05-20",
+    "retirementDate": "2041-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 91,
+      "grievanceScore": 72,
+      "taskCompletion": 62,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 10,
+    "name": "Vivek Nair",
+    "role": "Assistant Engineer",
+    "department": "Engineering",
+    "mobile": "+919973903196",
+    "status": "Present",
+    "coords": {
+      "lat": 28.706025740084918,
+      "lng": 77.4252783844047
+    },
+    "attendanceTime": "10:25 AM",
+    "joiningDate": "2022-01-15",
+    "currentPostingDate": "2023-05-20",
+    "retirementDate": "2052-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 86,
+      "grievanceScore": 73,
+      "taskCompletion": 55,
+      "overallGrade": "C",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 11,
+    "name": "Rekha Nair",
+    "role": "Health Officer",
+    "department": "Health",
+    "mobile": "+919386374098",
+    "status": "Present",
+    "coords": {
+      "lat": 28.70188333890531,
+      "lng": 77.42940299653478
+    },
+    "attendanceTime": "8:41 AM",
+    "joiningDate": "2014-01-15",
+    "currentPostingDate": "2022-05-20",
+    "retirementDate": "2044-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 100,
+      "grievanceScore": 90,
+      "taskCompletion": 90,
+      "overallGrade": "A",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 12,
+    "name": "Pooja Das",
+    "role": "Supervisor",
+    "department": "Sanitation",
+    "mobile": "+918531149318",
+    "status": "Present",
+    "coords": {
+      "lat": 28.693256705655312,
+      "lng": 77.4367851556241
+    },
+    "attendanceTime": "9:29 AM",
+    "joiningDate": "2019-01-15",
+    "currentPostingDate": "2021-05-20",
+    "retirementDate": "2049-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 72,
+      "grievanceScore": 81,
+      "taskCompletion": 85,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 13,
+    "name": "Anju Saxena",
+    "role": "Health Officer",
+    "department": "Health",
+    "mobile": "+919660439700",
+    "status": "Present",
+    "coords": {
+      "lat": 28.70287123302195,
+      "lng": 77.43155967563044
+    },
+    "attendanceTime": "10:19 AM",
+    "joiningDate": "2008-01-15",
+    "currentPostingDate": "2022-05-20",
+    "retirementDate": "2038-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 94,
+      "grievanceScore": 100,
+      "taskCompletion": 73,
+      "overallGrade": "C",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 14,
+    "name": "Lalit Das",
+    "role": "Nurse",
+    "department": "Health",
+    "mobile": "+918610947049",
+    "status": "Present",
+    "coords": {
+      "lat": 28.693472526322612,
+      "lng": 77.42961539667712
+    },
+    "attendanceTime": "10:10 AM",
+    "joiningDate": "2019-01-15",
+    "currentPostingDate": "2021-05-20",
+    "retirementDate": "2049-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 91,
+      "grievanceScore": 92,
+      "taskCompletion": 93,
+      "overallGrade": "D",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 15,
+    "name": "Rekha Das",
+    "role": "Nurse",
+    "department": "Health",
+    "mobile": "+918856710420",
+    "status": "Present",
+    "coords": {
+      "lat": 28.69320430662151,
+      "lng": 77.42033356503201
+    },
+    "attendanceTime": "8:36 AM",
+    "joiningDate": "2010-01-15",
+    "currentPostingDate": "2018-05-20",
+    "retirementDate": "2040-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 64,
+      "grievanceScore": 96,
+      "taskCompletion": 88,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 16,
+    "name": "Sunita Bhatia",
+    "role": "Section Officer",
+    "department": "Administration",
+    "mobile": "+919561099932",
+    "status": "Present",
+    "coords": {
+      "lat": 28.690644183928406,
+      "lng": 77.42987905120388
+    },
+    "attendanceTime": "9:18 AM",
+    "joiningDate": "2013-01-15",
+    "currentPostingDate": "2022-05-20",
+    "retirementDate": "2043-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 90,
+      "grievanceScore": 97,
+      "taskCompletion": 56,
+      "overallGrade": "D",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 17,
+    "name": "Meena Singh",
+    "role": "Nurse",
+    "department": "Health",
+    "mobile": "+919050811708",
+    "status": "Present",
+    "coords": {
+      "lat": 28.69867143015618,
+      "lng": 77.42210425407706
+    },
+    "attendanceTime": "10:47 AM",
+    "joiningDate": "2009-01-15",
+    "currentPostingDate": "2021-05-20",
+    "retirementDate": "2039-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 73,
+      "grievanceScore": 99,
+      "taskCompletion": 93,
+      "overallGrade": "A",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 18,
+    "name": "Meena Singh",
+    "role": "Health Officer",
+    "department": "Health",
+    "mobile": "+919211200166",
+    "status": "Present",
+    "coords": {
+      "lat": 28.7046389538304,
+      "lng": 77.43161034598873
+    },
+    "attendanceTime": "10:17 AM",
+    "joiningDate": "2007-01-15",
+    "currentPostingDate": "2019-05-20",
+    "retirementDate": "2037-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 83,
+      "grievanceScore": 76,
+      "taskCompletion": 74,
+      "overallGrade": "B",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 19,
+    "name": "Ramesh Mishra",
+    "role": "Driver",
+    "department": "Sanitation",
+    "mobile": "+918715832226",
+    "status": "Present",
+    "coords": {
+      "lat": 28.704549249268748,
+      "lng": 77.4213552483262
+    },
+    "attendanceTime": "8:37 AM",
+    "joiningDate": "2015-01-15",
+    "currentPostingDate": "2017-05-20",
+    "retirementDate": "2045-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 61,
+      "grievanceScore": 70,
+      "taskCompletion": 63,
+      "overallGrade": "B",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 20,
+    "name": "Ramesh Das",
+    "role": "Supervisor",
+    "department": "Sanitation",
+    "mobile": "+918763729162",
+    "status": "Present",
+    "coords": {
+      "lat": 28.69764551379452,
+      "lng": 77.42071688830299
+    },
+    "attendanceTime": "9:59 AM",
+    "joiningDate": "2020-01-15",
+    "currentPostingDate": "2021-05-20",
+    "retirementDate": "2050-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 94,
+      "grievanceScore": 90,
+      "taskCompletion": 84,
+      "overallGrade": "A",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 21,
+    "name": "Alok Sharma",
+    "role": "Assistant Engineer",
+    "department": "Engineering",
+    "mobile": "+917546082067",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2007-01-15",
+    "currentPostingDate": "2022-05-20",
+    "retirementDate": "2037-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 83,
+      "grievanceScore": 89,
+      "taskCompletion": 92,
+      "overallGrade": "B",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 22,
+    "name": "Vivek Verma",
+    "role": "Supervisor",
+    "department": "Sanitation",
+    "mobile": "+919627092751",
+    "status": "Present",
+    "coords": {
+      "lat": 28.702271803645008,
+      "lng": 77.42205414647171
+    },
+    "attendanceTime": "9:29 AM",
+    "joiningDate": "2020-01-15",
+    "currentPostingDate": "2023-05-20",
+    "retirementDate": "2050-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 77,
+      "grievanceScore": 94,
+      "taskCompletion": 55,
+      "overallGrade": "C",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 23,
+    "name": "Anita Aggarwal",
+    "role": "Junior Engineer",
+    "department": "Engineering",
+    "mobile": "+919499699030",
+    "status": "Present",
+    "coords": {
+      "lat": 28.693533995466225,
+      "lng": 77.42120696137668
+    },
+    "attendanceTime": "9:27 AM",
+    "joiningDate": "2006-01-15",
+    "currentPostingDate": "2006-05-20",
+    "retirementDate": "2036-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 100,
+      "grievanceScore": 99,
+      "taskCompletion": 94,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 24,
+    "name": "Vijay Kumar",
+    "role": "Nurse",
+    "department": "Health",
+    "mobile": "+918521899810",
+    "status": "Present",
+    "coords": {
+      "lat": 28.69683982507525,
+      "lng": 77.42921801879241
+    },
+    "attendanceTime": "10:21 AM",
+    "joiningDate": "2015-01-15",
+    "currentPostingDate": "2019-05-20",
+    "retirementDate": "2045-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 65,
+      "grievanceScore": 94,
+      "taskCompletion": 83,
+      "overallGrade": "D",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 25,
+    "name": "Rahul Saxena",
+    "role": "Sanitation Worker",
+    "department": "Sanitation",
+    "mobile": "+919877343955",
+    "status": "Present",
+    "coords": {
+      "lat": 28.700254131533317,
+      "lng": 77.42424711388591
+    },
+    "attendanceTime": "9:46 AM",
+    "joiningDate": "2018-01-15",
+    "currentPostingDate": "2021-05-20",
+    "retirementDate": "2048-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 79,
+      "grievanceScore": 89,
+      "taskCompletion": 59,
+      "overallGrade": "D",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 26,
+    "name": "Alok Yadav",
+    "role": "Nurse",
+    "department": "Health",
+    "mobile": "+919398939845",
+    "status": "Present",
+    "coords": {
+      "lat": 28.708970309854347,
+      "lng": 77.42509309127638
+    },
+    "attendanceTime": "10:44 AM",
+    "joiningDate": "2016-01-15",
+    "currentPostingDate": "2023-05-20",
+    "retirementDate": "2046-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 83,
+      "grievanceScore": 100,
+      "taskCompletion": 80,
+      "overallGrade": "C",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 27,
+    "name": "Rahul Yadav",
+    "role": "Helper",
+    "department": "Engineering",
+    "mobile": "+919872093622",
+    "status": "Present",
+    "coords": {
+      "lat": 28.695172436645755,
+      "lng": 77.43352335645397
+    },
+    "attendanceTime": "9:31 AM",
+    "joiningDate": "2017-01-15",
+    "currentPostingDate": "2023-05-20",
+    "retirementDate": "2047-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 75,
+      "grievanceScore": 91,
+      "taskCompletion": 90,
+      "overallGrade": "D",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 28,
+    "name": "Suresh Bhatia",
+    "role": "Data Entry Operator",
+    "department": "Administration",
+    "mobile": "+919456768326",
+    "status": "Present",
+    "coords": {
+      "lat": 28.693613432460197,
+      "lng": 77.42436794572967
+    },
+    "attendanceTime": "8:46 AM",
+    "joiningDate": "2007-01-15",
+    "currentPostingDate": "2015-05-20",
+    "retirementDate": "2037-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 94,
+      "grievanceScore": 78,
+      "taskCompletion": 93,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 29,
+    "name": "Meena Verma",
+    "role": "Health Officer",
+    "department": "Health",
+    "mobile": "+918388737979",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2015-01-15",
+    "currentPostingDate": "2020-05-20",
+    "retirementDate": "2045-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 90,
+      "grievanceScore": 96,
+      "taskCompletion": 79,
+      "overallGrade": "C",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 30,
+    "name": "Mohit Aggarwal",
+    "role": "Health Officer",
+    "department": "Health",
+    "mobile": "+918527373065",
+    "status": "Present",
+    "coords": {
+      "lat": 28.693062219139723,
+      "lng": 77.42379880253823
+    },
+    "attendanceTime": "9:48 AM",
+    "joiningDate": "2017-01-15",
+    "currentPostingDate": "2019-05-20",
+    "retirementDate": "2047-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 85,
+      "grievanceScore": 91,
+      "taskCompletion": 84,
+      "overallGrade": "B",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 31,
+    "name": "Priya Yadav",
+    "role": "Driver",
+    "department": "Sanitation",
+    "mobile": "+919521304788",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2016-01-15",
+    "currentPostingDate": "2019-05-20",
+    "retirementDate": "2046-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 62,
+      "grievanceScore": 76,
+      "taskCompletion": 68,
+      "overallGrade": "C",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 32,
+    "name": "Deepak Rawat",
+    "role": "Junior Engineer",
+    "department": "Engineering",
+    "mobile": "+919629347772",
+    "status": "Present",
+    "coords": {
+      "lat": 28.70208194754508,
+      "lng": 77.42587704914531
+    },
+    "attendanceTime": "8:38 AM",
+    "joiningDate": "2016-01-15",
+    "currentPostingDate": "2016-05-20",
+    "retirementDate": "2046-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 63,
+      "grievanceScore": 98,
+      "taskCompletion": 56,
+      "overallGrade": "A",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 33,
+    "name": "Rekha Rawat",
+    "role": "Sanitation Worker",
+    "department": "Sanitation",
+    "mobile": "+917848058168",
+    "status": "Present",
+    "coords": {
+      "lat": 28.698675573595768,
+      "lng": 77.4390143120681
+    },
+    "attendanceTime": "8:53 AM",
+    "joiningDate": "2014-01-15",
+    "currentPostingDate": "2016-05-20",
+    "retirementDate": "2044-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 65,
+      "grievanceScore": 85,
+      "taskCompletion": 58,
+      "overallGrade": "C",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 34,
+    "name": "Anju Bhatia",
+    "role": "Section Officer",
+    "department": "Administration",
+    "mobile": "+919597049631",
+    "status": "Present",
+    "coords": {
+      "lat": 28.70826136432136,
+      "lng": 77.42365004097654
+    },
+    "attendanceTime": "8:16 AM",
+    "joiningDate": "2000-01-15",
+    "currentPostingDate": "2004-05-20",
+    "retirementDate": "2030-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 95,
+      "grievanceScore": 100,
+      "taskCompletion": 97,
+      "overallGrade": "A",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 35,
+    "name": "Meena Bhatia",
+    "role": "Driver",
+    "department": "Sanitation",
+    "mobile": "+918697410637",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2006-01-15",
+    "currentPostingDate": "2015-05-20",
+    "retirementDate": "2036-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 66,
+      "grievanceScore": 72,
+      "taskCompletion": 72,
+      "overallGrade": "B",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 36,
+    "name": "Karan Bhatia",
+    "role": "Junior Engineer",
+    "department": "Engineering",
+    "mobile": "+918666353369",
+    "status": "Present",
+    "coords": {
+      "lat": 28.704931438211577,
+      "lng": 77.43882495294562
+    },
+    "attendanceTime": "8:56 AM",
+    "joiningDate": "2019-01-15",
+    "currentPostingDate": "2021-05-20",
+    "retirementDate": "2049-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 87,
+      "grievanceScore": 89,
+      "taskCompletion": 100,
+      "overallGrade": "B",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 37,
+    "name": "Raj Saxena",
+    "role": "Health Officer",
+    "department": "Health",
+    "mobile": "+919679837163",
+    "status": "Present",
+    "coords": {
+      "lat": 28.692841092439103,
+      "lng": 77.42637037897354
+    },
+    "attendanceTime": "8:23 AM",
+    "joiningDate": "2009-01-15",
+    "currentPostingDate": "2012-05-20",
+    "retirementDate": "2039-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 91,
+      "grievanceScore": 100,
+      "taskCompletion": 83,
+      "overallGrade": "B",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 38,
+    "name": "Raj Kumar",
+    "role": "Junior Engineer",
+    "department": "Engineering",
+    "mobile": "+919848231193",
+    "status": "Present",
+    "coords": {
+      "lat": 28.691372162612716,
+      "lng": 77.42680474643741
+    },
+    "attendanceTime": "9:55 AM",
+    "joiningDate": "2000-01-15",
+    "currentPostingDate": "2007-05-20",
+    "retirementDate": "2030-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 61,
+      "grievanceScore": 94,
+      "taskCompletion": 82,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 39,
+    "name": "Vijay Yadav",
+    "role": "Driver",
+    "department": "Sanitation",
+    "mobile": "+917072218751",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2020-01-15",
+    "currentPostingDate": "2022-05-20",
+    "retirementDate": "2050-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 99,
+      "grievanceScore": 72,
+      "taskCompletion": 54,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 40,
+    "name": "Rahul Verma",
+    "role": "Section Officer",
+    "department": "Administration",
+    "mobile": "+918022297159",
+    "status": "Present",
+    "coords": {
+      "lat": 28.70369787132261,
+      "lng": 77.42073024204403
+    },
+    "attendanceTime": "9:36 AM",
+    "joiningDate": "2011-01-15",
+    "currentPostingDate": "2023-05-20",
+    "retirementDate": "2041-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 89,
+      "grievanceScore": 78,
+      "taskCompletion": 63,
+      "overallGrade": "A",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 41,
+    "name": "Seema Yadav",
+    "role": "Section Officer",
+    "department": "Administration",
+    "mobile": "+918213122245",
+    "status": "Present",
+    "coords": {
+      "lat": 28.7081358816734,
+      "lng": 77.43628025506577
+    },
+    "attendanceTime": "10:51 AM",
+    "joiningDate": "2008-01-15",
+    "currentPostingDate": "2010-05-20",
+    "retirementDate": "2038-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 100,
+      "grievanceScore": 84,
+      "taskCompletion": 52,
+      "overallGrade": "D",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 42,
+    "name": "Sneha Sharma",
+    "role": "Data Entry Operator",
+    "department": "Administration",
+    "mobile": "+918388378948",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2009-01-15",
+    "currentPostingDate": "2014-05-20",
+    "retirementDate": "2039-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 66,
+      "grievanceScore": 95,
+      "taskCompletion": 93,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 43,
+    "name": "Tarun Gupta",
+    "role": "Inspector",
+    "department": "Health",
+    "mobile": "+918196338318",
+    "status": "Present",
+    "coords": {
+      "lat": 28.692482800302955,
+      "lng": 77.4254950372988
+    },
+    "attendanceTime": "9:17 AM",
+    "joiningDate": "2021-01-15",
+    "currentPostingDate": "2023-05-20",
+    "retirementDate": "2051-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 65,
+      "grievanceScore": 80,
+      "taskCompletion": 90,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 44,
+    "name": "Sunita Malhotra",
+    "role": "Assistant Engineer",
+    "department": "Engineering",
+    "mobile": "+917362183417",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2008-01-15",
+    "currentPostingDate": "2018-05-20",
+    "retirementDate": "2038-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 93,
+      "grievanceScore": 83,
+      "taskCompletion": 92,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 45,
+    "name": "Kavita Rawat",
+    "role": "Helper",
+    "department": "Engineering",
+    "mobile": "+917198865159",
+    "status": "Present",
+    "coords": {
+      "lat": 28.703334215237934,
+      "lng": 77.42580972686174
+    },
+    "attendanceTime": "8:25 AM",
+    "joiningDate": "2021-01-15",
+    "currentPostingDate": "2023-05-20",
+    "retirementDate": "2051-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 82,
+      "grievanceScore": 91,
+      "taskCompletion": 96,
+      "overallGrade": "C",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 46,
+    "name": "Priya Chopra",
+    "role": "Inspector",
+    "department": "Health",
+    "mobile": "+917535303112",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2010-01-15",
+    "currentPostingDate": "2011-05-20",
+    "retirementDate": "2040-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 70,
+      "grievanceScore": 78,
+      "taskCompletion": 55,
+      "overallGrade": "D",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 47,
+    "name": "Sanjay Sharma",
+    "role": "Driver",
+    "department": "Sanitation",
+    "mobile": "+917327546571",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2004-01-15",
+    "currentPostingDate": "2010-05-20",
+    "retirementDate": "2034-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 82,
+      "grievanceScore": 83,
+      "taskCompletion": 50,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 48,
+    "name": "Divya Mishra",
+    "role": "Health Officer",
+    "department": "Health",
+    "mobile": "+918645309313",
+    "status": "Present",
+    "coords": {
+      "lat": 28.7053401332731,
+      "lng": 77.42525956761622
+    },
+    "attendanceTime": "8:39 AM",
+    "joiningDate": "2008-01-15",
+    "currentPostingDate": "2023-05-20",
+    "retirementDate": "2038-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 72,
+      "grievanceScore": 71,
+      "taskCompletion": 99,
+      "overallGrade": "B",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 49,
+    "name": "Sunita Negi",
+    "role": "Sanitation Worker",
+    "department": "Sanitation",
+    "mobile": "+919295495786",
+    "status": "Present",
+    "coords": {
+      "lat": 28.706069360857786,
+      "lng": 77.42933903867294
+    },
+    "attendanceTime": "9:10 AM",
+    "joiningDate": "2005-01-15",
+    "currentPostingDate": "2017-05-20",
+    "retirementDate": "2035-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 82,
+      "grievanceScore": 77,
+      "taskCompletion": 72,
+      "overallGrade": "A+",
+      "lastReviewDate": "2025-12-31"
+    }
+  },
+  {
+    "id": 50,
+    "name": "Sanjay Verma",
+    "role": "Junior Engineer",
+    "department": "Engineering",
+    "mobile": "+917542078547",
+    "status": "Absent",
+    "coords": null,
+    "joiningDate": "2005-01-15",
+    "currentPostingDate": "2013-05-20",
+    "retirementDate": "2035-01-15",
+    "serviceBook": [],
+    "performance": {
+      "attendanceScore": 66,
+      "grievanceScore": 100,
+      "taskCompletion": 90,
+      "overallGrade": "B",
+      "lastReviewDate": "2025-12-31"
+    }
+  }
+]

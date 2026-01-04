@@ -1,0 +1,7 @@
+{
+  "name": "MCD Unified HRMS",
+  "description": "A unified HR management system for the Municipal Corporation of Delhi featuring role-based dashboards for employees and administrators.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

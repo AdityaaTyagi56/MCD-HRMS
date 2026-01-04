@@ -1,0 +1,33 @@
+services:
+  # Backend API Service (Node.js)
+  - type: web
+    name: mcd-hrms-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: npx tsx server/index.ts
+    envVars:
+      - key: PORT
+        value: 8010
+      - key: NODE_ENV
+        value: production
+      - key: API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: ALLOWED_ORIGINS
+        value: "*"  # Allow all origins for demo
+    healthCheckPath: /health
+    plan: free
+
+  # ML/NLP Service (Python FastAPI)
+  - type: web
+    name: mcd-hrms-ml
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    rootDir: ml_service
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    healthCheckPath: /health
+    plan: free
