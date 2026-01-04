@@ -49,12 +49,14 @@ export interface Grievance {
   status: 'Pending' | 'Under Review' | 'Resolved' | 'Escalated';
   priority: 'High' | 'Medium' | 'Low';
   date: string;
+  submittedAt: string; // ISO timestamp
   escalationLevel: 0 | 1 | 2; // 0: Zonal, 1: Deputy Comm, 2: Commissioner
   slaBreach: boolean;
   source?: 'web' | 'whatsapp' | 'voice' | 'ivr'; // Track how complaint was submitted
   phoneNumber?: string; // For WhatsApp/Voice submissions
   audioUrl?: string; // For voice complaints
   transcript?: string; // For voice-to-text
+  location?: string; // Ward or location info
 }
 
 export interface DashboardStats {

@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const EmployeeDashboard: React.FC = () => {
-  const { language, setCurrentView, addGrievance, markAttendance, t } = useApp();
+  const { language, setCurrentView, addGrievance, markAttendance, t, grievances } = useApp();
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -27,6 +27,12 @@ const EmployeeDashboard: React.FC = () => {
   const [manualComplaint, setManualComplaint] = useState('');
   const [speechSupported, setSpeechSupported] = useState(true);
   const [micError, setMicError] = useState('');
+  const [employeeView, setEmployeeView] = useState<'dashboard' | 'case-history'>('dashboard');
+  
+  // Enhanced Complaint Form State
+  const [complaintCategory, setComplaintCategory] = useState('');
+  const [complaintLocation, setComplaintLocation] = useState('');
+  const [complaintFile, setComplaintFile] = useState<File | null>(null);
   
   // Attendance State
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
@@ -213,15 +219,19 @@ const EmployeeDashboard: React.FC = () => {
       const analysis = await analyzeGrievanceNLP(text);
       await addGrievance({
         userId: 1,
-        category: analysis.category,
+        category: complaintCategory || analysis.category,
         description: text,
         priority: analysis.priority,
+        location: complaintLocation || undefined,
       });
       
       setShowVoiceModal(false);
       setTranscript('');
       setManualComplaint('');
-      alert(`${t('complaint_submitted_success')}${analysis.category}\n${t('priority')}: ${analysis.priority}`);
+      setComplaintCategory('');
+      setComplaintLocation('');
+      setComplaintFile(null);
+      alert(`${t('complaint_submitted_success')}${complaintCategory || analysis.category}\n${t('priority')}: ${analysis.priority}`);
     } catch (error) {
       console.error('❌ Submit error:', error);
       alert(t('something_went_wrong'));
@@ -339,6 +349,147 @@ const EmployeeDashboard: React.FC = () => {
 
   const currentText = transcript || manualComplaint;
 
+  // Get user's grievances
+  const myGrievances = grievances.filter(g => g.userId === 1);
+  const pendingCount = myGrievances.filter(g => g.status === 'Pending').length;
+  const resolvedCount = myGrievances.filter(g => g.status === 'Resolved').length;
+
+  const categories = ['Salary', 'Leave', 'Equipment', 'Transfer', 'Harassment', 'Safety', 'Infrastructure', 'Other'];
+  const wards = ['Ward 1', 'Ward 2', 'Ward 3', 'Ward 4', 'Ward 5', 'Ward 6', 'Ward 7', 'Ward 8'];
+
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      'Salary': '#22c55e',
+      'Leave': '#3b82f6',
+      'Equipment': '#f59e0b',
+      'Transfer': '#8b5cf6',
+      'Harassment': '#ef4444',
+      'Safety': '#f97316',
+      'Infrastructure': '#06b6d4',
+      'Other': '#64748b'
+    };
+    return colors[category] || '#64748b';
+  };
+
+  // Case History View
+  if (employeeView === 'case-history') {
+    return (
+      <div className="min-h-screen pb-24" style={{ background: '#f8fafc' }}>
+        {/* Header */}
+        <div style={{ 
+          background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)', 
+          padding: '24px 20px',
+          borderRadius: '0 0 24px 24px'
+        }}>
+          <button
+            onClick={() => setEmployeeView('dashboard')}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '12px',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            ← Back to Dashboard
+          </button>
+          
+          <h1 style={{ color: 'white', fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
+            📋 My Case History
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', margin: 0 }}>
+            Track all your submitted grievances
+          </p>
+        </div>
+
+        {/* Stats */}
+        <div style={{ padding: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ background: 'white', borderRadius: '16px', padding: '16px', textAlign: 'center', border: '2px solid #e2e8f0' }}>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#1e293b' }}>{myGrievances.length}</div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Total Cases</div>
+            </div>
+            <div style={{ background: 'white', borderRadius: '16px', padding: '16px', textAlign: 'center', border: '2px solid #fbbf24' }}>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{pendingCount}</div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Pending</div>
+            </div>
+            <div style={{ background: 'white', borderRadius: '16px', padding: '16px', textAlign: 'center', border: '2px solid #22c55e' }}>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#16a34a' }}>{resolvedCount}</div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Resolved</div>
+            </div>
+          </div>
+
+          {/* Grievances List */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {myGrievances.length === 0 ? (
+              <div style={{ background: 'white', borderRadius: '16px', padding: '40px 20px', textAlign: 'center' }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>📭</div>
+                <p style={{ color: '#64748b', fontSize: '16px', margin: 0 }}>No grievances submitted yet</p>
+              </div>
+            ) : (
+              myGrievances.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()).map((grievance) => (
+                <div key={grievance.id} style={{ 
+                  background: 'white', 
+                  borderRadius: '16px', 
+                  padding: '20px', 
+                  border: '2px solid #e2e8f0',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <span style={{ 
+                          fontSize: '12px', 
+                          fontWeight: 'bold', 
+                          padding: '4px 10px', 
+                          borderRadius: '8px',
+                          background: getCategoryColor(grievance.category) + '15',
+                          color: getCategoryColor(grievance.category)
+                        }}>
+                          {grievance.category}
+                        </span>
+                        <span style={{ fontSize: '11px', color: '#94a3b8' }}>#{grievance.id}</span>
+                      </div>
+                      <p style={{ color: '#475569', fontSize: '14px', margin: '0 0 8px 0', lineHeight: '1.5' }}>
+                        {grievance.description.substring(0, 100)}{grievance.description.length > 100 ? '...' : ''}
+                      </p>
+                    </div>
+                    <div style={{ 
+                      padding: '6px 12px', 
+                      borderRadius: '8px', 
+                      fontSize: '11px', 
+                      fontWeight: '600',
+                      background: grievance.status === 'Resolved' ? '#dcfce7' : '#fef3c7',
+                      color: grievance.status === 'Resolved' ? '#166534' : '#92400e',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {grievance.status === 'Resolved' ? '✅ Resolved' : '⏳ Pending'}
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', color: '#64748b' }}>
+                      <span>🚨 {grievance.priority}</span>
+                      <span>📅 {new Date(grievance.submittedAt).toLocaleDateString()}</span>
+                      {grievance.location && <span>📍 {grievance.location}</span>}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-24" style={{ background: '#f8fafc' }}>
       {/* Header */}
@@ -450,6 +601,20 @@ const EmployeeDashboard: React.FC = () => {
           <div style={{ textAlign: 'left' }}>
             <p style={{ color: 'white', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>🎤 {t('file_complaint_voice')}</p>
             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', margin: '4px 0 0 0' }}>{t('speak_or_type')}</p>
+          </div>
+        </button>
+
+        {/* Case History */}
+        <button onClick={() => setEmployeeView('case-history')}
+          style={{ width: '100%', padding: '20px', background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', border: 'none', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', boxShadow: '0 6px 20px rgba(139,92,246,0.25)' }}>
+          <div style={{ width: '48px', height: '48px', background: 'rgba(255,255,255,0.2)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MessageSquare size={26} style={{ color: 'white' }} />
+          </div>
+          <div style={{ textAlign: 'left', flex: 1 }}>
+            <p style={{ color: 'white', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>📋 My Case History</p>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', margin: '4px 0 0 0' }}>
+              {myGrievances.length} {myGrievances.length === 1 ? 'case' : 'cases'} • {pendingCount} pending
+            </p>
           </div>
         </button>
 
@@ -623,7 +788,7 @@ const EmployeeDashboard: React.FC = () => {
               </button>
             </div>
 
-            <div style={{ position: 'relative', marginBottom: '24px' }}>
+            <div style={{ position: 'relative', marginBottom: '16px' }}>
               <textarea
                 value={currentText}
                 onChange={(e) => { setManualComplaint(e.target.value); setTranscript(''); }}
@@ -652,6 +817,59 @@ const EmployeeDashboard: React.FC = () => {
                   <Mic size={20} style={{ color: '#94a3b8', opacity: 0.5 }} />
                 </div>
               )}
+            </div>
+
+            {/* Enhanced Form Fields */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: '#475569', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                Category (Optional)
+              </label>
+              <select
+                value={complaintCategory}
+                onChange={(e) => setComplaintCategory(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  color: '#334155',
+                  cursor: 'pointer',
+                  outline: 'none'
+                }}
+              >
+                <option value="">Auto-detect category</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', color: '#475569', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                Location (Optional)
+              </label>
+              <select
+                value={complaintLocation}
+                onChange={(e) => setComplaintLocation(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  color: '#334155',
+                  cursor: 'pointer',
+                  outline: 'none'
+                }}
+              >
+                <option value="">Select ward/location</option>
+                {wards.map(ward => (
+                  <option key={ward} value={ward}>{ward}</option>
+                ))}
+              </select>
             </div>
 
             {/* Error Message */}
