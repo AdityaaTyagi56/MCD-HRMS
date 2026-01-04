@@ -82,6 +82,26 @@ const AdminDashboard: React.FC = () => {
   const [weather, setWeather] = useState<WeatherSnapshot | null>(null);
   const [wards, setWards] = useState<Ward[]>([]);
   const [attendanceTrendData, setAttendanceTrendData] = useState<Array<{ day: string; present: number; target: number }>>([]);
+  const hasAttendanceData = attendanceTrendData.length > 0;
+
+  const AttendanceTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || !payload.length) return null;
+    const present = payload.find((p: any) => p.dataKey === 'present');
+    const target = payload.find((p: any) => p.dataKey === 'target');
+    const delta = present && target ? present.value - target.value : 0;
+    return (
+      <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-lg">
+        <div className="text-xs font-semibold text-neutral-600">{label}</div>
+        <div className="mt-1 flex flex-col gap-1 text-sm">
+          <span className="text-sky-600 font-semibold">Present: {present?.value ?? '-'} </span>
+          <span className="text-amber-600">Target: {target?.value ?? '-'} </span>
+          <span className={`text-xs font-medium ${delta >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            {delta >= 0 ? '▲' : '▼'} {Math.abs(delta)} vs target
+          </span>
+        </div>
+      </div>
+    );
+  };
   const fallbackAlerts = useMemo(() => [
     "🚨 CRITICAL: Heavy rain forecast in Zone 4 - Deployment increased",
     "⚠️ ALERT: 3 Grievances escalated to Level 2 in Sanitation Dept",
@@ -600,41 +620,42 @@ const AdminDashboard: React.FC = () => {
           </div>
           
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={attendanceTrendData}>
-                <defs>
-                  <linearGradient id="attendanceGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="day" stroke="#64748b" fontSize={12} />
-                <YAxis stroke="#64748b" fontSize={12} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e2e8f0', 
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-                  }} 
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="present" 
-                  stroke="#0ea5e9" 
-                  strokeWidth={3}
-                  fill="url(#attendanceGradient)" 
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="target" 
-                  stroke="#f59e0b" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {hasAttendanceData ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={attendanceTrendData}>
+                  <defs>
+                    <linearGradient id="attendanceGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.45}/>
+                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="day" stroke="#475569" fontSize={12} tickLine={false} axisLine={{ stroke: '#cbd5e1' }} />
+                  <YAxis stroke="#475569" fontSize={12} tickLine={false} axisLine={{ stroke: '#cbd5e1' }} />
+                  <Tooltip content={<AttendanceTooltip />} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="present" 
+                    stroke="#0ea5e9" 
+                    strokeWidth={3}
+                    fill="url(#attendanceGradient)"
+                    activeDot={{ r: 5, fill: '#0ea5e9', stroke: '#fff', strokeWidth: 2 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="target" 
+                    stroke="#f59e0b" 
+                    strokeWidth={2.5}
+                    strokeDasharray="6 6"
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-neutral-500">
+                Attendance data will appear as employees mark in.
+              </div>
+            )}
           </div>
         </div>
 
