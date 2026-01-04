@@ -16,7 +16,7 @@ dotenv.config({ path: process.env.DOTENV_CONFIG_PATH || '.env.local' });
 const app = express();
 const PORT = Number(process.env.PORT) || 8010;
 const API_KEY = process.env.API_KEY || 'hackathon-demo-key';
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:8001,http://localhost:8010,http://localhost:8002')
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:8001,http://localhost:8010,http://localhost:8002,https://mcd-hrms.vercel.app')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean);
@@ -37,6 +37,8 @@ const secureCors = cors({
     // Allow requests with no origin (curl, Postman, server-to-server)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
+    // For production, allow Vercel domain
+    if (origin && origin.includes('vercel.app')) return callback(null, true);
     // For hackathon demo, allow all origins rather than crash
     console.warn(`CORS warning: origin ${origin} not in allowlist, allowing anyway for demo`);
     return callback(null, true);
@@ -308,8 +310,10 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   res.status(500).json({ message: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Secure API running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Secure API running on http://0.0.0.0:${PORT}`);
+  console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 function sanitize(text: string) {

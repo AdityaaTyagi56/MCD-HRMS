@@ -6,14 +6,12 @@ services:
     buildCommand: npm install
     startCommand: npx tsx server/index.ts
     envVars:
-      - key: PORT
-        value: 8010
       - key: NODE_ENV
         value: production
       - key: API_KEY
-        sync: false  # Set manually in Render dashboard
+        value: hackathon-demo-key
       - key: ALLOWED_ORIGINS
-        value: "*"  # Allow all origins for demo
+        value: https://mcd-hrms.vercel.app,http://localhost:8001,http://localhost:8010
     healthCheckPath: /health
     plan: free
 
@@ -26,7 +24,7 @@ services:
     rootDir: ml_service
     envVars:
       - key: OPENROUTER_API_KEY
-        sync: false  # Set manually in Render dashboard
+        value: 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
       - key: PYTHONUNBUFFERED
         value: "1"
     healthCheckPath: /health
