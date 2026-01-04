@@ -18,7 +18,8 @@ import {
   Wrench,
   Users,
   FileText,
-  Building
+  Building,
+  X
 } from 'lucide-react';
 import { Grievance } from '../types';
 
@@ -69,6 +70,17 @@ const GrievanceManagement: React.FC = () => {
   const [resolvingId, setResolvingId] = useState<number | null>(null);
   const [translations, setTranslations] = useState<Record<number, { english: string; loading: boolean }>>({});
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  
+  // Bulk Actions State
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkAction, setBulkAction] = useState<'assign' | 'resolve' | 'escalate' | ''>('');
+  const [bulkDepartment, setBulkDepartment] = useState('');
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  
+  // Comment System State
+  const [comments, setComments] = useState<Record<number, Array<{ user: string; text: string; timestamp: string }>>>({});
+  const [newComment, setNewComment] = useState<Record<number, string>>({});
+  const [showCommentModal, setShowCommentModal] = useState<number | null>(null);
 
   // Mock current user ID for employee view
   const currentUserId = 1;
@@ -150,9 +162,96 @@ const GrievanceManagement: React.FC = () => {
     setResolvingId(id);
     try {
       await resolveGrievance(id);
+      // Audit log
+      logAction('resolve', 'Admin', id, 'Grievance resolved by admin');
     } finally {
       setResolvingId(null);
     }
+  };
+
+  // Bulk Action Handlers
+  const toggleSelection = (id: number) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredGrievances.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredGrievances.map(g => g.id)));
+    }
+  };
+
+  const handleBulkAction = async () => {
+    if (selectedIds.size === 0 || !bulkAction) return;
+    
+    try {
+      const idsArray = Array.from(selectedIds);
+      
+      if (bulkAction === 'resolve') {
+        for (const id of idsArray) {
+          await resolveGrievance(id);
+          logAction('bulk-resolve', 'Admin', id, `Bulk resolved ${idsArray.length} grievances`);
+        }
+      } else if (bulkAction === 'assign' && bulkDepartment) {
+        logAction('bulk-assign', 'Admin', idsArray[0], `Assigned ${idsArray.length} grievances to ${bulkDepartment}`);
+      } else if (bulkAction === 'escalate') {
+        logAction('bulk-escalate', 'Admin', idsArray[0], `Escalated ${idsArray.length} grievances`);
+      }
+      
+      setSelectedIds(new Set());
+      setBulkAction('');
+      setBulkDepartment('');
+      setShowBulkModal(false);
+      alert(`Successfully processed ${idsArray.length} grievance(s)`);
+    } catch (error) {
+      alert('Bulk action failed. Please try again.');
+    }
+  };
+
+  // Comment System
+  const addComment = (grievanceId: number) => {
+    const commentText = newComment[grievanceId];
+    if (!commentText?.trim()) return;
+    
+    const comment = {
+      user: 'Admin',
+      text: commentText,
+      timestamp: new Date().toISOString()
+    };
+    
+    setComments(prev => ({
+      ...prev,
+      [grievanceId]: [...(prev[grievanceId] || []), comment]
+    }));
+    
+    setNewComment(prev => ({ ...prev, [grievanceId]: '' }));
+    logAction('comment', 'Admin', grievanceId, `Added comment: ${commentText.substring(0, 50)}...`);
+  };
+
+  // Audit Logging
+  const logAction = (action: string, user: string, grievanceId: number, details: string) => {
+    const logEntry = {
+      action,
+      user,
+      grievanceId,
+      details,
+      timestamp: new Date().toISOString()
+    };
+    
+    // In real app, this would persist to server
+    console.log('📝 Audit Log:', logEntry);
+    
+    // Store in localStorage for demo
+    const existingLogs = JSON.parse(localStorage.getItem('audit_logs') || '[]');
+    existingLogs.push(logEntry);
+    localStorage.setItem('audit_logs', JSON.stringify(existingLogs));
   };
 
   const filteredGrievances = grievances.filter(g => {
@@ -251,6 +350,51 @@ const GrievanceManagement: React.FC = () => {
         />
       </div>
 
+      {/* Bulk Actions Bar */}
+      {currentRole === 'admin' && selectedIds.size > 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={selectedIds.size === filteredGrievances.length}
+                onChange={toggleSelectAll}
+                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="font-semibold text-blue-900">{selectedIds.size} selected</span>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setBulkAction('resolve'); setShowBulkModal(true); }}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+              >
+                ✓ Mark Resolved
+              </button>
+              <button
+                onClick={() => { setBulkAction('assign'); setShowBulkModal(true); }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                → Assign Department
+              </button>
+              <button
+                onClick={() => { setBulkAction('escalate'); setShowBulkModal(true); }}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors"
+              >
+                ⬆ Escalate
+              </button>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="text-blue-700 hover:text-blue-900 font-medium"
+          >
+            Clear Selection
+          </button>
+        </div>
+      )}
+
       {/* Grievance List */}
       <div className="space-y-4">
         {filteredGrievances.length === 0 ? (
@@ -278,31 +422,42 @@ const GrievanceManagement: React.FC = () => {
                 } ${isExpanded ? 'shadow-lg' : 'hover:shadow-md'}`}
               >
                 <div className="p-5">
-                  {/* Top Row: Tags */}
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
-                    {/* Priority Badge */}
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                      g.priority === 'High' ? 'bg-red-100 text-red-700' : 
-                      g.priority === 'Medium' ? 'bg-orange-100 text-orange-700' : 
-                      'bg-blue-100 text-blue-700'
-                    }`}>
-                      {g.priority}
-                    </span>
+                  {/* Top Row: Checkbox + Tags */}
+                  <div className="flex items-start gap-3 mb-3">
+                    {currentRole === 'admin' && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(g.id)}
+                        onChange={() => toggleSelection(g.id)}
+                        className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    )}
                     
-                    {/* Category Badge */}
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium border flex items-center gap-1 ${getCategoryColor(g.category)}`}>
-                      {getCategoryIcon(g.category)}
-                      {g.category}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2 flex-1">
+                      {/* Priority Badge */}
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                        g.priority === 'High' ? 'bg-red-100 text-red-700' : 
+                        g.priority === 'Medium' ? 'bg-orange-100 text-orange-700' : 
+                        'bg-blue-100 text-blue-700'
+                      }`}>
+                        {g.priority}
+                      </span>
+                      
+                      {/* Category Badge */}
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium border flex items-center gap-1 ${getCategoryColor(g.category)}`}>
+                        {getCategoryIcon(g.category)}
+                        {g.category}
+                      </span>
 
-                    {/* Status Badge */}
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                      g.status === 'Resolved' ? 'bg-green-100 text-green-700' : 
-                      g.status === 'Under Review' ? 'bg-purple-100 text-purple-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {g.status}
-                    </span>
+                      {/* Status Badge */}
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                        g.status === 'Resolved' ? 'bg-green-100 text-green-700' : 
+                        g.status === 'Under Review' ? 'bg-purple-100 text-purple-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {g.status}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Description */}
@@ -361,25 +516,36 @@ const GrievanceManagement: React.FC = () => {
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-2">
-                      {currentRole === 'admin' && g.status !== 'Resolved' && (
-                        <button 
-                          onClick={() => handleResolve(g.id)}
-                          disabled={resolvingId === g.id}
-                          className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white rounded-lg font-medium text-sm hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                          aria-label={`Mark grievance ${g.id} as resolved`}
-                        >
-                          {resolvingId === g.id ? (
-                            <>
-                              <Loader2 size={14} className="animate-spin" />
-                              Resolving...
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle size={14} />
-                              Resolve
-                            </>
+                      {currentRole === 'admin' && (
+                        <>
+                          <button
+                            onClick={() => setShowCommentModal(g.id)}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium text-sm hover:bg-blue-200 transition-colors"
+                          >
+                            <MessageSquare size={14} />
+                            Comment ({comments[g.id]?.length || 0})
+                          </button>
+                          {g.status !== 'Resolved' && (
+                            <button 
+                              onClick={() => handleResolve(g.id)}
+                              disabled={resolvingId === g.id}
+                              className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white rounded-lg font-medium text-sm hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              aria-label={`Mark grievance ${g.id} as resolved`}
+                            >
+                              {resolvingId === g.id ? (
+                                <>
+                                  <Loader2 size={14} className="animate-spin" />
+                                  Resolving...
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle size={14} />
+                                  Resolve
+                                </>
+                              )}
+                            </button>
                           )}
-                        </button>
+                        </>
                       )}
                       <button
                         onClick={() => setExpandedId(isExpanded ? null : g.id)}
@@ -392,6 +558,24 @@ const GrievanceManagement: React.FC = () => {
                       </button>
                     </div>
                   </div>
+
+                  {/* Comments Section */}
+                  {comments[g.id] && comments[g.id].length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="text-sm font-semibold text-gray-700 mb-2">Comments:</div>
+                      <div className="space-y-2">
+                        {comments[g.id].map((comment, idx) => (
+                          <div key={idx} className="bg-gray-50 rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-semibold text-blue-600">{comment.user}</span>
+                              <span className="text-xs text-gray-500">{new Date(comment.timestamp).toLocaleString()}</span>
+                            </div>
+                            <p className="text-sm text-gray-700">{comment.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Expanded Details */}
                   {isExpanded && (
@@ -424,6 +608,93 @@ const GrievanceManagement: React.FC = () => {
           })
         )}
       </div>
+
+      {/* Bulk Action Modal */}
+      {showBulkModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              {bulkAction === 'resolve' && 'Mark as Resolved'}
+              {bulkAction === 'assign' && 'Assign to Department'}
+              {bulkAction === 'escalate' && 'Escalate Grievances'}
+            </h3>
+            
+            <p className="text-gray-600 mb-4">
+              This action will apply to {selectedIds.size} selected grievance(s).
+            </p>
+            
+            {bulkAction === 'assign' && (
+              <select
+                value={bulkDepartment}
+                onChange={(e) => setBulkDepartment(e.target.value)}
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg mb-4"
+              >
+                <option value="">Select Department</option>
+                <option value="Sanitation">Sanitation</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Administration">Administration</option>
+                <option value="Health">Health</option>
+              </select>
+            )}
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowBulkModal(false); setBulkAction(''); setBulkDepartment(''); }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkAction}
+                disabled={bulkAction === 'assign' && !bulkDepartment}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Comment Modal */}
+      {showCommentModal !== null && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Add Comment</h3>
+              <button
+                onClick={() => setShowCommentModal(null)}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <textarea
+              value={newComment[showCommentModal] || ''}
+              onChange={(e) => setNewComment(prev => ({ ...prev, [showCommentModal]: e.target.value }))}
+              placeholder="Add your comment here..."
+              className="w-full h-32 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+            />
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCommentModal(null)}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { addComment(showCommentModal); setShowCommentModal(null); }}
+                disabled={!newComment[showCommentModal]?.trim()}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Add Comment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
