@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Square, Send, AlertCircle } from 'lucide-react';
+import { Mic, Square, Send, AlertCircle, Globe } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
+
+// Supported languages for voice input
+const VOICE_LANGUAGES = [
+  { code: 'hi-IN', name: 'हिन्दी', label: 'Hindi' },
+  { code: 'en-IN', name: 'English', label: 'English (India)' },
+  { code: 'pa-IN', name: 'ਪੰਜਾਬੀ', label: 'Punjabi' },
+  { code: 'ur-IN', name: 'اردو', label: 'Urdu' },
+  { code: 'bn-IN', name: 'বাংলা', label: 'Bengali' },
+];
 
 const VoiceGrievance: React.FC = () => {
   const { t, language } = useApp();
@@ -11,6 +20,7 @@ const VoiceGrievance: React.FC = () => {
   const [supportError, setSupportError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('hi-IN');
   
   const recognitionRef = useRef<any>(null);
 
@@ -21,7 +31,7 @@ const VoiceGrievance: React.FC = () => {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = true; // Keep listening even after pauses
       recognitionRef.current.interimResults = true; // Show text while speaking
-      recognitionRef.current.lang = 'hi-IN'; // STRICTLY HINDI FOR MCD WORKERS
+      recognitionRef.current.lang = selectedLanguage;
 
       recognitionRef.current.onresult = (event: any) => {
         const transcript = Array.from(event.results)
@@ -48,7 +58,18 @@ const VoiceGrievance: React.FC = () => {
         recognitionRef.current.stop();
       }
     };
-  }, []);
+  }, [selectedLanguage]);
+
+  const handleLanguageChange = (langCode: string) => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    }
+    setSelectedLanguage(langCode);
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = langCode;
+    }
+  };
 
   const toggleListening = () => {
     if (supportError) {
@@ -147,6 +168,34 @@ const VoiceGrievance: React.FC = () => {
         </h2>
         <p className="text-gray-500 text-sm mt-1">
           {language === 'hi' ? 'बोलकर या लिखकर शिकायत करें' : 'Speak or type your complaint'}
+        </p>
+      </div>
+
+      {/* Language Selector */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200">
+        <div className="flex items-center gap-2 mb-3">
+          <Globe className="w-5 h-5 text-blue-600" />
+          <span className="font-semibold text-gray-700">
+            {language === 'hi' ? 'भाषा चुनें' : 'Select Language'}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {VOICE_LANGUAGES.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => handleLanguageChange(lang.code)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                selectedLanguage === lang.code
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-blue-100 border border-gray-200'
+              }`}
+            >
+              <div className="font-bold">{lang.name}</div>
+              <div className="text-xs opacity-80">{lang.label}</div>
+            </button>
+          ))}
+        </div>
+      </div>
         </p>
       </div>
       
