@@ -7,6 +7,12 @@ export default defineConfig({
     // Use 8001 for fresh start
     port: 8001,
     host: '0.0.0.0',
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8010',
+        changeOrigin: true,
+      }
+    }
   },
   plugins: [react()],
   // No need for define block - Vite auto-exposes VITE_* variables via import.meta.env

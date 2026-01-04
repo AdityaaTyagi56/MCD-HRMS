@@ -310,6 +310,46 @@ app.post('/api/payslips', (req, res) => {
   res.status(201).json(slip);
 });
 
+app.post('/api/send-whatsapp', async (req, res) => {
+  const { to, message } = req.body;
+  
+  const TWILIO_ACCOUNT_SID = process.env.VITE_TWILIO_ACCOUNT_SID;
+  const TWILIO_AUTH_TOKEN = process.env.VITE_TWILIO_AUTH_TOKEN;
+  const TWILIO_WHATSAPP_NUMBER = process.env.VITE_TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
+
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
+    return res.status(500).json({ error: 'Twilio credentials not configured' });
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          From: TWILIO_WHATSAPP_NUMBER,
+          To: to,
+          Body: message,
+        }).toString(),
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return res.status(200).json({ success: true, messageId: data.sid });
+    } else {
+      return res.status(400).json({ success: false, error: data.message || 'Failed to send message' });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled error', err);
   res.status(500).json({ message: 'Internal server error' });

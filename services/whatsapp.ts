@@ -5,7 +5,6 @@
 
 const TWILIO_ACCOUNT_SID = import.meta.env.VITE_TWILIO_ACCOUNT_SID || '';
 const TWILIO_AUTH_TOKEN = import.meta.env.VITE_TWILIO_AUTH_TOKEN || '';
-const TWILIO_WHATSAPP_NUMBER = import.meta.env.VITE_TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886'; // Twilio Sandbox
 
 interface WhatsAppMessage {
   to: string; // Employee mobile number (with country code)
@@ -41,7 +40,7 @@ function formatWhatsAppNumber(phone: string): string {
 }
 
 /**
- * Send WhatsApp message via Twilio
+ * Send WhatsApp message via Vercel API
  */
 export async function sendWhatsAppMessage(params: WhatsAppMessage): Promise<SendResult> {
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
@@ -52,28 +51,23 @@ export async function sendWhatsAppMessage(params: WhatsAppMessage): Promise<Send
   const toNumber = formatWhatsAppNumber(params.to);
   
   try {
-    const response = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Basic ' + btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`),
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          From: TWILIO_WHATSAPP_NUMBER,
-          To: toNumber,
-          Body: params.message,
-        }),
-      }
-    );
+    const response = await fetch('/api/send-whatsapp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: toNumber,
+        message: params.message,
+      }),
+    });
 
     const data = await response.json();
 
-    if (response.ok) {
-      return { success: true, messageId: data.sid };
+    if (response.ok && data.success) {
+      return { success: true, messageId: data.messageId };
     } else {
-      return { success: false, error: data.message || 'Failed to send message' };
+      return { success: false, error: data.error || 'Failed to send message' };
     }
   } catch (error: any) {
     return { success: false, error: error.message };
