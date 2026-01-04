@@ -234,7 +234,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     "manage_track_salaries": { en: "Manage and track salary disbursements", hi: "वेतन वितरण प्रबंधित और ट्रैक करें" },
     "role": { en: "Role", hi: "भूमिका" },
     "days_present": { en: "Days Present", hi: "उपस्थित दिन" },
-    "net_pay": { en: "Net Pay", hi: "शुद्ध वेतन" },
     
     // Employee Dashboard
     "hello": { en: "Hello", hi: "नमस्ते" },
@@ -268,7 +267,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     "suspicious_location": { en: "Suspicious Location!", hi: "संदिग्ध स्थान!" },
     "gps_spoofing_suspected": { en: "GPS spoofing suspected", hi: "GPS स्पूफिंग का संदेह है" },
     "issues_found": { en: "Issues Found:", hi: "पाई गई समस्याएं:" },
-    "close": { en: "Close", hi: "बंद करें" },
     "retry_at_office": { en: "Please try again from office", hi: "कृपया कार्यालय में जाकर पुनः प्रयास करें" },
     "error_exclamation": { en: "Error!", hi: "त्रुटि!" },
     "location_verification_failed": { en: "Location verification failed", hi: "स्थान सत्यापन विफल" },
