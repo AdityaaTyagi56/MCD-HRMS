@@ -38,6 +38,11 @@ export interface Employee {
   serviceBook: ServiceRecord[];
   performance: PerformanceMetric;
   photoUrl?: string; // For face rec
+  // Government verification fields
+  aadhaar?: string;
+  pan?: string;
+  uan?: string;       // EPFO UAN
+  esiNumber?: string; // ESI IP Number
 }
 
 export interface Grievance {

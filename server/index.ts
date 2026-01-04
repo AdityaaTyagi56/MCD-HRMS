@@ -1402,6 +1402,452 @@ app.get('/api/monitoring/dashboard', authGuard, async (req, res) => {
   res.json(dashboard);
 });
 
+// ============================================================================
+// Government API Integration Endpoints
+// ============================================================================
+
+/**
+ * Aadhaar Verification Endpoint
+ * Verifies Aadhaar number using UIDAI eKYC API
+ */
+app.post('/api/government/aadhaar/verify', authGuard, async (req, res) => {
+  try {
+    const { aadhaarNumber, employeeId, consent } = req.body;
+
+    if (!consent) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: 'User consent required for Aadhaar verification',
+      });
+    }
+
+    // Validate Aadhaar format
+    const aadhaarPattern = /^\d{12}$/;
+    if (!aadhaarPattern.test(aadhaarNumber)) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: 'Invalid Aadhaar format. Must be 12 digits.',
+      });
+    }
+
+    // Check if real UIDAI API is configured
+    const aadhaarApiKey = process.env.AADHAAR_API_KEY || '';
+    
+    if (aadhaarApiKey) {
+      // Call real UIDAI eKYC API
+      const uidaiResponse = await fetch('https://api.uidai.gov.in/ekyc/verify', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${aadhaarApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          aadhaar: aadhaarNumber,
+          consent: 'Y',
+        }),
+      });
+
+      if (!uidaiResponse.ok) {
+        throw new Error('UIDAI API error');
+      }
+
+      const uidaiData = await uidaiResponse.json();
+      
+      // Update employee record with verified Aadhaar
+      const employee = employees.find(e => e.id === employeeId);
+      if (employee) {
+        employee.aadhaar = aadhaarNumber;
+        writeEmployees(employees);
+      }
+
+      return res.json({
+        success: true,
+        verified: true,
+        name: uidaiData.name,
+        dob: uidaiData.dob,
+        gender: uidaiData.gender,
+        address: uidaiData.address,
+      });
+    }
+
+    // Mock verification for demo (remove in production)
+    const mockData: Record<string, any> = {
+      '123456789012': {
+        name: 'Rajesh Kumar',
+        dob: '1985-05-15',
+        gender: 'Male',
+        address: 'Ward 4, Karol Bagh, New Delhi - 110005',
+      },
+      '987654321098': {
+        name: 'Priya Sharma',
+        dob: '1990-08-22',
+        gender: 'Female',
+        address: 'Ward 2, Chandni Chowk, New Delhi - 110006',
+      },
+    };
+
+    const mockResponse = mockData[aadhaarNumber];
+    if (mockResponse) {
+      // Update employee record
+      const employee = employees.find(e => e.id === employeeId);
+      if (employee) {
+        employee.aadhaar = aadhaarNumber;
+        writeEmployees(employees);
+      }
+
+      return res.json({
+        success: true,
+        verified: true,
+        ...mockResponse,
+        message: '✅ Verified using mock data (Configure AADHAAR_API_KEY for production)',
+      });
+    }
+
+    res.status(404).json({
+      success: false,
+      verified: false,
+      error: 'Aadhaar not found in database',
+    });
+  } catch (error: any) {
+    console.error('Aadhaar verification error:', error);
+    metrics.api_errors_total++;
+    res.status(500).json({
+      success: false,
+      verified: false,
+      error: error.message || 'Aadhaar verification failed',
+    });
+  }
+});
+
+/**
+ * PAN Verification Endpoint
+ * Verifies PAN card using Income Tax Department API
+ */
+app.post('/api/government/pan/verify', authGuard, async (req, res) => {
+  try {
+    const { panNumber, employeeId, name } = req.body;
+
+    // Validate PAN format
+    const panPattern = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    if (!panPattern.test(panNumber)) {
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        error: 'Invalid PAN format. Must be in format: ABCDE1234F',
+      });
+    }
+
+    // Check if real Income Tax API is configured
+    const panApiKey = process.env.PAN_API_KEY || '';
+    
+    if (panApiKey) {
+      // Call real Income Tax Department API
+      const itdResponse = await fetch('https://api.incometax.gov.in/pan/verify', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${panApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pan: panNumber,
+          name: name,
+        }),
+      });
+
+      if (!itdResponse.ok) {
+        throw new Error('Income Tax API error');
+      }
+
+      const itdData = await itdResponse.json();
+      
+      // Update employee record
+      const employee = employees.find(e => e.id === employeeId);
+      if (employee && itdData.verified) {
+        employee.pan = panNumber;
+        writeEmployees(employees);
+      }
+
+      return res.json({
+        success: true,
+        verified: itdData.verified,
+        name: itdData.name,
+        panStatus: itdData.status,
+      });
+    }
+
+    // Mock verification for demo
+    const mockData: Record<string, any> = {
+      'ABCDE1234F': { name: 'Rajesh Kumar', status: 'Active' },
+      'XYZAB5678C': { name: 'Priya Sharma', status: 'Active' },
+    };
+
+    const mockResponse = mockData[panNumber];
+    if (mockResponse) {
+      // Simple name matching
+      const nameMatch = mockResponse.name.toLowerCase().includes(name.toLowerCase()) ||
+                       name.toLowerCase().includes(mockResponse.name.toLowerCase());
+
+      // Update employee record
+      if (nameMatch) {
+        const employee = employees.find(e => e.id === employeeId);
+        if (employee) {
+          employee.pan = panNumber;
+          writeEmployees(employees);
+        }
+      }
+
+      return res.json({
+        success: true,
+        verified: nameMatch,
+        name: mockResponse.name,
+        panStatus: mockResponse.status,
+        message: nameMatch 
+          ? '✅ Verified using mock data (Configure PAN_API_KEY for production)'
+          : '⚠️ PAN found but name does not match',
+      });
+    }
+
+    res.status(404).json({
+      success: false,
+      verified: false,
+      error: 'PAN not found in database',
+    });
+  } catch (error: any) {
+    console.error('PAN verification error:', error);
+    metrics.api_errors_total++;
+    res.status(500).json({
+      success: false,
+      verified: false,
+      error: error.message || 'PAN verification failed',
+    });
+  }
+});
+
+/**
+ * EPFO Balance Endpoint
+ * Fetches EPF balance using EPFO API
+ */
+app.post('/api/government/epfo/balance', authGuard, async (req, res) => {
+  try {
+    const { uan, employeeId } = req.body;
+
+    // Validate UAN format
+    const uanPattern = /^\d{12}$/;
+    if (!uanPattern.test(uan)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid UAN format. Must be 12 digits.',
+      });
+    }
+
+    const epfoApiKey = process.env.EPFO_API_KEY || '';
+    
+    if (epfoApiKey) {
+      // Call real EPFO API
+      const epfoResponse = await fetch('https://api.epfindia.gov.in/balance', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${epfoApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ uan }),
+      });
+
+      if (!epfoResponse.ok) {
+        throw new Error('EPFO API error');
+      }
+
+      const epfoData = await epfoResponse.json();
+      
+      return res.json({
+        success: true,
+        uan: uan,
+        name: epfoData.name,
+        balance: epfoData.balance,
+        lastContribution: epfoData.lastContribution,
+      });
+    }
+
+    // Mock data for demo
+    const employee = employees.find(e => e.id === employeeId);
+    res.json({
+      success: true,
+      uan: uan,
+      name: employee?.name || 'Employee Name',
+      balance: Math.floor(Math.random() * 200000) + 50000,
+      lastContribution: '2025-12-31',
+      message: '✅ Mock data (Configure EPFO_API_KEY for production)',
+    });
+  } catch (error: any) {
+    console.error('EPFO balance fetch error:', error);
+    metrics.api_errors_total++;
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch EPFO balance',
+    });
+  }
+});
+
+/**
+ * ESI Details Endpoint
+ * Fetches ESI information using ESIC API
+ */
+app.post('/api/government/esi/details', authGuard, async (req, res) => {
+  try {
+    const { ipNumber, employeeId } = req.body;
+
+    if (!ipNumber || ipNumber.length < 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid IP Number format',
+      });
+    }
+
+    const esiApiKey = process.env.ESI_API_KEY || '';
+    
+    if (esiApiKey) {
+      // Call real ESIC API
+      const esiResponse = await fetch('https://api.esic.nic.in/details', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${esiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ipNumber }),
+      });
+
+      if (!esiResponse.ok) {
+        throw new Error('ESIC API error');
+      }
+
+      const esiData = await esiResponse.json();
+      
+      return res.json({
+        success: true,
+        ipNumber: ipNumber,
+        name: esiData.name,
+        dispensary: esiData.dispensary,
+        validUpto: esiData.validUpto,
+      });
+    }
+
+    // Mock data for demo
+    const employee = employees.find(e => e.id === employeeId);
+    const wards = ['Karol Bagh', 'Chandni Chowk', 'Rohini', 'Dwarka'];
+    const randomWard = wards[Math.floor(Math.random() * wards.length)];
+    
+    res.json({
+      success: true,
+      ipNumber: ipNumber,
+      name: employee?.name || 'Employee Name',
+      dispensary: `ESI Dispensary - ${randomWard}`,
+      validUpto: '2026-03-31',
+      message: '✅ Mock data (Configure ESI_API_KEY for production)',
+    });
+  } catch (error: any) {
+    console.error('ESI details fetch error:', error);
+    metrics.api_errors_total++;
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch ESI details',
+    });
+  }
+});
+
+/**
+ * DigiLocker Documents Endpoint
+ * Fetches documents from DigiLocker
+ */
+app.post('/api/government/digilocker/documents', authGuard, async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+
+    const digilockerClientId = process.env.DIGILOCKER_CLIENT_ID || '';
+    const digilockerClientSecret = process.env.DIGILOCKER_CLIENT_SECRET || '';
+    
+    if (digilockerClientId && digilockerClientSecret) {
+      // Real DigiLocker OAuth flow would go here
+      // This is simplified - actual implementation needs OAuth dance
+      return res.json({
+        success: false,
+        error: 'DigiLocker requires user OAuth authorization. Please implement OAuth flow.',
+      });
+    }
+
+    // Mock documents for demo
+    const mockDocuments = [
+      {
+        docType: 'Aadhaar Card',
+        docName: 'aadhaar.pdf',
+        issuer: 'UIDAI',
+        uri: 'digilocker://aadhaar/xxxx-xxxx-1234',
+        size: 245000,
+        mimeType: 'application/pdf',
+      },
+      {
+        docType: 'PAN Card',
+        docName: 'pan.pdf',
+        issuer: 'Income Tax Department',
+        uri: 'digilocker://pan/ABCDE1234F',
+        size: 189000,
+        mimeType: 'application/pdf',
+      },
+      {
+        docType: 'Driving License',
+        docName: 'dl.pdf',
+        issuer: 'Transport Department, Delhi',
+        uri: 'digilocker://dl/DL-0120231234567',
+        size: 321000,
+        mimeType: 'application/pdf',
+      },
+    ];
+
+    res.json({
+      success: true,
+      documents: mockDocuments,
+      message: '✅ Mock data (Configure DIGILOCKER credentials for production)',
+    });
+  } catch (error: any) {
+    console.error('DigiLocker fetch error:', error);
+    metrics.api_errors_total++;
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch DigiLocker documents',
+    });
+  }
+});
+
+/**
+ * Government APIs Status Endpoint
+ * Returns which government APIs are configured
+ */
+app.get('/api/government/status', authGuard, (req, res) => {
+  res.json({
+    aadhaar: {
+      enabled: !!process.env.AADHAAR_API_KEY,
+      mode: process.env.AADHAAR_API_KEY ? 'production' : 'mock',
+    },
+    pan: {
+      enabled: !!process.env.PAN_API_KEY,
+      mode: process.env.PAN_API_KEY ? 'production' : 'mock',
+    },
+    epfo: {
+      enabled: !!process.env.EPFO_API_KEY,
+      mode: process.env.EPFO_API_KEY ? 'production' : 'mock',
+    },
+    esi: {
+      enabled: !!process.env.ESI_API_KEY,
+      mode: process.env.ESI_API_KEY ? 'production' : 'mock',
+    },
+    digilocker: {
+      enabled: !!(process.env.DIGILOCKER_CLIENT_ID && process.env.DIGILOCKER_CLIENT_SECRET),
+      mode: (process.env.DIGILOCKER_CLIENT_ID && process.env.DIGILOCKER_CLIENT_SECRET) ? 'production' : 'mock',
+    },
+  });
+});
+
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled error', err);
   metrics.api_errors_total++;
