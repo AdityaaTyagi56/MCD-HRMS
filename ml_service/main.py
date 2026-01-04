@@ -479,9 +479,11 @@ async def verify_location(request: LocationVerificationRequest):
         confidence_score -= 20
     
     # Check 3: Suspicious lack of movement (GPS spoofing indicator)
-    if len(pings) > 3 and total_movement < 0.01:  # Less than 10 meters total
+    # TEMPORARILY RELAXED: Normal for desk workers to be stationary
+    # Original threshold: 0.01 (10 meters)
+    if len(pings) > 3 and total_movement < 0.001:  # Less than 1 meter total (extremely suspicious)
         spoofing_indicators.append("Unnaturally stationary - possible GPS spoofing")
-        confidence_score -= 25
+        confidence_score -= 15  # Reduced penalty
     
     # Check 4: Too much movement (not actually working)
     if total_movement > 5:  # More than 5km movement
@@ -503,14 +505,19 @@ async def verify_location(request: LocationVerificationRequest):
                 break
     
     # Check 7: Perfect coordinates (spoofing indicator)
-    unique_coords = set((p.lat, p.lng) for p in pings)
-    if len(unique_coords) == 1 and len(pings) > 2:
-        spoofing_indicators.append("All pings have identical coordinates - likely GPS spoofing")
-        confidence_score -= 40
+    # TEMPORARILY RELAXED: GPS can give same coords when stationary
+    unique_coords = set((round(p.lat, 5), round(p.lng, 5)) for p in pings)  # Round to 5 decimals
+    if len(unique_coords) == 1 and len(pings) > 3:  # Need more than 3 identical pings
+        # Only flag if coordinates are suspiciously round (like 28.600000, 77.200000)
+        first_ping = pings[0]
+        if first_ping.lat == round(first_ping.lat, 3) and first_ping.lng == round(first_ping.lng, 3):
+            spoofing_indicators.append("All pings have identical round coordinates - possible GPS spoofing")
+            confidence_score -= 25
     
     # Check 8: Round number coordinates (spoofing indicator)
+    # TEMPORARILY RELAXED: Only flag very round numbers
     for ping in pings[:3]:
-        if ping.lat == round(ping.lat, 2) and ping.lng == round(ping.lng, 2):
+        if ping.lat == round(ping.lat, 1) and ping.lng == round(ping.lng, 1):  # Only 1 decimal = suspicious
             spoofing_indicators.append("Suspiciously round coordinates detected")
             confidence_score -= 15
             break
