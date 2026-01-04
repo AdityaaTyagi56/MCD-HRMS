@@ -196,8 +196,6 @@ const VoiceGrievance: React.FC = () => {
           ))}
         </div>
       </div>
-        </p>
-      </div>
       
       {/* The Text Area - Auto-filled by Voice */}
       <textarea
