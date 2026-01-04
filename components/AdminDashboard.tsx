@@ -57,7 +57,8 @@ import {
   MessageSquare,
   Mic,
   ChevronRight,
-  FileText
+  FileText,
+  Languages
 } from 'lucide-react';
 import aiService from '../services/ai';
 import WhatsAppPanel from './WhatsAppPanel';
@@ -82,6 +83,11 @@ const AdminDashboard: React.FC = () => {
   const [weather, setWeather] = useState<WeatherSnapshot | null>(null);
   const [wards, setWards] = useState<Ward[]>([]);
   const [attendanceTrendData, setAttendanceTrendData] = useState<Array<{ day: string; present: number; target: number }>>([]);
+  const [translationState, setTranslationState] = useState<{ text: string | null; loading: boolean; error: string | null }>({
+    text: null,
+    loading: false,
+    error: null,
+  });
   const hasAttendanceData = attendanceTrendData.length > 0;
 
   const AttendanceTooltip = ({ active, payload, label }: any) => {
@@ -117,6 +123,65 @@ const AdminDashboard: React.FC = () => {
   const [mlAnalysisLoading, setMlAnalysisLoading] = useState(false);
   
   const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
+
+  const isHindiText = (text: string) => /[\u0900-\u097F]/.test(text || '');
+
+  const getFallbackTranslation = (text: string) => {
+    const dictionary: Record<string, string> = {
+      'वेतन कम है': 'Salary is less / insufficient',
+      'वेतन प्राप्त नहीं हुआ है': 'Salary has not been received',
+      'वेतन नहीं मिला': 'Did not receive salary',
+      'छुट्टी चाहिए': 'Need leave',
+      'तबादला चाहिए': 'Need transfer',
+      'उपकरण नहीं है': 'Equipment not available',
+      'झाड़ू नहीं है': 'Broom not available',
+      'परेशानी हो रही है': 'Facing problems',
+      'समस्या है': 'There is a problem',
+      'मदद चाहिए': 'Need help',
+      'काम ज्यादा है': 'Too much work',
+      'समय पर वेतन नहीं मिला': 'Salary not received on time',
+    };
+
+    if (dictionary[text]) return dictionary[text];
+    for (const [hindi, english] of Object.entries(dictionary)) {
+      if (text?.includes(hindi)) return english;
+    }
+    return `[Hindi text] ${text}`;
+  };
+
+  const translateDescription = async (text: string) => {
+    if (!text?.trim()) return;
+    setTranslationState({ text: null, loading: true, error: null });
+    try {
+      const response = await fetch(`${ML_API_URL}/translate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, target_language: 'en' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Translation failed');
+      }
+
+      const data = await response.json();
+      setTranslationState({
+        text: data.translated_text || data.translation || text,
+        loading: false,
+        error: null,
+      });
+    } catch (error) {
+      console.error('Translation error:', error);
+      setTranslationState({
+        text: getFallbackTranslation(text),
+        loading: false,
+        error: 'Using fallback translation',
+      });
+    }
+  };
+
+  useEffect(() => {
+    setTranslationState({ text: null, loading: false, error: null });
+  }, [selectedGrievance?.id]);
 
   // Filter grievances
   const filteredGrievances = grievances.filter(g => 
@@ -1023,6 +1088,38 @@ const AdminDashboard: React.FC = () => {
                 <label className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Description</label>
                 <p className="mt-1 text-neutral-800 bg-neutral-50 p-4 rounded-xl">{selectedGrievance.description}</p>
               </div>
+
+              {isHindiText(selectedGrievance.description) && (
+                <div className="p-4 rounded-xl border border-blue-100 bg-blue-50 space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-blue-700">
+                    <Languages size={16} />
+                    Hindi Complaint Detected
+                  </div>
+                  {!translationState.text && !translationState.loading && (
+                    <button
+                      onClick={() => translateDescription(selectedGrievance.description)}
+                      className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
+                    >
+                      <Languages size={14} />
+                      Translate to English
+                    </button>
+                  )}
+                  {translationState.loading && (
+                    <div className="flex items-center gap-2 text-sm text-blue-600">
+                      <Loader2 size={16} className="animate-spin" />
+                      Translating...
+                    </div>
+                  )}
+                  {translationState.text && (
+                    <div className="text-sm text-neutral-800 bg-white p-3 rounded-lg border border-blue-100">
+                      {translationState.text}
+                    </div>
+                  )}
+                  {translationState.error && (
+                    <p className="text-xs text-blue-600">{translationState.error}</p>
+                  )}
+                </div>
+              )}
               
               {/* NLP Analysis Badge */}
               <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-xl border border-purple-200">
