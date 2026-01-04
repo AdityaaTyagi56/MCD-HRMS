@@ -86,6 +86,15 @@ export interface Payslip {
   status: 'Paid' | 'Pending';
 }
 
+export interface Ward {
+  id: number;
+  zone: string;
+  name: string;
+  population?: number;
+  riskLevel: 'Low' | 'Medium' | 'High' | 'Critical';
+  notes?: string;
+}
+
 export type AppView =
   | 'dashboard'
   | 'payroll'

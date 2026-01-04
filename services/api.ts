@@ -1,4 +1,4 @@
-import type { Employee, Grievance, LeaveRequest, Payslip } from '../types';
+import type { Employee, Grievance, LeaveRequest, Payslip, Ward } from '../types';
 
 const FALLBACK_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8010';
 const FALLBACK_KEY = import.meta.env.VITE_API_KEY || 'hackathon-demo-key';
@@ -64,4 +64,5 @@ export const api = {
     apiFetch<LeaveRequest>(`/api/leaves/${id}/status`, { method: 'POST', body: JSON.stringify({ status }) }),
   listPayslips: () => apiFetch<Payslip[]>('/api/payslips'),
   releaseAllSalaries: () => apiFetch<{ message: string }>('/api/payroll/release-all', { method: 'POST' }),
+  listWards: () => apiFetch<Ward[]>('/api/wards'),
 };

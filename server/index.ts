@@ -8,8 +8,8 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
 import { z } from 'zod';
-import { INITIAL_EMPLOYEES, INITIAL_GRIEVANCES, INITIAL_LEAVES, INITIAL_PAYSLIPS, MCD_ZONE_COORDS } from '../constants';
-import { Employee, Grievance, LeaveRequest, Payslip } from '../types';
+import { INITIAL_EMPLOYEES, INITIAL_GRIEVANCES, INITIAL_LEAVES, INITIAL_PAYSLIPS, INITIAL_WARDS, MCD_ZONE_COORDS } from '../constants';
+import { Employee, Grievance, LeaveRequest, Payslip, Ward } from '../types';
 
 dotenv.config({ path: process.env.DOTENV_CONFIG_PATH || '.env.local' });
 
@@ -90,6 +90,7 @@ const employees: Employee[] = load('employees', INITIAL_EMPLOYEES.map((e) => ({ 
 const grievances: Grievance[] = load('grievances', INITIAL_GRIEVANCES.map((g) => ({ ...g })));
 const leaves: LeaveRequest[] = load('leaves', INITIAL_LEAVES.map((l) => ({ ...l })));
 let payslips: Payslip[] = load('payslips', INITIAL_PAYSLIPS.map((p) => ({ ...p })));
+const wards: Ward[] = load('wards', INITIAL_WARDS.map((w) => ({ ...w })));
 
 const authGuard = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const headerKey = req.headers['x-api-key'];
@@ -160,6 +161,10 @@ app.use('/api', authGuard);
 app.get('/api/employees', (_req, res) => {
   const safeEmployees = employees.map(({ coords, ...rest }) => rest);
   res.json(safeEmployees);
+});
+
+app.get('/api/wards', (_req, res) => {
+  res.json(wards);
 });
 
 app.post('/api/attendance', (req, res) => {

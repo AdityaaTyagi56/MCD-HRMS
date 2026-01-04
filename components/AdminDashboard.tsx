@@ -61,6 +61,9 @@ import {
 } from 'lucide-react';
 import aiService from '../services/ai';
 import WhatsAppPanel from './WhatsAppPanel';
+import { api } from '../services/api';
+import { fetchDelhiWeather, pickHighestRiskWard, WeatherSnapshot } from '../services/weather';
+import { Ward } from '../types';
 
 const AdminDashboard: React.FC = () => {
   const { employees, grievances, resolveGrievance } = useApp();
@@ -76,6 +79,16 @@ const AdminDashboard: React.FC = () => {
   const [aiQuery, setAiQuery] = useState("");
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [weather, setWeather] = useState<WeatherSnapshot | null>(null);
+  const [wards, setWards] = useState<Ward[]>([]);
+  const fallbackAlerts = useMemo(() => [
+    "🚨 CRITICAL: Heavy rain forecast in Zone 4 - Deployment increased",
+    "⚠️ ALERT: 3 Grievances escalated to Level 2 in Sanitation Dept",
+    "ℹ️ INFO: Biometric Server Maintenance scheduled for 2 AM",
+    "📢 NOTICE: New Transfer Policy effective from next month",
+    "✅ SUCCESS: Monthly payroll processed for all departments"
+  ], []);
+  const [alerts, setAlerts] = useState<string[]>(fallbackAlerts);
   
   // ML Service State
   const [mlServiceStatus, setMlServiceStatus] = useState<'checking' | 'online' | 'offline'>('checking');
@@ -141,22 +154,70 @@ const AdminDashboard: React.FC = () => {
     { grade: 'D', count: employees.filter(e => e.performance.overallGrade === 'D').length, color: '#ef4444' },
   ];
 
-  // Mock Alerts for Ticker
-  const alerts = [
-    "🚨 CRITICAL: Heavy rain forecast in Zone 4 - Deployment increased",
-    "⚠️ ALERT: 3 Grievances escalated to Level 2 in Sanitation Dept",
-    "ℹ️ INFO: Biometric Server Maintenance scheduled for 2 AM",
-    "📢 NOTICE: New Transfer Policy effective from next month",
-    "✅ SUCCESS: Monthly payroll processed for all departments"
-  ];
+  const riskScore = (level: Ward['riskLevel']) => {
+    switch (level) {
+      case 'Critical':
+        return 4;
+      case 'High':
+        return 3;
+      case 'Medium':
+        return 2;
+      default:
+        return 1;
+    }
+  };
+
+  const buildAlerts = (wx: WeatherSnapshot | null, wardList: Ward[]) => {
+    if (!wx || !wardList.length) return fallbackAlerts;
+    const topWard = pickHighestRiskWard(wardList);
+    const zoneLabel = topWard ? `${topWard.zone}` : 'Zone';
+    const wardName = topWard ? `${topWard.name}` : 'Priority ward';
+
+    const derived: string[] = [];
+    if (wx.condition === 'heavy_rain') {
+      derived.push(`🚨 CRITICAL: Heavy rain forecast in ${zoneLabel} - Deployment increased`);
+    } else if (wx.condition === 'light_rain') {
+      derived.push(`⚠️ ALERT: Moderate rain expected near ${zoneLabel} - Cover assets`);
+    } else if (wx.condition === 'windy') {
+      derived.push(`⚠️ WIND: Gusty winds in ${zoneLabel} - Secure equipment`);
+    } else {
+      derived.push(`ℹ️ INFO: Weather stable in Delhi (${wx.temperatureC.toFixed(0)}°C)`);
+    }
+
+    derived.push(`🌧️ Precip: ${wx.precipitationMm.toFixed(1)} mm | 💨 Wind: ${wx.windKph.toFixed(1)} km/h`);
+
+    if (topWard) {
+      const scoreLabel = ['Low', 'Medium', 'High', 'Critical'][riskScore(topWard.riskLevel) - 1] || 'Monitoring';
+      derived.push(`📍 Ward watch: ${wardName} (${zoneLabel}) - ${scoreLabel} risk`);
+    }
+
+    return derived.length ? derived : fallbackAlerts;
+  };
+
+  // Fetch weather + wards and build alerts
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [wx, wardData] = await Promise.all([fetchDelhiWeather(), api.listWards()]);
+        setWeather(wx);
+        setWards(wardData);
+        setAlerts(buildAlerts(wx, wardData));
+      } catch (err) {
+        console.warn('Alert sources unavailable, using fallback', err);
+        setAlerts(fallbackAlerts);
+      }
+    };
+    load();
+  }, [fallbackAlerts]);
 
   // Ticker Animation
   useEffect(() => {
+    if (!alerts.length) return;
     const interval = setInterval(() => {
       setTickerIndex((prev) => (prev + 1) % alerts.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, [alerts.length]);
+  }, [alerts]);
 
   // Check ML Service Status
   useEffect(() => {

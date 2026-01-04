@@ -183,3 +183,18 @@ const generatePayslips = (): Payslip[] => {
 };
 
 export const INITIAL_PAYSLIPS = generatePayslips();
+
+export const INITIAL_WARDS = [
+  { id: 1, zone: 'Zone 1', name: 'Chandni Chowk', population: 180000, riskLevel: 'Medium', notes: 'Old city dense lanes' },
+  { id: 2, zone: 'Zone 2', name: 'Karol Bagh', population: 210000, riskLevel: 'Low', notes: 'Mixed commercial/residential' },
+  { id: 3, zone: 'Zone 3', name: 'Civil Lines', population: 150000, riskLevel: 'Low', notes: 'Close to Yamuna embankment' },
+  { id: 4, zone: 'Zone 4', name: 'Rohini', population: 320000, riskLevel: 'High', notes: 'Low-lying pockets, waterlogging risk' },
+  { id: 5, zone: 'Zone 5', name: 'Najafgarh', population: 275000, riskLevel: 'Medium', notes: 'Open drains near settlements' },
+  { id: 6, zone: 'Zone 6', name: 'Dwarka', population: 240000, riskLevel: 'Low', notes: 'Better drainage but high wind corridor' },
+  { id: 7, zone: 'Zone 7', name: 'South Delhi', population: 330000, riskLevel: 'Medium', notes: 'Tree cover, scattered waterlogging' },
+  { id: 8, zone: 'Zone 8', name: 'Central Delhi', population: 195000, riskLevel: 'Medium', notes: 'Heritage areas, traffic choke points' },
+  { id: 9, zone: 'Zone 9', name: 'Narela', population: 160000, riskLevel: 'High', notes: 'Industrial belts, drainage constraints' },
+  { id: 10, zone: 'Zone 10', name: 'Shahdara North', population: 200000, riskLevel: 'Medium', notes: 'Yamuna proximity, embankment watch' },
+  { id: 11, zone: 'Zone 11', name: 'Shahdara South', population: 210000, riskLevel: 'High', notes: 'Floodplain-adjacent wards' },
+  { id: 12, zone: 'Zone 12', name: 'Kalkaji', population: 185000, riskLevel: 'Low', notes: 'Elevated terrain, minor wind alerts' }
+];
