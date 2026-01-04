@@ -1316,6 +1316,303 @@ async def gdpr_data_export(user_id: int):
         "download_expires": "24 hours"
     }
 
+# ============ SMART RECOMMENDATIONS (Step 7) ============
+
+class ResolutionRequest(BaseModel):
+    grievance_id: int
+    category: str
+    description: str
+    priority: str
+    historical_resolutions: List[dict] = []
+
+class RepeatIssueCheck(BaseModel):
+    grievances: List[dict]
+    ward: Optional[str] = None
+    time_window_days: int = 7
+    threshold: int = 3
+
+@app.post("/recommendations/suggest-resolution")
+async def suggest_resolution(request: ResolutionRequest):
+    """
+    AI-powered resolution recommendation based on grievance content and historical data.
+    Uses OpenRouter API with fallback to template matching.
+    """
+    try:
+        # Prepare context from historical resolutions
+        history_context = ""
+        if request.historical_resolutions:
+            history_context = "\n\nHistorical resolutions:\n"
+            for res in request.historical_resolutions[:5]:
+                history_context += f"- Category: {res.get('category')}, Resolution: {res.get('resolution')}\n"
+        
+        prompt = f"""As an HR resolution expert for a government organization, suggest the best resolution for this grievance:
+
+Category: {request.category}
+Priority: {request.priority}
+Description: {request.description}
+{history_context}
+
+Provide:
+1. Recommended actions (3-5 specific steps)
+2. Department to assign
+3. Expected resolution time
+4. Preventive measures
+
+Format as JSON with keys: actions, department, timeline, prevention"""
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                OPENROUTER_URL,
+                headers={
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": MODEL_ID,
+                    "messages": [
+                        {"role": "system", "content": "You are an expert HR resolution advisor. Always respond with valid JSON."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.3
+                },
+                timeout=15.0
+            )
+        
+        if response.status_code == 200:
+            ai_response = response.json()
+            content = ai_response["choices"][0]["message"]["content"]
+            
+            # Extract JSON from response
+            start_idx = content.find("{")
+            end_idx = content.rfind("}") + 1
+            if start_idx != -1 and end_idx > start_idx:
+                json_str = content[start_idx:end_idx]
+                recommendation = json.loads(json_str)
+                
+                return {
+                    "success": True,
+                    "grievance_id": request.grievance_id,
+                    "recommendation": recommendation,
+                    "ai_powered": True,
+                    "confidence": 0.85
+                }
+        
+        # Fallback to template-based recommendations
+        raise Exception("AI unavailable, using fallback")
+    
+    except Exception as e:
+        print(f"Resolution suggestion error: {e}")
+        
+        # Template-based fallback
+        templates = {
+            "Salary": {
+                "actions": [
+                    "Verify payroll records for discrepancies",
+                    "Contact accounts department",
+                    "Issue corrected payslip within 3 days",
+                    "Provide written explanation to employee"
+                ],
+                "department": "Accounts & Finance",
+                "timeline": "3-5 business days",
+                "prevention": "Implement automated payroll validation checks"
+            },
+            "Equipment": {
+                "actions": [
+                    "Verify equipment inventory",
+                    "Procure or reallocate required equipment",
+                    "Update equipment tracking system",
+                    "Schedule delivery within 2 days"
+                ],
+                "department": "Operations & Logistics",
+                "timeline": "2-3 business days",
+                "prevention": "Maintain buffer stock of essential equipment"
+            },
+            "Harassment": {
+                "actions": [
+                    "Initiate confidential inquiry immediately",
+                    "Assign dedicated investigation officer",
+                    "Interview involved parties separately",
+                    "Take disciplinary action if required",
+                    "Provide counseling support"
+                ],
+                "department": "HR & Internal Affairs",
+                "timeline": "7-10 business days",
+                "prevention": "Conduct regular anti-harassment training"
+            },
+            "Leave": {
+                "actions": [
+                    "Review leave balance and eligibility",
+                    "Check departmental staffing requirements",
+                    "Approve or provide alternative dates",
+                    "Update leave management system"
+                ],
+                "department": "HR Operations",
+                "timeline": "1-2 business days",
+                "prevention": "Implement online leave approval system"
+            }
+        }
+        
+        recommendation = templates.get(request.category, {
+            "actions": [
+                "Investigate issue thoroughly",
+                "Consult with relevant department",
+                "Implement corrective measures",
+                "Follow up with employee"
+            ],
+            "department": "General Administration",
+            "timeline": "5-7 business days",
+            "prevention": "Conduct regular feedback sessions"
+        })
+        
+        return {
+            "success": True,
+            "grievance_id": request.grievance_id,
+            "recommendation": recommendation,
+            "ai_powered": False,
+            "confidence": 0.7,
+            "fallback": True
+        }
+
+@app.post("/recommendations/detect-repeat-issues")
+async def detect_repeat_issues(request: RepeatIssueCheck):
+    """
+    Detect repeated issues in the same ward/category within a time window.
+    Suggests preventive action plans when threshold is exceeded.
+    """
+    from datetime import datetime, timedelta
+    from collections import defaultdict
+    
+    try:
+        # Filter grievances by time window
+        cutoff_date = datetime.now() - timedelta(days=request.time_window_days)
+        recent_grievances = []
+        
+        for g in request.grievances:
+            submitted_at = g.get("submittedAt") or g.get("date")
+            if submitted_at:
+                try:
+                    g_date = datetime.fromisoformat(submitted_at.replace('Z', '+00:00'))
+                    if g_date >= cutoff_date:
+                        recent_grievances.append(g)
+                except:
+                    continue
+        
+        # Group by ward + category
+        clusters = defaultdict(list)
+        
+        for g in recent_grievances:
+            ward = g.get("location") or request.ward or "Unknown"
+            category = g.get("category", "Unknown")
+            key = f"{ward}|{category}"
+            clusters[key].append(g)
+        
+        # Detect repeat issues exceeding threshold
+        repeat_issues = []
+        
+        for key, grievances_in_cluster in clusters.items():
+            if len(grievances_in_cluster) >= request.threshold:
+                ward, category = key.split("|")
+                
+                # Generate preventive action plan
+                action_plans = {
+                    "Salary": "Conduct payroll audit for this ward, implement automated validation",
+                    "Equipment": "Increase equipment allocation to this ward, set up monthly inventory checks",
+                    "Harassment": "Mandatory anti-harassment workshop for this ward, appoint ward coordinator",
+                    "Leave": "Review staffing levels, implement rotation policy",
+                    "Infrastructure": "Schedule infrastructure inspection, allocate repair budget",
+                    "Safety": "Conduct safety audit, provide protective equipment"
+                }
+                
+                repeat_issues.append({
+                    "ward": ward,
+                    "category": category,
+                    "count": len(grievances_in_cluster),
+                    "severity": "Critical" if len(grievances_in_cluster) >= request.threshold * 2 else "High",
+                    "grievance_ids": [g.get("id") for g in grievances_in_cluster],
+                    "preventive_action": action_plans.get(category, "Conduct root cause analysis, implement corrective measures"),
+                    "recommended_timeline": "Implement within 48 hours",
+                    "escalation_required": len(grievances_in_cluster) >= request.threshold * 2
+                })
+        
+        return {
+            "success": True,
+            "repeat_issues": repeat_issues,
+            "total_analyzed": len(recent_grievances),
+            "threshold": request.threshold,
+            "time_window_days": request.time_window_days,
+            "action_required": len(repeat_issues) > 0
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "repeat_issues": []
+        }
+
+@app.get("/recommendations/resolution-templates")
+async def get_resolution_templates():
+    """
+    Get pre-defined resolution templates for common grievance categories.
+    """
+    templates = {
+        "Salary": {
+            "template_id": "SAL-001",
+            "title": "Salary Payment Issue Resolution",
+            "steps": [
+                "Verify employee ID and payroll records",
+                "Check for system errors or pending approvals",
+                "Process manual payment if required",
+                "Update employee and generate confirmation"
+            ],
+            "typical_resolution_time": "3 days",
+            "required_approvals": ["Accounts Head", "Deputy Commissioner"]
+        },
+        "Equipment": {
+            "template_id": "EQP-001",
+            "title": "Equipment Shortage Resolution",
+            "steps": [
+                "Verify equipment request against allocation",
+                "Check inventory availability",
+                "Initiate procurement or reallocation",
+                "Schedule delivery and training"
+            ],
+            "typical_resolution_time": "2-3 days",
+            "required_approvals": ["Store Manager", "Operations Head"]
+        },
+        "Harassment": {
+            "template_id": "HAR-001",
+            "title": "Harassment Complaint Investigation",
+            "steps": [
+                "Assign investigation committee",
+                "Conduct confidential interviews",
+                "Document evidence and statements",
+                "Recommend disciplinary action",
+                "Provide support and counseling"
+            ],
+            "typical_resolution_time": "10 days",
+            "required_approvals": ["HR Head", "Commissioner", "Legal Team"]
+        },
+        "Leave": {
+            "template_id": "LEV-001",
+            "title": "Leave Request Processing",
+            "steps": [
+                "Verify leave balance",
+                "Check departmental coverage",
+                "Approve or suggest alternate dates",
+                "Update leave management system"
+            ],
+            "typical_resolution_time": "1 day",
+            "required_approvals": ["Immediate Supervisor"]
+        }
+    }
+    
+    return {
+        "success": True,
+        "templates": templates,
+        "total_templates": len(templates)
+    }
+
 # ============ STARTUP ============
 if __name__ == "__main__":
     print("🚀 Starting MCD HRMS ML Service v2.0...")
