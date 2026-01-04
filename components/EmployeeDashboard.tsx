@@ -1,121 +1,81 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useApp } from '../context/AppContext';
-import { 
-  MapPin, 
-  IndianRupee, 
-  Mic, 
-  CheckCircle, 
-  AlertTriangle, 
-  X, 
-  Loader2,
-  Calendar,
-  MessageSquare,
-  Phone,
-  Clock,
-  MicOff,
-  Shield,
-  Navigation,
-  Wifi,
-  ScanFace,
-  Fingerprint
-} from 'lucide-react';
-import FaceRecognition from './FaceRecognition';
-import { hasEnrolledFace, getEnrollmentStatus } from '../services/face-recognition';
+  if (employeeView === 'case-history') {
+    return (
+      <div className="min-h-screen pb-24" style={{ background: '#f4f4f5' }}>
+        <div style={{ background: '#ffffff', borderBottom: '1px solid #e5e7eb', padding: '14px 16px' }}>
+          <button
+            onClick={() => setEmployeeView('dashboard')}
+            style={{
+              background: '#f3f4f6',
+              border: '1px solid #e5e7eb',
+              padding: '8px 12px',
+              borderRadius: '10px',
+              color: '#111827',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            ← {t('back_to_dashboard') || 'Back to dashboard'}
+          </button>
+          <h1 style={{ color: '#0f172a', fontSize: '20px', fontWeight: 700, margin: '12px 0 4px' }}>
+            {t('case_history') || 'My Case History'}
+          </h1>
+          <p style={{ color: '#4b5563', fontSize: '13px', margin: 0 }}>
+            {t('track_cases') || 'See all complaints you have raised'}
+          </p>
+        </div>
 
-const EmployeeDashboard: React.FC = () => {
-  const { language, setCurrentView, addGrievance, markAttendance, t, grievances } = useApp();
-  const [showVoiceModal, setShowVoiceModal] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [processing, setProcessing] = useState(false);
-  const [manualComplaint, setManualComplaint] = useState('');
-  const [speechSupported, setSpeechSupported] = useState(true);
-  const [micError, setMicError] = useState('');
-  const [employeeView, setEmployeeView] = useState<'dashboard' | 'case-history'>('dashboard');
-  
-  // Enhanced Complaint Form State
-  const [complaintCategory, setComplaintCategory] = useState('');
-  const [complaintLocation, setComplaintLocation] = useState('');
-  const [complaintFile, setComplaintFile] = useState<File | null>(null);
-  
-  // Attendance State
-  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
-  const [attendanceStep, setAttendanceStep] = useState<'locating' | 'face-verify' | 'verifying' | 'success' | 'error' | 'spoofing'>('locating');
-  const [attendanceMarked, setAttendanceMarked] = useState(false);
-  const [locationPings, setLocationPings] = useState<any[]>([]);
-  const [verificationResult, setVerificationResult] = useState<any>(null);
-  const [verificationProgress, setVerificationProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  
-  // Face Recognition State
-  const [showFaceEnrollment, setShowFaceEnrollment] = useState(false);
-  const [faceVerified, setFaceVerified] = useState(false);
+        <div style={{ padding: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '12px' }}>
+            {[{ label: t('total_cases') || 'Total cases', value: myGrievances.length }, { label: t('pending') || 'Pending', value: pendingCount }, { label: t('resolved') || 'Resolved', value: resolvedCount }].map((item, idx) => (
+              <div key={idx} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a' }}>{item.value}</div>
+                <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>{item.label}</div>
+              </div>
+            ))}
+          </div>
 
-  const recognitionRef = useRef<any>(null);
-  const locationWatchRef = useRef<number | null>(null);
-  const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
-  
-  // Office location (MCD Civic Centre, Delhi)
-  const OFFICE_LOCATION = { lat: 28.6328, lng: 77.2197, radius: 0.5 };
-
-  const employeeData = {
-    id: 1,
-    name: 'Ramesh Gupta',
-    checkInTime: '09:15 AM',
-    leaveBalance: 8,
-  };
-
-  // Update current time every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Check if current time is within attendance window (7 AM - 5 PM)
-  const isWithinAttendanceWindow = () => {
-    const hours = currentTime.getHours();
-    return hours >= 7 && hours < 17; // 7 AM to 5 PM (17:00)
-  };
-
-  // Format time for display
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true,
-    });
-  };
-
-  // NLP Analysis
-  const analyzeGrievanceNLP = async (text: string) => {
-    console.log('🔍 Analyzing:', text);
-    try {
-      const response = await fetch(`${ML_API_URL}/analyze-grievance`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      if (!response.ok) throw new Error('NLP unavailable');
-      const data = await response.json();
-      console.log('✅ NLP Result:', data);
-      return {
-        category: data?.category || 'General',
-        priority: (data?.priority === 'High' ? 'High' : data?.priority === 'Low' ? 'Low' : 'Medium') as 'High' | 'Medium' | 'Low',
-      };
-    } catch (error) {
-      console.error('❌ NLP Error:', error);
-      return { category: 'General', priority: 'Medium' as const };
-    }
-  };
-
-  // Setup Speech Recognition
-  useEffect(() => {
-    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-    
-    if (!SpeechRecognition) {
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {myGrievances.length === 0 ? (
+              <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '24px 16px', textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📭</div>
+                <p style={{ color: '#4b5563', fontSize: '14px', margin: 0 }}>{t('no_grievances') || 'No grievances submitted yet'}</p>
+              </div>
+            ) : (
+              myGrievances
+                .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+                .map((grievance) => (
+                  <div key={grievance.id} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 8px', borderRadius: '8px', background: '#f3f4f6', color: '#111827' }}>
+                            {grievance.category}
+                          </span>
+                          <span style={{ fontSize: '11px', color: '#6b7280' }}>#{grievance.id}</span>
+                        </div>
+                        <p style={{ color: '#1f2937', fontSize: '14px', margin: '0 0 6px', lineHeight: 1.4 }}>
+                          {grievance.description.substring(0, 120)}{grievance.description.length > 120 ? '…' : ''}
+                        </p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '12px', color: '#4b5563' }}>
+                          <span>📅 {new Date(grievance.submittedAt).toLocaleDateString()}</span>
+                          <span>🚨 {grievance.priority}</span>
+                          {grievance.location && <span>📍 {grievance.location}</span>}
+                        </div>
+                      </div>
+                      <div style={{ alignSelf: 'flex-start', padding: '6px 10px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '12px', fontWeight: 600, color: grievance.status === 'Resolved' ? '#166534' : '#92400e', background: grievance.status === 'Resolved' ? '#ecfdf3' : '#fff7ed' }}>
+                        {grievance.status === 'Resolved' ? 'Resolved' : 'Pending'}
+                      </div>
+                    </div>
+                  </div>
+                ))
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
       console.log('❌ No Speech Recognition API');
       setSpeechSupported(false);
       return;
@@ -521,178 +481,155 @@ const EmployeeDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: '#f8fafc' }}>
-      {/* Header */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)', 
-        padding: '24px 20px',
-        borderRadius: '0 0 24px 24px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-          <div style={{ 
-            width: '60px', height: '60px', 
-            background: 'rgba(255,255,255,0.2)', 
-            borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '24px', color: 'white', fontWeight: 'bold'
-          }}>
-            {employeeData.name.charAt(0)}
-          </div>
-          <div>
-            <h1 style={{ color: 'white', fontSize: '22px', fontWeight: 'bold', margin: 0 }}>
-              {`${t('hello')}, ${employeeData.name.split(' ')[0]}! 👋`}
-            </h1>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', margin: '4px 0 0 0' }}>
-              {t('have_good_day')}
-            </p>
-          </div>
-        </div>
-        
-        <div style={{ 
-          background: attendanceMarked ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.15)', 
-          borderRadius: '12px', padding: '12px 16px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {attendanceMarked ? <CheckCircle size={20} style={{ color: '#4ade80' }} /> : <Clock size={20} style={{ color: 'rgba(255,255,255,0.8)' }} />}
-            <span style={{ color: 'white', fontSize: '15px', fontWeight: '500' }}>
-              {attendanceMarked ? `${t('attendance_marked_at')}: ${employeeData.checkInTime}` : t('mark_attendance_now')}
-            </span>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ color: 'white', fontSize: '16px', fontWeight: 'bold' }}>
-              {formatTime(currentTime)}
+    <div className="min-h-screen pb-24" style={{ background: '#f4f4f5' }}>
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#111827' }}>
+                {employeeData.name.charAt(0)}
+              </div>
+              <div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#111827' }}>{`${t('hello')}, ${employeeData.name.split(' ')[0]}`}</div>
+                <div style={{ fontSize: '13px', color: '#4b5563' }}>{t('have_good_day')}</div>
+              </div>
             </div>
-            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>
-              {isWithinAttendanceWindow() ? t('time_window_in') : t('time_window_out')}
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: '#111827' }}>{formatTime(currentTime)}</div>
+              <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                {isWithinAttendanceWindow() ? t('time_window_in') : t('time_window_out')}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Buttons */}
-      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        
-        {/* Face Enrollment Banner (if not enrolled) */}
         {!hasEnrolledFace(employeeData.id) && (
-          <div style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', borderRadius: '16px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(139,92,246,0.3)' }}
-               onClick={() => setShowFaceEnrollment(true)}>
-            <div style={{ width: '48px', height: '48px', background: 'rgba(255,255,255,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ScanFace size={28} style={{ color: 'white' }} />
+          <button
+            onClick={() => setShowFaceEnrollment(true)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '12px', padding: '12px 14px', cursor: 'pointer'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <ScanFace size={22} style={{ color: '#c2410c' }} />
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#7c2d12' }}>{t('setup_face_id') || 'Set up Face ID'}</div>
+                <div style={{ fontSize: '12px', color: '#9a3412' }}>{t('required_for_attendance') || 'Needed for attendance'}</div>
+              </div>
             </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>🔐 {t('setup_face_id') || 'Setup Face ID'}</p>
-              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', margin: '2px 0 0 0' }}>
-                {t('required_for_attendance') || 'Required for secure attendance marking'}
-              </p>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '8px 12px', borderRadius: '8px' }}>
-              <span style={{ color: 'white', fontSize: '12px', fontWeight: '600' }}>{t('enroll_now') || 'Enroll Now'}</span>
-            </div>
-          </div>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#7c2d12' }}>{t('enroll_now') || 'Enroll'}</span>
+          </button>
         )}
-        
-        {/* Face ID Status Badge (if enrolled) */}
+
         {hasEnrolledFace(employeeData.id) && (
-          <div style={{ background: '#f0fdf4', border: '2px solid #bbf7d0', borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '36px', height: '36px', background: '#dcfce7', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Fingerprint size={20} style={{ color: '#16a34a' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ecfdf3', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '12px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Fingerprint size={20} style={{ color: '#15803d' }} />
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#166534' }}>{t('face_id_ready') || 'Face ID ready'}</div>
+                <div style={{ fontSize: '12px', color: '#166534' }}>{getEnrollmentStatus(employeeData.id).samplesCount} {t('samples') || 'samples saved'}</div>
+              </div>
             </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ color: '#166534', fontSize: '14px', fontWeight: '600', margin: 0 }}>✅ Face ID Enrolled</p>
-              <p style={{ color: '#22c55e', fontSize: '12px', margin: '2px 0 0 0' }}>
-                {getEnrollmentStatus(employeeData.id).samplesCount} samples registered
-              </p>
-            </div>
-            <button 
+            <button
               onClick={() => setShowFaceEnrollment(true)}
-              style={{ background: 'transparent', border: '1px solid #22c55e', color: '#16a34a', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
-              Update
+              style={{ border: '1px solid #16a34a', background: '#ffffff', color: '#166534', padding: '6px 10px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+            >
+              {t('update') || 'Update'}
             </button>
           </div>
         )}
-        
-        {/* Attendance */}
-        <button onClick={handleAttendance} disabled={attendanceMarked || !isWithinAttendanceWindow()}
+
+        <button
+          onClick={handleAttendance}
+          disabled={attendanceMarked || !isWithinAttendanceWindow()}
           style={{
-            width: '100%', padding: '24px',
-            background: attendanceMarked ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : !isWithinAttendanceWindow() ? 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-            border: 'none', borderRadius: '20px',
-            display: 'flex', alignItems: 'center', gap: '16px',
-            cursor: (attendanceMarked || !isWithinAttendanceWindow()) ? 'not-allowed' : 'pointer',
-            boxShadow: '0 8px 24px rgba(59,130,246,0.3)',
-            opacity: (attendanceMarked || !isWithinAttendanceWindow()) ? 0.7 : 1
-          }}>
-          <div style={{ width: '56px', height: '56px', background: 'rgba(255,255,255,0.2)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {attendanceMarked ? <CheckCircle size={32} style={{ color: 'white' }} /> : <MapPin size={32} style={{ color: 'white' }} />}
+            background: attendanceMarked ? '#16a34a' : !isWithinAttendanceWindow() ? '#9ca3af' : '#0ea5e9',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            cursor: attendanceMarked || !isWithinAttendanceWindow() ? 'not-allowed' : 'pointer',
+            opacity: attendanceMarked || !isWithinAttendanceWindow() ? 0.75 : 1
+          }}
+        >
+          <div style={{ width: '46px', height: '46px', borderRadius: '10px', background: 'rgba(255,255,255,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {attendanceMarked ? <CheckCircle size={24} /> : <MapPin size={24} />}
           </div>
           <div style={{ textAlign: 'left', flex: 1 }}>
-            <p style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>
-              {attendanceMarked ? `✓ ${t('attendance_complete')}` : !isWithinAttendanceWindow() ? `⏰ ${t('time_window_out')}` : `📍 ${t('mark_attendance_now')}`}
-            </p>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', margin: '4px 0 0 0' }}>
-              {attendanceMarked ? t('attendance_complete') : !isWithinAttendanceWindow() ? t('time_window_hours') : t('tap_here')}
-            </p>
+            <div style={{ fontSize: '16px', fontWeight: 700 }}>
+              {attendanceMarked ? t('attendance_complete') : t('mark_attendance_now')}
+            </div>
+            <div style={{ fontSize: '12px' }}>
+              {attendanceMarked ? `${t('attendance_marked_at')}: ${employeeData.checkInTime}` : t('tap_here')}
+            </div>
           </div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>›</div>
         </button>
 
-        {/* Salary & Leave */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <button onClick={() => setCurrentView('payroll')}
-            style={{ padding: '20px 16px', background: 'white', border: '2px solid #e2e8f0', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-            <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <IndianRupee size={26} style={{ color: 'white' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+          <button
+            onClick={() => setCurrentView('payroll')}
+            style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '14px', textAlign: 'left', cursor: 'pointer' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <IndianRupee size={20} style={{ color: '#166534' }} />
+              <span style={{ fontWeight: 700, color: '#111827' }}>{t('salary_slip')}</span>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ color: '#1e293b', fontSize: '16px', fontWeight: '600', margin: 0 }}>💰 {t('salary_slip')}</p>
-              <p style={{ color: '#64748b', fontSize: '12px', margin: '4px 0 0 0' }}>{t('view_download')}</p>
-            </div>
+            <div style={{ fontSize: '12px', color: '#4b5563' }}>{t('view_download')}</div>
           </button>
 
-          <button onClick={() => setCurrentView('leave')}
-            style={{ padding: '20px 16px', background: 'white', border: '2px solid #e2e8f0', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-            <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Calendar size={26} style={{ color: 'white' }} />
+          <button
+            onClick={() => setCurrentView('leave')}
+            style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '14px', textAlign: 'left', cursor: 'pointer' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <Calendar size={20} style={{ color: '#b45309' }} />
+              <span style={{ fontWeight: 700, color: '#111827' }}>{t('leave')}</span>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ color: '#1e293b', fontSize: '16px', fontWeight: '600', margin: 0 }}>📅 {t('leave')}</p>
-              <p style={{ color: '#64748b', fontSize: '12px', margin: '4px 0 0 0' }}>{employeeData.leaveBalance} {t('leave_remaining')}</p>
-            </div>
+            <div style={{ fontSize: '12px', color: '#4b5563' }}>{employeeData.leaveBalance} {t('leave_remaining')}</div>
           </button>
         </div>
 
-        {/* Complaint */}
-        <button onClick={() => setShowVoiceModal(true)}
-          style={{ width: '100%', padding: '20px', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', border: 'none', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', boxShadow: '0 6px 20px rgba(239,68,68,0.25)' }}>
-          <div style={{ width: '48px', height: '48px', background: 'rgba(255,255,255,0.2)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Mic size={26} style={{ color: 'white' }} />
-          </div>
-          <div style={{ textAlign: 'left' }}>
-            <p style={{ color: 'white', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>🎤 {t('file_complaint_voice')}</p>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', margin: '4px 0 0 0' }}>{t('speak_or_type')}</p>
-          </div>
-        </button>
-
-        {/* Case History */}
-        <button onClick={() => setEmployeeView('case-history')}
-          style={{ width: '100%', padding: '20px', background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', border: 'none', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', boxShadow: '0 6px 20px rgba(139,92,246,0.25)' }}>
-          <div style={{ width: '48px', height: '48px', background: 'rgba(255,255,255,0.2)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <MessageSquare size={26} style={{ color: 'white' }} />
+        <button
+          onClick={() => setShowVoiceModal(true)}
+          style={{ background: '#fee2e2', border: '1px solid #fecdd3', borderRadius: '12px', padding: '14px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+        >
+          <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: '#fecdd3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Mic size={22} style={{ color: '#b91c1c' }} />
           </div>
           <div style={{ textAlign: 'left', flex: 1 }}>
-            <p style={{ color: 'white', fontSize: '18px', fontWeight: 'bold', margin: 0 }}>📋 My Case History</p>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', margin: '4px 0 0 0' }}>
-              {myGrievances.length} {myGrievances.length === 1 ? 'case' : 'cases'} • {pendingCount} pending
-            </p>
+            <div style={{ fontWeight: 700, color: '#991b1b' }}>{t('file_complaint_voice')}</div>
+            <div style={{ fontSize: '12px', color: '#b91c1c' }}>{t('speak_or_type')}</div>
           </div>
+          <div style={{ fontSize: '18px', fontWeight: 700, color: '#991b1b' }}>›</div>
         </button>
 
-        {/* Help */}
-        <div style={{ background: 'white', borderRadius: '16px', padding: '16px', border: '2px solid #e2e8f0', marginTop: '8px' }}>
-          <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 12px 0', fontWeight: '500' }}>📞 {t('need_help')}</p>
-          <a href="tel:1800-123-4567" style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#1e40af', textDecoration: 'none', fontSize: '16px', fontWeight: '600' }}>
-            <Phone size={20} />1800-123-4567 ({t('toll_free')})
+        <button
+          onClick={() => setEmployeeView('case-history')}
+          style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '14px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+        >
+          <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MessageSquare size={20} style={{ color: '#111827' }} />
+          </div>
+          <div style={{ textAlign: 'left', flex: 1 }}>
+            <div style={{ fontWeight: 700, color: '#111827' }}>{t('case_history') || 'Case history'}</div>
+            <div style={{ fontSize: '12px', color: '#4b5563' }}>
+              {myGrievances.length} {myGrievances.length === 1 ? t('case_single') || 'case' : t('case_plural') || 'cases'} • {pendingCount} {t('pending') || 'pending'}
+            </div>
+          </div>
+          <div style={{ fontSize: '18px', fontWeight: 700 }}>›</div>
+        </button>
+
+        <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ fontWeight: 700, color: '#111827', fontSize: '14px' }}>📞 {t('need_help')}</div>
+          <a href="tel:1800-123-4567" style={{ color: '#0f172a', fontWeight: 700, textDecoration: 'none', fontSize: '16px' }}>
+            1800-123-4567 ({t('toll_free')})
           </a>
+          <div style={{ fontSize: '12px', color: '#4b5563' }}>{t('working_hours') || 'Working hours: 9 AM - 6 PM'}</div>
         </div>
       </div>
 
