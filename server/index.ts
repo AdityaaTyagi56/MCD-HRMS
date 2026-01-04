@@ -132,6 +132,7 @@ const grievanceSchema = z.object({
   category: z.string().min(3).max(80),
   description: z.string().min(5).max(500),
   priority: z.enum(['High', 'Medium', 'Low']).optional().default('Low'),
+  location: z.string().optional(),
 });
 
 const leaveSchema = z.object({
@@ -265,11 +266,17 @@ app.post('/api/grievances', (req, res) => {
     priority: parsed.data.priority,
     status: 'Pending',
     date: new Date().toISOString().split('T')[0],
+    submittedAt: new Date().toISOString(),
     escalationLevel: 0,
     slaBreach: false,
+    location: parsed.data.location || undefined,
   };
   grievances.unshift(grievance);
   persist('grievances', grievances);
+  
+  // Trigger webhook
+  triggerWebhook('grievance.created', grievance);
+  
   res.status(201).json(grievance);
 });
 
@@ -284,8 +291,17 @@ app.patch('/api/grievances/:id/status', (req, res) => {
   const grievance = grievances.find((g) => g.id === grievanceId);
   if (!grievance) return res.status(404).json({ message: 'Grievance not found' });
   
+  const oldStatus = grievance.status;
   grievance.status = status;
   persist('grievances', grievances);
+  
+  // Trigger webhooks based on status change
+  if (status === 'Resolved' && oldStatus !== 'Resolved') {
+    triggerWebhook('grievance.resolved', grievance);
+  } else if (status === 'Escalated' && oldStatus !== 'Escalated') {
+    triggerWebhook('grievance.escalated', grievance);
+  }
+  
   res.json(grievance);
 });
 
@@ -686,6 +702,272 @@ app.post('/api/send-whatsapp', async (req, res) => {
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
   }
+});
+
+// ============ External API Layer (Step 5) ============
+
+// Webhook Subscription Management
+interface WebhookSubscription {
+  id: string;
+  url: string;
+  events: string[];
+  secret: string;
+  createdAt: string;
+  active: boolean;
+}
+
+const webhookSubscriptions: WebhookSubscription[] = load('webhooks', []);
+
+const triggerWebhook = async (event: string, data: any) => {
+  const activeSubscriptions = webhookSubscriptions.filter(sub => 
+    sub.active && sub.events.includes(event)
+  );
+  
+  for (const sub of activeSubscriptions) {
+    try {
+      const payload = {
+        event,
+        data,
+        timestamp: new Date().toISOString(),
+        subscriptionId: sub.id
+      };
+      
+      const signature = Buffer.from(
+        JSON.stringify(payload) + sub.secret
+      ).toString('base64');
+      
+      await fetch(sub.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-MCD-Signature': signature,
+          'X-MCD-Event': event
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      console.log(`✅ Webhook triggered: ${event} → ${sub.url}`);
+    } catch (error) {
+      console.error(`❌ Webhook failed: ${sub.url}`, error);
+    }
+  }
+};
+
+// Create webhook subscription
+app.post('/api/webhooks', authGuard, (req, res) => {
+  const { url, events, secret } = req.body;
+  
+  if (!url || !events || !Array.isArray(events)) {
+    return res.status(400).json({ error: 'Missing url or events array' });
+  }
+  
+  const validEvents = ['grievance.created', 'grievance.resolved', 'grievance.escalated', 'employee.attendance'];
+  const invalidEvents = events.filter((e: string) => !validEvents.includes(e));
+  
+  if (invalidEvents.length > 0) {
+    return res.status(400).json({ error: `Invalid events: ${invalidEvents.join(', ')}`, validEvents });
+  }
+  
+  const subscription: WebhookSubscription = {
+    id: uuid(),
+    url,
+    events,
+    secret: secret || uuid(),
+    createdAt: new Date().toISOString(),
+    active: true
+  };
+  
+  webhookSubscriptions.push(subscription);
+  persist('webhooks', webhookSubscriptions);
+  
+  res.status(201).json(subscription);
+});
+
+// List webhook subscriptions
+app.get('/api/webhooks', authGuard, (_req, res) => {
+  res.json(webhookSubscriptions);
+});
+
+// Delete webhook subscription
+app.delete('/api/webhooks/:id', authGuard, (req, res) => {
+  const { id } = req.params;
+  const index = webhookSubscriptions.findIndex(sub => sub.id === id);
+  
+  if (index === -1) {
+    return res.status(404).json({ error: 'Subscription not found' });
+  }
+  
+  webhookSubscriptions.splice(index, 1);
+  persist('webhooks', webhookSubscriptions);
+  
+  res.json({ message: 'Subscription deleted' });
+});
+
+// OAuth Token Generation
+interface OAuthToken {
+  token: string;
+  scope: string[];
+  expiresAt: string;
+  createdAt: string;
+}
+
+const oauthTokens: OAuthToken[] = load('oauth_tokens', []);
+
+app.post('/api/auth/token', authGuard, (req, res) => {
+  const { scope } = req.body;
+  
+  if (!scope || !Array.isArray(scope)) {
+    return res.status(400).json({ error: 'Missing scope array' });
+  }
+  
+  const validScopes = ['read:grievances', 'write:grievances', 'read:employees', 'read:analytics'];
+  const invalidScopes = scope.filter((s: string) => !validScopes.includes(s));
+  
+  if (invalidScopes.length > 0) {
+    return res.status(400).json({ error: `Invalid scopes: ${invalidScopes.join(', ')}`, validScopes });
+  }
+  
+  const token: OAuthToken = {
+    token: Buffer.from(uuid() + Date.now()).toString('base64'),
+    scope,
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+    createdAt: new Date().toISOString()
+  };
+  
+  oauthTokens.push(token);
+  persist('oauth_tokens', oauthTokens);
+  
+  res.status(201).json(token);
+});
+
+// Validate OAuth token middleware
+const validateOAuthToken = (requiredScope: string) => {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader?.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Missing or invalid authorization header' });
+    }
+    
+    const token = authHeader.substring(7);
+    const oauthToken = oauthTokens.find(t => t.token === token);
+    
+    if (!oauthToken) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    
+    if (new Date(oauthToken.expiresAt) < new Date()) {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+    
+    if (!oauthToken.scope.includes(requiredScope)) {
+      return res.status(403).json({ error: `Missing required scope: ${requiredScope}` });
+    }
+    
+    next();
+  };
+};
+
+// GraphQL-style Query Endpoint
+app.post('/graphql', (req, res) => {
+  const { query, variables } = req.body;
+  
+  if (!query) {
+    return res.status(400).json({ error: 'Missing query' });
+  }
+  
+  try {
+    // Simple GraphQL-like query parser (demo implementation)
+    const result: any = { data: {} };
+    
+    if (query.includes('grievances')) {
+      const limit = variables?.limit || 10;
+      const status = variables?.status;
+      
+      let filtered = grievances;
+      if (status) {
+        filtered = grievances.filter(g => g.status === status);
+      }
+      
+      result.data.grievances = filtered.slice(0, limit).map(g => ({
+        id: g.id,
+        category: g.category,
+        description: g.description,
+        status: g.status,
+        priority: g.priority,
+        submittedAt: g.submittedAt || g.date
+      }));
+    }
+    
+    if (query.includes('employees')) {
+      const limit = variables?.limit || 10;
+      const department = variables?.department;
+      
+      let filtered = employees;
+      if (department) {
+        filtered = employees.filter(e => e.department === department);
+      }
+      
+      result.data.employees = filtered.slice(0, limit).map(e => ({
+        id: e.id,
+        name: e.name,
+        department: e.department,
+        role: e.role,
+        status: e.status
+      }));
+    }
+    
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GraphQL Schema Documentation
+app.get('/graphql/schema', (_req, res) => {
+  const schema = {
+    types: {
+      Grievance: {
+        id: 'number',
+        category: 'string',
+        description: 'string',
+        status: 'string',
+        priority: 'string',
+        submittedAt: 'string'
+      },
+      Employee: {
+        id: 'number',
+        name: 'string',
+        department: 'string',
+        role: 'string',
+        status: 'string'
+      }
+    },
+    queries: {
+      grievances: {
+        args: { limit: 'number', status: 'string' },
+        returns: '[Grievance]'
+      },
+      employees: {
+        args: { limit: 'number', department: 'string' },
+        returns: '[Employee]'
+      }
+    },
+    examples: [
+      {
+        description: 'Get pending grievances',
+        query: '{ grievances }',
+        variables: { limit: 5, status: 'Pending' }
+      },
+      {
+        description: 'Get employees by department',
+        query: '{ employees }',
+        variables: { limit: 10, department: 'Sanitation' }
+      }
+    ]
+  };
+  
+  res.json(schema);
 });
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
