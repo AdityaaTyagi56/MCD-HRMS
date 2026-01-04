@@ -11,6 +11,11 @@ node_modules
 dist
 dist-ssr
 
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
 # Environment files (contain secrets - never commit!)
 .env
 .env.local

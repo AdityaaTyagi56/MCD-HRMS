@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Layout from './components/Layout';
 import AdminDashboard from './components/AdminDashboard';
@@ -11,6 +11,8 @@ import TransferManagement from './components/TransferManagement';
 import PerformanceReview from './components/PerformanceReview';
 import ServiceBook from './components/ServiceBook';
 import ComingSoon from './components/ComingSoon';
+import ErrorBoundary from './components/ErrorBoundary';
+import ServiceWakeUp from './components/ServiceWakeUp';
 
 const DashboardRouter = () => {
   const { currentRole, currentView } = useApp();
@@ -56,10 +58,28 @@ const DashboardRouter = () => {
 };
 
 const App: React.FC = () => {
+  const [servicesReady, setServicesReady] = useState(false);
+  const [skipWakeUp, setSkipWakeUp] = useState(false);
+
+  // Check if we should skip the wake-up screen (for local development)
+  useEffect(() => {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocalhost) {
+      setSkipWakeUp(true);
+      setServicesReady(true);
+    }
+  }, []);
+
+  if (!servicesReady && !skipWakeUp) {
+    return <ServiceWakeUp onReady={() => setServicesReady(true)} />;
+  }
+
   return (
-    <AppProvider>
-      <DashboardRouter />
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <DashboardRouter />
+      </AppProvider>
+    </ErrorBoundary>
   );
 };
 

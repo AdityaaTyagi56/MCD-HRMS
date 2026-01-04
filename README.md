@@ -12,14 +12,39 @@
 
 **A modern, AI-powered HRMS solution designed for government workforce management with advanced fraud detection, multilingual support, and real-time analytics.**
 
-[Features](#-key-features) • [Tech Stack](#-technology-stack) • [Installation](#-installation) • [Architecture](#-architecture) • [API Reference](#-api-reference)
+[Live Demo](#-live-demo) • [Features](#-key-features) • [Tech Stack](#-technology-stack) • [Installation](#-installation) • [API Reference](#-api-reference)
 
 </div>
 
 ---
 
+## 🎬 Live Demo
+
+<div align="center">
+
+### 🌐 [**Try Live Demo →**](https://mcd-hrms.vercel.app)
+
+</div>
+
+| Portal | Description | Access |
+|--------|-------------|--------|
+| 👨‍💼 **Admin Dashboard** | Full analytics, employee management, AI fraud detection | Click "Admin" toggle |
+| 👷 **Employee Portal** | Hindi-first interface, GPS attendance, voice grievance | Default view |
+
+### Demo Features to Try:
+1. **📍 GPS Attendance** - Mark attendance with anti-spoofing verification
+2. **🎤 Voice Grievance** - Submit complaints in Hindi using voice
+3. **👻 Ghost Detection** - Run AI scan to detect fake employees
+4. **📊 Analytics** - View real-time workforce metrics
+5. **🌐 Language Toggle** - Switch between Hindi/English
+
+> ⚠️ **Note:** Free tier servers may take 30-50 seconds to wake up on first visit.
+
+---
+
 ## 📋 Table of Contents
 
+- [Live Demo](#-live-demo)
 - [Overview](#-overview)
 - [Key Features](#-key-features)
 - [Technology Stack](#-technology-stack)
