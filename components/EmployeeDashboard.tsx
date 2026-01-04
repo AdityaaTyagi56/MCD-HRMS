@@ -73,10 +73,12 @@ const EmployeeDashboard: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Check if current time is within attendance window (7 AM - 5 PM)
+  // Check if current time is within attendance window
+  // TEMPORARILY DISABLED FOR TESTING - Original: 7 AM - 5 PM
   const isWithinAttendanceWindow = () => {
-    const hours = currentTime.getHours();
-    return hours >= 7 && hours < 17; // 7 AM to 5 PM (17:00)
+    // const hours = currentTime.getHours();
+    // return hours >= 7 && hours < 17; // 7 AM to 5 PM (17:00)
+    return true; // TEMP: Allow attendance at any time for testing
   };
 
   // Format time for display
