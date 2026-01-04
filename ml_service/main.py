@@ -873,6 +873,191 @@ User Message: {request.message}"""
             "ai_powered": False
         }
 
+# ============ TRANSLATION SERVICE ============
+class TranslationRequest(BaseModel):
+    text: str
+    target_language: str = "en"  # Default to English
+
+@app.post("/translate")
+async def translate_text(request: TranslationRequest):
+    """AI-powered translation service for Hindi to English and vice versa"""
+    text = request.text
+    target = request.target_language.lower()
+    
+    # Detect source language
+    is_hindi = any(ord(c) > 2304 and ord(c) < 2432 for c in text)  # Devanagari range
+    source_lang = "Hindi" if is_hindi else "English"
+    target_lang = "English" if target == "en" else "Hindi"
+    
+    # If already in target language, return as-is
+    if (is_hindi and target == "hi") or (not is_hindi and target == "en"):
+        return {
+            "original_text": text,
+            "translated_text": text,
+            "source_language": source_lang,
+            "target_language": target_lang,
+            "ai_powered": False,
+            "message": "Text is already in target language"
+        }
+    
+    try:
+        prompt = f"""Translate the following text from {source_lang} to {target_lang}.
+Provide ONLY the translation, no explanations or additional text.
+
+Text to translate: "{text}"
+
+Translation:"""
+
+        translation = await call_openrouter(prompt, max_tokens=200)
+        
+        # Clean up the translation
+        translation = translation.strip()
+        if translation.startswith('"') and translation.endswith('"'):
+            translation = translation[1:-1]
+        
+        return {
+            "original_text": text,
+            "translated_text": translation,
+            "source_language": source_lang,
+            "target_language": target_lang,
+            "ai_powered": True
+        }
+        
+    except Exception as e:
+        print(f"Translation error: {e}")
+        # Fallback dictionary for common phrases
+        fallback_dict = {
+            # Hindi to English
+            "वेतन कम है": "Salary is less / insufficient",
+            "वेतन प्राप्त नहीं हुआ है": "Salary has not been received",
+            "वेतन नहीं मिला": "Did not receive salary",
+            "छुट्टी चाहिए": "Need leave",
+            "तबादला चाहिए": "Need transfer",
+            "उपकरण नहीं है": "Equipment not available",
+            "झाड़ू नहीं है": "Broom not available",
+            "परेशानी हो रही है": "Facing problems",
+            "समस्या है": "There is a problem",
+            "मदद चाहिए": "Need help",
+            "काम ज्यादा है": "Too much work",
+            "समय पर वेतन नहीं मिला": "Salary not received on time",
+        }
+        
+        # Try exact match first
+        if text in fallback_dict:
+            return {
+                "original_text": text,
+                "translated_text": fallback_dict[text],
+                "source_language": source_lang,
+                "target_language": target_lang,
+                "ai_powered": False,
+                "fallback": True
+            }
+        
+        # Try partial match
+        for hindi, english in fallback_dict.items():
+            if hindi in text:
+                return {
+                    "original_text": text,
+                    "translated_text": english,
+                    "source_language": source_lang,
+                    "target_language": target_lang,
+                    "ai_powered": False,
+                    "fallback": True,
+                    "partial_match": True
+                }
+        
+        return {
+            "original_text": text,
+            "translated_text": f"[Translation unavailable] {text}",
+            "source_language": source_lang,
+            "target_language": target_lang,
+            "ai_powered": False,
+            "error": str(e)
+        }
+
+# ============ CATEGORIZE GRIEVANCE ============
+@app.post("/categorize-grievance")
+async def categorize_grievance(request: GrievanceRequest):
+    """AI-powered grievance categorization with detailed analysis"""
+    text = request.text
+    
+    # Detect language
+    is_hindi = any(ord(c) > 2304 and ord(c) < 2432 for c in text)
+    
+    try:
+        prompt = f"""Analyze this MCD employee grievance and categorize it.
+
+Grievance Text: "{text}"
+
+Available Categories:
+1. Payroll and Salary Issue - salary delays, wrong payment, deductions
+2. Sanitation Equipment Shortage - missing tools, brooms, dustbins
+3. Workplace Harassment - supervisor issues, bullying, discrimination  
+4. Leave and Transfer Request - leave approval, transfer requests
+5. Infrastructure Problem - office issues, facilities problems
+6. General Complaint - other issues
+
+Respond with ONLY a JSON object:
+{{"category": "exact category name from above", "priority": "High/Medium/Low", "summary_en": "one line English summary", "department": "HR/Admin/Operations/Management", "recommended_action": "brief suggestion"}}"""
+
+        ai_response = await call_openrouter(prompt, max_tokens=200)
+        
+        # Parse JSON from response
+        json_str = ai_response.strip()
+        if "```" in json_str:
+            start = json_str.find("{")
+            end = json_str.rfind("}") + 1
+            if start != -1 and end > start:
+                json_str = json_str[start:end]
+        
+        start_idx = json_str.find("{")
+        end_idx = json_str.rfind("}") + 1
+        if start_idx != -1 and end_idx > start_idx:
+            json_str = json_str[start_idx:end_idx]
+            
+        analysis = json.loads(json_str)
+        
+        return {
+            "original_text": text,
+            "detected_language": "Hindi" if is_hindi else "English",
+            "category": analysis.get("category", "General Complaint"),
+            "priority": analysis.get("priority", "Medium"),
+            "summary": analysis.get("summary_en", text[:100]),
+            "department": analysis.get("department", "Admin"),
+            "recommended_action": analysis.get("recommended_action", "Review and respond"),
+            "ai_powered": True
+        }
+        
+    except Exception as e:
+        print(f"Categorization error: {e}")
+        # Fallback keyword-based categorization
+        text_lower = text.lower()
+        
+        category_keywords = {
+            "Payroll and Salary Issue": ["salary", "pay", "payment", "वेतन", "पैसा", "money", "तनख्वाह"],
+            "Sanitation Equipment Shortage": ["equipment", "tool", "झाड़ू", "broom", "dustbin", "कूड़ादान", "उपकरण"],
+            "Workplace Harassment": ["harassment", "supervisor", "boss", "बॉस", "परेशान", "धमकी"],
+            "Leave and Transfer Request": ["leave", "transfer", "छुट्टी", "तबादला", "holiday"],
+            "Infrastructure Problem": ["office", "building", "toilet", "कार्यालय", "शौचालय"],
+        }
+        
+        detected_category = "General Complaint"
+        for cat, keywords in category_keywords.items():
+            if any(kw in text_lower or kw in text for kw in keywords):
+                detected_category = cat
+                break
+        
+        return {
+            "original_text": text,
+            "detected_language": "Hindi" if is_hindi else "English",
+            "category": detected_category,
+            "priority": "Medium",
+            "summary": text[:100],
+            "department": "Admin",
+            "recommended_action": "Manual review required",
+            "ai_powered": False
+        }
+
 # ============ STARTUP ============
 if __name__ == "__main__":
     print("🚀 Starting MCD HRMS ML Service v2.0...")
