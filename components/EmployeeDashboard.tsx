@@ -610,78 +610,134 @@ const EmployeeDashboard: React.FC = () => {
 
       {/* Voice Modal */}
       {showVoiceModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', zIndex: 100 }}>
-          <div style={{ background: 'white', borderRadius: '24px', padding: '24px', width: '100%', maxWidth: '360px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ color: '#1e293b', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>🎤 {t('file_complaint_voice')}</h2>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', zIndex: 100 }}>
+          <div style={{ background: 'white', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '400px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ color: '#0f172a', fontSize: '22px', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ background: '#eff6ff', padding: '8px', borderRadius: '12px' }}>🎤</span>
+                {t('file_complaint_voice')}
+              </h2>
               <button onClick={() => { stopListening(); setShowVoiceModal(false); setTranscript(''); setManualComplaint(''); setMicError(''); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
-                <X size={24} style={{ color: '#64748b' }} />
+                style={{ background: '#f1f5f9', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}>
+                <X size={20} style={{ color: '#64748b' }} />
               </button>
             </div>
 
-            <textarea
-              value={currentText}
-              onChange={(e) => { setManualComplaint(e.target.value); setTranscript(''); }}
-              placeholder={t('type_or_speak')}
-              style={{ width: '100%', height: '120px', padding: '16px', border: '2px solid #e2e8f0', borderRadius: '16px', fontSize: '16px', resize: 'none', marginBottom: '16px', fontFamily: 'inherit', boxSizing: 'border-box' }}
-            />
+            <div style={{ position: 'relative', marginBottom: '24px' }}>
+              <textarea
+                value={currentText}
+                onChange={(e) => { setManualComplaint(e.target.value); setTranscript(''); }}
+                placeholder={t('type_or_speak')}
+                style={{ 
+                  width: '100%', 
+                  height: '140px', 
+                  padding: '16px', 
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0', 
+                  borderRadius: '16px', 
+                  fontSize: '16px', 
+                  lineHeight: '1.5',
+                  resize: 'none', 
+                  fontFamily: 'inherit', 
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                  color: '#334155'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              />
+              {!currentText && !isListening && (
+                <div style={{ position: 'absolute', bottom: '16px', right: '16px', pointerEvents: 'none' }}>
+                  <Mic size={20} style={{ color: '#94a3b8', opacity: 0.5 }} />
+                </div>
+              )}
+            </div>
 
             {/* Error Message */}
             {micError && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '8px 12px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <MicOff size={16} style={{ color: '#dc2626' }} />
-                <span style={{ color: '#dc2626', fontSize: '14px' }}>{micError}</span>
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '12px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <MicOff size={18} style={{ color: '#dc2626' }} />
+                <span style={{ color: '#b91c1c', fontSize: '14px', fontWeight: '500' }}>{micError}</span>
               </div>
             )}
 
-            {/* Mic Button */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <button
-                onClick={isListening ? stopListening : startListening}
-                style={{
-                  width: '80px', height: '80px', borderRadius: '50%', border: 'none',
-                  background: !speechSupported ? '#9ca3af' : isListening ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                  cursor: 'pointer',
-                  boxShadow: isListening ? '0 0 0 8px rgba(239,68,68,0.3)' : '0 4px 16px rgba(59,130,246,0.3)',
-                  transition: 'all 0.3s ease',
-                  animation: isListening ? 'pulse 1.5s infinite' : 'none'
-                }}>
-                <Mic size={36} style={{ color: 'white' }} />
-              </button>
+            {/* Mic Button - Centered and Enhanced */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <div style={{ position: 'relative' }}>
+                {isListening && (
+                  <div style={{
+                    position: 'absolute', inset: '-8px', borderRadius: '50%',
+                    background: 'rgba(239, 68, 68, 0.2)',
+                    animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite'
+                  }} />
+                )}
+                <button
+                  onClick={isListening ? stopListening : startListening}
+                  style={{
+                    width: '72px', height: '72px', borderRadius: '50%', border: 'none',
+                    background: !speechSupported ? '#9ca3af' : isListening ? '#ef4444' : '#3b82f6',
+                    cursor: 'pointer',
+                    boxShadow: isListening ? '0 0 0 4px rgba(239,68,68,0.3)' : '0 10px 25px -5px rgba(59, 130, 246, 0.4)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transform: isListening ? 'scale(1.1)' : 'scale(1)'
+                  }}>
+                  <Mic size={32} style={{ color: 'white' }} />
+                </button>
+              </div>
+              <p style={{ 
+                textAlign: 'center', 
+                color: isListening ? '#ef4444' : '#64748b', 
+                fontSize: '14px', 
+                fontWeight: '600',
+                margin: 0,
+                height: '20px'
+              }}>
+                {!speechSupported ? `⚠️ ${t('voice_not_supported')}` : isListening ? t('listening_speak') : t('press_to_speak')}
+              </p>
             </div>
-
-            <p style={{ textAlign: 'center', color: isListening ? '#dc2626' : '#64748b', fontSize: '14px', fontWeight: '500', marginBottom: '20px' }}>
-              {!speechSupported ? `⚠️ ${t('voice_not_supported')}` : isListening ? `🔴 ${t('listening_speak')}` : `🎤 ${t('press_to_speak')}`}
-            </p>
 
             <button
               onClick={() => handleVoiceSubmit(currentText)}
               disabled={processing || !currentText.trim()}
               style={{
                 width: '100%', padding: '16px',
-                background: processing || !currentText.trim() ? '#cbd5e1' : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                border: 'none', borderRadius: '14px', color: 'white', fontSize: '18px', fontWeight: 'bold',
+                background: processing || !currentText.trim() ? '#e2e8f0' : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                color: processing || !currentText.trim() ? '#94a3b8' : 'white',
+                border: 'none', borderRadius: '16px', fontSize: '16px', fontWeight: '700',
                 cursor: processing || !currentText.trim() ? 'not-allowed' : 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-              }}>
-              {processing ? (<><Loader2 size={20} className="animate-spin" />{t('sending')}</>) : (<><MessageSquare size={20} />{t('send_complaint')}</>)}
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                boxShadow: processing || !currentText.trim() ? 'none' : '0 10px 20px -5px rgba(22, 163, 74, 0.3)',
+                transition: 'all 0.2s ease',
+                transform: processing || !currentText.trim() ? 'none' : 'translateY(0)'
+              }}
+              onMouseDown={(e) => !processing && currentText.trim() && (e.currentTarget.style.transform = 'translateY(2px)')}
+              onMouseUp={(e) => !processing && currentText.trim() && (e.currentTarget.style.transform = 'translateY(0)')}
+            >
+              {processing ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  {t('sending')}
+                </>
+              ) : (
+                <>
+                  <MessageSquare size={20} />
+                  {t('send_complaint')}
+                </>
+              )}
             </button>
           </div>
         </div>
       )}
 
       <style>{`
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
+        @keyframes ping {
+          75%, 100% { transform: scale(1.5); opacity: 0; }
         }
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
-        }
-        .animate-pulse {
-          animation: pulse 2s ease-in-out infinite;
         }
       `}</style>
     </div>
