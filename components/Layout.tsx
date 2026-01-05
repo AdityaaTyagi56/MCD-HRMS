@@ -92,43 +92,42 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         ? `${item.bgColor} ${item.color} shadow-inner-soft border border-opacity-50`
                         : 'text-neutral-800 hover:bg-neutral-50 hover:text-black'
                     }`}
+
                   >
                     <item.icon 
                       size={20} 
                       className={currentView === item.id ? item.color : `${item.color} group-hover:scale-110 transition-transform`}
                     />
+                  </button>
+                ))}
               </nav>
 
               {/* Footer */}
-                  <div className="min-h-screen" style={{ background: ENTERPRISE_COLORS.gray50 }}>
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-neutral-50 to-primary-50/30 rounded-xl border border-neutral-200/50">
-                  <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                    A
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-black">{language === 'hi' ? 'एडमिन उपयोगकर्ता' : 'Admin User'}</p>
-                    <p className="text-xs text-neutral-600">{language === 'hi' ? 'सिस्टम प्रशासक' : 'System Administrator'}</p>
-                  </div>
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-neutral-50 to-primary-50/30 rounded-xl border border-neutral-200/50">
+                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                  A
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={toggleLanguage}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors text-sm font-medium shadow-soft"
-                  >
-                    <Languages size={16} />
-                    {language === 'hi' ? 'EN' : 'हिंदी'}
-                  </button>
-                  <button
-                    onClick={() => switchRole(currentRole === 'admin' ? 'employee' : 'admin')}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-secondary-50 text-secondary-700 border border-secondary-200 rounded-lg hover:bg-secondary-100 transition-colors text-sm font-medium shadow-soft"
-                  >
-                    <User size={16} />
-                    {language === 'hi' ? 'कर्मचारी' : 'Employee'}
-                  </button>
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-black">{language === 'hi' ? 'एडमिन उपयोगकर्ता' : 'Admin User'}</p>
+                  <p className="text-xs text-neutral-600">{language === 'hi' ? 'सिस्टम प्रशासक' : 'System Administrator'}</p>
                 </div>
               </div>
-            </div>
-          </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={toggleLanguage}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors text-sm font-medium shadow-soft"
+                >
+                  <Languages size={16} />
+                  {language === 'hi' ? 'EN' : 'हिंदी'}
+                </button>
+                <button
+                  onClick={() => switchRole(currentRole === 'admin' ? 'employee' : 'admin')}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-secondary-50 text-secondary-700 border border-secondary-200 rounded-lg hover:bg-secondary-100 transition-colors text-sm font-medium shadow-soft"
+                >
+                  <User size={16} />
+                  {language === 'hi' ? 'कर्मचारी' : 'Employee'}
+                </button>
+              </div>
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col overflow-hidden">
