@@ -255,7 +255,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </nav>
         </div>
-        )}
+      )}
     </div>
   );
 }
