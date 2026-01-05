@@ -201,11 +201,12 @@ const inferCategoryAndPriority = (
     patterns.some((p) => (typeof p === 'string' ? normalized.includes(p) : p.test(text)));
 
   const categoryRules: Array<{ category: string; patterns: Array<string | RegExp> }> = [
-    { category: 'Salary', patterns: ['salary', 'pay', 'wage', 'वेतन', 'सैलरी', 'पैसा', 'भुगतान'] },
+    { category: 'Salary', patterns: ['salary', 'pay', 'wage', 'वेतन', 'सैलरी', 'पैसा', 'पैसे', 'भुगतान', 'नहीं आये', 'नहीं आए', 'nhi aaye', 'nahi aaye', 'nhi aaya', 'nahi aaya'] },
     { category: 'Leave', patterns: ['leave', ' छुट्टी', 'छुट्टी', 'अवकाश', 'medical', 'sick', 'बीमारी'] },
     { category: 'Transfer', patterns: ['transfer', 'ट्रांसफर', 'स्थानांतरण'] },
     { category: 'Harassment', patterns: ['harass', 'abuse', 'threat', 'उत्पीड़', 'शोषण', 'धमकी', 'गाली'] },
-    { category: 'Equipment', patterns: ['equipment', 'tool', 'uniform', 'broom', 'सामान', 'उपकरण', 'झाड़ू', 'यूनिफॉर्म'] },
+    { category: 'Equipment', patterns: ['equipment', 'tool', 'uniform', 'broom', 'jhaadu', 'jhadu', 'सामान', 'उपकरण', 'झाड़ू', 'यूनिफॉर्म', 'नहीं है', 'nhi hai', 'nahi hai'] },
+    { category: 'IT/Portal', patterns: ['site', 'website', 'app', 'portal', 'login', 'otp', 'डाउन', 'वेबसाइट', 'ऐप', 'पोर्टल', 'लॉगिन', 'नहीं चल', 'नहीं चल रही', 'nhi chal', 'nahi chal', 'not working', 'down'] },
     { category: 'Sanitation', patterns: ['garbage', 'waste', 'clean', 'सफाई', 'कूड़ा', 'गंदगी', 'डस्टबिन'] },
   ];
 
