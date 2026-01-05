@@ -3,7 +3,7 @@ services:
   - type: web
     name: mcd-hrms-api
     runtime: node
-    buildCommand: npm install --legacy-peer-deps
+    buildCommand: npm install --legacy-peer-deps && npm run build
     startCommand: npx tsx server/index.ts
     envVars:
       - key: NODE_ENV
@@ -14,13 +14,14 @@ services:
         value: https://mcd-hrms.vercel.app,http://localhost:8001,http://localhost:8010
     healthCheckPath: /health
     plan: free
+    autoDeploy: false
 
   # ML/NLP Service (Python FastAPI)
   - type: web
     name: mcd-hrms-ml
     runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
     rootDir: ml_service
     envVars:
       - key: OPENROUTER_API_KEY
@@ -29,3 +30,4 @@ services:
         value: "1"
     healthCheckPath: /health
     plan: free
+    autoDeploy: false

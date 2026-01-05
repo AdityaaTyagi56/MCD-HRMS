@@ -43,14 +43,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
-      - name: Trigger Render deployments
+      - name: Deploy to Vercel only
         run: |
-          # Wake up services by hitting health endpoints
-          echo "Triggering Render deploys..."
-          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_API }}" ]; then
-            curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_API }}" || true
-          fi
-          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_ML }}" ]; then
-            curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_ML }}" || true
-          fi
-          echo "Deploy hooks triggered"
+          echo "Skipping Render deploy - services set to manual deploy only"
+          echo "Render services will auto-wake on first request"
