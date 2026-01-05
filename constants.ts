@@ -1,3 +1,27 @@
+// --- ENTERPRISE DESIGN SYSTEM COLORS ---
+export const ENTERPRISE_COLORS = {
+  white: '#ffffff',
+  gray50: '#f8fafc',
+  gray100: '#f1f5f9',
+  gray200: '#e2e8f0',
+  gray300: '#cbd5e1',
+  gray700: '#334155',
+  gray900: '#0f172a',
+  primary: '#273c75', // Deep Indigo / Slate Blue
+  primaryDark: '#192a56',
+  accent: '#0052cc', // Government Blue
+  border: '#e2e8f0',
+  error: '#dc2626',
+  warning: '#f59e0b',
+  success: '#059669',
+  info: '#2563eb',
+  cardBg: '#ffffff',
+  cardBorder: '#e2e8f0',
+  sidebarBg: '#f8fafc',
+  sidebarBorder: '#e2e8f0',
+  sidebarActive: '#273c75',
+  sidebarActiveText: '#ffffff',
+};
 import { Employee, Grievance, LeaveRequest, Payslip, Ward } from './types';
 
 // YOUR COORDINATES (Ghaziabad/Noida)
