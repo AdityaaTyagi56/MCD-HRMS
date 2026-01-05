@@ -192,6 +192,47 @@ const escapeXml = (value: string) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
 
+const inferCategoryAndPriority = (
+  text: string
+): { category: string; priority: 'High' | 'Medium' | 'Low' } => {
+  const normalized = text.toLowerCase();
+
+  const has = (patterns: Array<string | RegExp>) =>
+    patterns.some((p) => (typeof p === 'string' ? normalized.includes(p) : p.test(text)));
+
+  const categoryRules: Array<{ category: string; patterns: Array<string | RegExp> }> = [
+    { category: 'Salary', patterns: ['salary', 'pay', 'wage', 'वेतन', 'सैलरी', 'पैसा', 'भुगतान'] },
+    { category: 'Leave', patterns: ['leave', ' छुट्टी', 'छुट्टी', 'अवकाश', 'medical', 'sick', 'बीमारी'] },
+    { category: 'Transfer', patterns: ['transfer', 'ट्रांसफर', 'स्थानांतरण'] },
+    { category: 'Harassment', patterns: ['harass', 'abuse', 'threat', 'उत्पीड़', 'शोषण', 'धमकी', 'गाली'] },
+    { category: 'Equipment', patterns: ['equipment', 'tool', 'uniform', 'broom', 'सामान', 'उपकरण', 'झाड़ू', 'यूनिफॉर्म'] },
+    { category: 'Sanitation', patterns: ['garbage', 'waste', 'clean', 'सफाई', 'कूड़ा', 'गंदगी', 'डस्टबिन'] },
+  ];
+
+  const matchedCategory = categoryRules.find((r) => has(r.patterns))?.category ?? 'General Complaint';
+
+  const highPriority = has([
+    'urgent',
+    'emergency',
+    'immediately',
+    'danger',
+    'fire',
+    'injury',
+    'चोट',
+    'खतरा',
+    'तुरंत',
+    'अत्यंत',
+    'बहुत जरूरी',
+    'बहुत ज़रूरी',
+    'आपात',
+  ]);
+
+  const lowPriority = has(['later', 'whenever', 'not urgent', 'कोई जल्दी नहीं', 'बाद में']);
+
+  const priority: 'High' | 'Medium' | 'Low' = highPriority ? 'High' : lowPriority ? 'Low' : 'Medium';
+  return { category: matchedCategory, priority };
+};
+
 // WhatsApp Webhook for incoming messages (PUBLIC: Twilio cannot send x-api-key)
 app.post('/api/whatsapp/webhook', express.urlencoded({ extended: false }), async (req, res) => {
   try {
@@ -221,6 +262,7 @@ app.post('/api/whatsapp/webhook', express.urlencoded({ extended: false }), async
     // Analyze the complaint using NLP (if ML service available)
     let category = 'General Complaint';
     let priority: 'High' | 'Medium' | 'Low' = 'Medium';
+    let analysisSucceeded = false;
 
     try {
       const ML_API_URL = process.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
@@ -234,9 +276,17 @@ app.post('/api/whatsapp/webhook', express.urlencoded({ extended: false }), async
         const analysis = await analysisRes.json();
         category = analysis.category || category;
         priority = analysis.priority || priority;
+        analysisSucceeded = true;
       }
     } catch (err) {
       console.error('NLP analysis failed for WhatsApp message:', err);
+    }
+
+    // Fallback for Hindi/English free-text if NLP is unavailable
+    if (!analysisSucceeded) {
+      const inferred = inferCategoryAndPriority(messageBody);
+      category = inferred.category;
+      priority = inferred.priority;
     }
 
     // Create grievance
@@ -244,8 +294,8 @@ app.post('/api/whatsapp/webhook', express.urlencoded({ extended: false }), async
       id: Date.now(),
       userId,
       user: userName,
-      category,
-      description: messageBody,
+      category: sanitize(category),
+      description: sanitize(messageBody),
       priority,
       status: 'Pending',
       date: new Date().toISOString().split('T')[0],
