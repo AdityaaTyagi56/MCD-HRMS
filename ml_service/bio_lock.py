@@ -28,10 +28,10 @@ class BioLock:
         # Load OpenCV's face detector as fallback
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         
-    def get_face_embedding(self, image_path: str):
+    def get_face_embedding(self, image_path: str, enrolled_embeddings: dict = None):
         """
-        Task 2: Privacy-First Vector Storage
-        Converts image to 128-d vector (or uses OpenCV fallback).
+        Enhanced: If multiple faces are detected, match each to enrolled embeddings and proceed if only one matches.
+        enrolled_embeddings: dict mapping employee_id to embedding list
         """
         try:
             if FACE_RECOGNITION_AVAILABLE:
@@ -41,15 +41,43 @@ class BioLock:
                 if not face_locations:
                     return {"error": "No face detected"}
                 
-                if len(face_locations) > 1:
-                    return {"error": "Multiple faces detected. Please ensure only one person is in frame."}
-                    
-                face_encoding = face_recognition.face_encodings(image, face_locations)[0]
+                face_encodings = face_recognition.face_encodings(image, face_locations)
                 
-                return {
-                    "embedding": face_encoding.tolist(),
-                    "status": "success"
-                }
+                if len(face_encodings) == 1:
+                    return {
+                        "embedding": face_encodings[0].tolist(),
+                        "status": "success"
+                    }
+                elif len(face_encodings) > 1:
+                    # If enrolled_embeddings provided, match each detected face
+                    if enrolled_embeddings and len(enrolled_embeddings) > 0:
+                        import numpy as np
+                        known_ids = list(enrolled_embeddings.keys())
+                        known_encs = np.array([enrolled_embeddings[eid] for eid in known_ids])
+                        matches = []
+                        for idx, enc in enumerate(face_encodings):
+                            # Compare to all enrolled
+                            dists = np.linalg.norm(known_encs - enc, axis=1)
+                            min_idx = np.argmin(dists)
+                            if dists[min_idx] < 0.5:  # Threshold for match (tune as needed)
+                                matches.append((idx, known_ids[min_idx], float(dists[min_idx])))
+                        if len(matches) == 1:
+                            idx, emp_id, dist = matches[0]
+                            return {
+                                "embedding": face_encodings[idx].tolist(),
+                                "matched_employee_id": emp_id,
+                                "distance": dist,
+                                "status": "success",
+                                "message": "Unique enrolled face matched from multiple detected."
+                            }
+                        elif len(matches) == 0:
+                            return {"error": "Multiple faces detected, but none match enrolled faces."}
+                        else:
+                            return {"error": "Multiple faces detected, more than one match to enrolled faces. Please ensure only one enrolled person is present."}
+                    else:
+                        return {"error": "Multiple faces detected. Please ensure only one person is in frame."}
+                else:
+                    return {"error": "No face detected"}
             else:
                 # Fallback: Use OpenCV for basic face detection
                 image = cv2.imread(image_path)

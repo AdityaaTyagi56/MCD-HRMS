@@ -728,16 +728,55 @@ async def register_face(employee_id: int = Form(...), file: UploadFile = File(..
 
 @app.post("/biolock/verify")
 async def verify_face(employee_id: int = Form(...), file: UploadFile = File(...)):
-    """Verify employee face"""
-    await file.read()
-    is_match = random.random() > 0.15
-    
-    return {
-        "verified": is_match,
-        "employee_id": employee_id,
-        "confidence": round(random.uniform(0.75, 0.98), 2) if is_match else round(random.uniform(0.2, 0.4), 2),
-        "message": "Face verified" if is_match else "Face verification failed"
-    }
+    """Verify employee face with enrolled embeddings and multi-face logic"""
+    import numpy as np
+    from bio_lock import BioLock
+    import tempfile
+    # Load enrolled embeddings
+    enroll_path = os.path.join(os.path.dirname(__file__), '../server/data/face-enrollments.json')
+    try:
+        with open(enroll_path, 'r') as f:
+            enroll_data = json.load(f)
+    except Exception:
+        enroll_data = {}
+    # Convert all embeddings to numpy arrays
+    enrolled_embeddings = {str(k): np.array(v) for k, v in enroll_data.items() if isinstance(v, list) and len(v) == 128}
+    # Save uploaded file to temp
+    contents = await file.read()
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
+        tmp.write(contents)
+        tmp_path = tmp.name
+    # Run BioLock logic
+    bio = BioLock()
+    result = bio.get_face_embedding(tmp_path, enrolled_embeddings)
+    os.unlink(tmp_path)
+    # Check result
+    if result.get('status') == 'success' and result.get('matched_employee_id'):
+        is_match = str(result['matched_employee_id']) == str(employee_id)
+        return {
+            "verified": is_match,
+            "employee_id": employee_id,
+            "confidence": 0.98 if is_match else 0.4,
+            "message": "Face verified" if is_match else "Face does not match enrolled user",
+            "matched_employee_id": result['matched_employee_id'],
+            "distance": result['distance']
+        }
+    elif result.get('status') == 'success':
+        # Only one face, not multi-face, just compare embedding
+        if str(employee_id) in enrolled_embeddings:
+            dist = np.linalg.norm(np.array(result['embedding']) - enrolled_embeddings[str(employee_id)])
+            is_match = dist < 0.5
+            return {
+                "verified": is_match,
+                "employee_id": employee_id,
+                "confidence": 0.98 if is_match else 0.4,
+                "message": "Face verified" if is_match else "Face does not match enrolled user",
+                "distance": dist
+            }
+        else:
+            return {"verified": False, "employee_id": employee_id, "message": "No enrolled face for this user"}
+    else:
+        return {"verified": False, "employee_id": employee_id, "message": result.get('error', 'Face verification failed')}
 
 # ============ AI-POWERED GRIEVANCE ANALYSIS ============
 @app.post("/analyze-grievance")
