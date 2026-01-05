@@ -1,81 +1,121 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-  if (employeeView === 'case-history') {
-    return (
-      <div className="min-h-screen pb-24" style={{ background: '#f4f4f5' }}>
-        <div style={{ background: '#ffffff', borderBottom: '1px solid #e5e7eb', padding: '14px 16px' }}>
-          <button
-            onClick={() => setEmployeeView('dashboard')}
-            style={{
-              background: '#f3f4f6',
-              border: '1px solid #e5e7eb',
-              padding: '8px 12px',
-              borderRadius: '10px',
-              color: '#111827',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            ← {t('back_to_dashboard') || 'Back to dashboard'}
-          </button>
-          <h1 style={{ color: '#0f172a', fontSize: '20px', fontWeight: 700, margin: '12px 0 4px' }}>
-            {t('case_history') || 'My Case History'}
-          </h1>
-          <p style={{ color: '#4b5563', fontSize: '13px', margin: 0 }}>
-            {t('track_cases') || 'See all complaints you have raised'}
-          </p>
-        </div>
+import { useApp } from '../context/AppContext';
+import { 
+  MapPin, 
+  IndianRupee, 
+  Mic, 
+  CheckCircle, 
+  AlertTriangle, 
+  X, 
+  Loader2,
+  Calendar,
+  MessageSquare,
+  Phone,
+  Clock,
+  MicOff,
+  Shield,
+  Navigation,
+  Wifi,
+  ScanFace,
+  Fingerprint
+} from 'lucide-react';
+import FaceRecognition from './FaceRecognition';
+import { hasEnrolledFace, getEnrollmentStatus } from '../services/face-recognition';
 
-        <div style={{ padding: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '12px' }}>
-            {[{ label: t('total_cases') || 'Total cases', value: myGrievances.length }, { label: t('pending') || 'Pending', value: pendingCount }, { label: t('resolved') || 'Resolved', value: resolvedCount }].map((item, idx) => (
-              <div key={idx} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a' }}>{item.value}</div>
-                <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>{item.label}</div>
-              </div>
-            ))}
-          </div>
+const EmployeeDashboard: React.FC = () => {
+  const { language, setCurrentView, addGrievance, markAttendance, t, grievances } = useApp();
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const [manualComplaint, setManualComplaint] = useState('');
+  const [speechSupported, setSpeechSupported] = useState(true);
+  const [micError, setMicError] = useState('');
+  const [employeeView, setEmployeeView] = useState<'dashboard' | 'case-history'>('dashboard');
+  
+  // Enhanced Complaint Form State
+  const [complaintCategory, setComplaintCategory] = useState('');
+  const [complaintLocation, setComplaintLocation] = useState('');
+  const [complaintFile, setComplaintFile] = useState<File | null>(null);
+  
+  // Attendance State
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [attendanceStep, setAttendanceStep] = useState<'locating' | 'face-verify' | 'verifying' | 'success' | 'error' | 'spoofing'>('locating');
+  const [attendanceMarked, setAttendanceMarked] = useState(false);
+  const [locationPings, setLocationPings] = useState<any[]>([]);
+  const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [verificationProgress, setVerificationProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Face Recognition State
+  const [showFaceEnrollment, setShowFaceEnrollment] = useState(false);
+  const [faceVerified, setFaceVerified] = useState(false);
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {myGrievances.length === 0 ? (
-              <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '24px 16px', textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📭</div>
-                <p style={{ color: '#4b5563', fontSize: '14px', margin: 0 }}>{t('no_grievances') || 'No grievances submitted yet'}</p>
-              </div>
-            ) : (
-              myGrievances
-                .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
-                .map((grievance) => (
-                  <div key={grievance.id} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '14px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 8px', borderRadius: '8px', background: '#f3f4f6', color: '#111827' }}>
-                            {grievance.category}
-                          </span>
-                          <span style={{ fontSize: '11px', color: '#6b7280' }}>#{grievance.id}</span>
-                        </div>
-                        <p style={{ color: '#1f2937', fontSize: '14px', margin: '0 0 6px', lineHeight: 1.4 }}>
-                          {grievance.description.substring(0, 120)}{grievance.description.length > 120 ? '…' : ''}
-                        </p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '12px', color: '#4b5563' }}>
-                          <span>📅 {new Date(grievance.submittedAt).toLocaleDateString()}</span>
-                          <span>🚨 {grievance.priority}</span>
-                          {grievance.location && <span>📍 {grievance.location}</span>}
-                        </div>
-                      </div>
-                      <div style={{ alignSelf: 'flex-start', padding: '6px 10px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '12px', fontWeight: 600, color: grievance.status === 'Resolved' ? '#166534' : '#92400e', background: grievance.status === 'Resolved' ? '#ecfdf3' : '#fff7ed' }}>
-                        {grievance.status === 'Resolved' ? 'Resolved' : 'Pending'}
-                      </div>
-                    </div>
-                  </div>
-                ))
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const recognitionRef = useRef<any>(null);
+  const locationWatchRef = useRef<number | null>(null);
+  const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
+  
+  // Office location (MCD Civic Centre, Delhi)
+  const OFFICE_LOCATION = { lat: 28.6328, lng: 77.2197, radius: 0.5 };
+
+  const employeeData = {
+    id: 1,
+    name: 'Ramesh Gupta',
+    checkInTime: '09:15 AM',
+    leaveBalance: 8,
+  };
+
+  // Update current time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Check if current time is within attendance window (7 AM - 5 PM)
+  const isWithinAttendanceWindow = () => {
+    const hours = currentTime.getHours();
+    return hours >= 7 && hours < 17; // 7 AM to 5 PM (17:00)
+  };
+
+  // Format time for display
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    });
+  };
+
+  // NLP Analysis
+  const analyzeGrievanceNLP = async (text: string) => {
+    console.log('🔍 Analyzing:', text);
+    try {
+      const response = await fetch(`${ML_API_URL}/analyze-grievance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      if (!response.ok) throw new Error('NLP unavailable');
+      const data = await response.json();
+      console.log('✅ NLP Result:', data);
+      return {
+        category: data?.category || 'General',
+        priority: (data?.priority === 'High' ? 'High' : data?.priority === 'Low' ? 'Low' : 'Medium') as 'High' | 'Medium' | 'Low',
+      };
+    } catch (error) {
+      console.error('❌ NLP Error:', error);
+      return { category: 'General', priority: 'Medium' as const };
+    }
+  };
+
+  // Setup Speech Recognition
+  useEffect(() => {
+    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    
+    if (!SpeechRecognition) {
       console.log('❌ No Speech Recognition API');
       setSpeechSupported(false);
       return;
@@ -364,115 +404,75 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
   // Case History View
   if (employeeView === 'case-history') {
     return (
-      <div className="min-h-screen pb-24" style={{ background: '#f8fafc' }}>
-        {/* Header */}
-        <div style={{ 
-          background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)', 
-          padding: '24px 20px',
-          borderRadius: '0 0 24px 24px'
-        }}>
+      <div className="min-h-screen pb-24" style={{ background: '#f4f4f5' }}>
+        <div style={{ background: '#ffffff', borderBottom: '1px solid #e5e7eb', padding: '14px 16px' }}>
           <button
             onClick={() => setEmployeeView('dashboard')}
             style={{
-              background: 'rgba(255,255,255,0.2)',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '12px',
-              color: 'white',
+              background: '#f3f4f6',
+              border: '1px solid #e5e7eb',
+              padding: '8px 12px',
+              borderRadius: '10px',
+              color: '#111827',
               fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
+              fontWeight: 600,
+              cursor: 'pointer'
             }}
           >
-            ← Back to Dashboard
+            ← {t('back_to_dashboard') || 'Back to dashboard'}
           </button>
-          
-          <h1 style={{ color: 'white', fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
-            📋 My Case History
+          <h1 style={{ color: '#0f172a', fontSize: '20px', fontWeight: 700, margin: '12px 0 4px' }}>
+            {t('case_history') || 'My Case History'}
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', margin: 0 }}>
-            Track all your submitted grievances
+          <p style={{ color: '#4b5563', fontSize: '13px', margin: 0 }}>
+            {t('track_cases') || 'See all complaints you have raised'}
           </p>
         </div>
 
-        {/* Stats */}
-        <div style={{ padding: '20px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-            <div style={{ background: 'white', borderRadius: '16px', padding: '16px', textAlign: 'center', border: '2px solid #e2e8f0' }}>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#1e293b' }}>{myGrievances.length}</div>
-              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Total Cases</div>
-            </div>
-            <div style={{ background: 'white', borderRadius: '16px', padding: '16px', textAlign: 'center', border: '2px solid #fbbf24' }}>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{pendingCount}</div>
-              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Pending</div>
-            </div>
-            <div style={{ background: 'white', borderRadius: '16px', padding: '16px', textAlign: 'center', border: '2px solid #22c55e' }}>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#16a34a' }}>{resolvedCount}</div>
-              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Resolved</div>
-            </div>
+        <div style={{ padding: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '12px' }}>
+            {[{ label: t('total_cases') || 'Total cases', value: myGrievances.length }, { label: t('pending') || 'Pending', value: pendingCount }, { label: t('resolved') || 'Resolved', value: resolvedCount }].map((item, idx) => (
+              <div key={idx} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a' }}>{item.value}</div>
+                <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '4px' }}>{item.label}</div>
+              </div>
+            ))}
           </div>
 
-          {/* Grievances List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {myGrievances.length === 0 ? (
-              <div style={{ background: 'white', borderRadius: '16px', padding: '40px 20px', textAlign: 'center' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>📭</div>
-                <p style={{ color: '#64748b', fontSize: '16px', margin: 0 }}>No grievances submitted yet</p>
+              <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '24px 16px', textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📭</div>
+                <p style={{ color: '#4b5563', fontSize: '14px', margin: 0 }}>{t('no_grievances') || 'No grievances submitted yet'}</p>
               </div>
             ) : (
-              myGrievances.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()).map((grievance) => (
-                <div key={grievance.id} style={{ 
-                  background: 'white', 
-                  borderRadius: '16px', 
-                  padding: '20px', 
-                  border: '2px solid #e2e8f0',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                        <span style={{ 
-                          fontSize: '12px', 
-                          fontWeight: 'bold', 
-                          padding: '4px 10px', 
-                          borderRadius: '8px',
-                          background: getCategoryColor(grievance.category) + '15',
-                          color: getCategoryColor(grievance.category)
-                        }}>
-                          {grievance.category}
-                        </span>
-                        <span style={{ fontSize: '11px', color: '#94a3b8' }}>#{grievance.id}</span>
+              myGrievances
+                .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+                .map((grievance) => (
+                  <div key={grievance.id} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 8px', borderRadius: '8px', background: '#f3f4f6', color: '#111827' }}>
+                            {grievance.category}
+                          </span>
+                          <span style={{ fontSize: '11px', color: '#6b7280' }}>#{grievance.id}</span>
+                        </div>
+                        <p style={{ color: '#1f2937', fontSize: '14px', margin: '0 0 6px', lineHeight: 1.4 }}>
+                          {grievance.description.substring(0, 120)}{grievance.description.length > 120 ? '…' : ''}
+                        </p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '12px', color: '#4b5563' }}>
+                          <span>📅 {new Date(grievance.submittedAt).toLocaleDateString()}</span>
+                          <span>🚨 {grievance.priority}</span>
+                          {grievance.location && <span>📍 {grievance.location}</span>}
+                        </div>
                       </div>
-                      <p style={{ color: '#475569', fontSize: '14px', margin: '0 0 8px 0', lineHeight: '1.5' }}>
-                        {grievance.description.substring(0, 100)}{grievance.description.length > 100 ? '...' : ''}
-                      </p>
-                    </div>
-                    <div style={{ 
-                      padding: '6px 12px', 
-                      borderRadius: '8px', 
-                      fontSize: '11px', 
-                      fontWeight: '600',
-                      background: grievance.status === 'Resolved' ? '#dcfce7' : '#fef3c7',
-                      color: grievance.status === 'Resolved' ? '#166534' : '#92400e',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {grievance.status === 'Resolved' ? '✅ Resolved' : '⏳ Pending'}
+                      <div style={{ alignSelf: 'flex-start', padding: '6px 10px', borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '12px', fontWeight: 600, color: grievance.status === 'Resolved' ? '#166534' : '#92400e', background: grievance.status === 'Resolved' ? '#ecfdf3' : '#fff7ed' }}>
+                        {grievance.status === 'Resolved' ? 'Resolved' : 'Pending'}
+                      </div>
                     </div>
                   </div>
-                  
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', color: '#64748b' }}>
-                      <span>🚨 {grievance.priority}</span>
-                      <span>📅 {new Date(grievance.submittedAt).toLocaleDateString()}</span>
-                      {grievance.location && <span>📍 {grievance.location}</span>}
-                    </div>
-                  </div>
-                </div>
-              ))
+                ))
             )}
           </div>
         </div>

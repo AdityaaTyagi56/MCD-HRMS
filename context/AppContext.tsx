@@ -183,12 +183,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     "earnings": { en: "Earnings", hi: "आय" },
     "deductions": { en: "Deductions", hi: "कटौती" },
     "download_slip": { en: "Download Slip", hi: "पर्ची डाउनलोड करें" },
-    "payment_history": { en: "Payment History", hi: "भुगतान इतिहास" },
     "paid": { en: "Paid", hi: "भुगतान हुआ" },
     "basic_pay": { en: "Basic Pay", hi: "मूल वेतन" },
-    "next_payday": { en: "Next payday", hi: "अगला वेतन दिवस" },
     "release_salaries": { en: "Release All Salaries", hi: "सभी वेतन जारी करें" },
-    "all_processed": { en: "All Processed", hi: "सभी प्रोसेस हो गए" },
     
     // Time
     "last_7_days": { en: "Last 7 days", hi: "पिछले 7 दिन" },
