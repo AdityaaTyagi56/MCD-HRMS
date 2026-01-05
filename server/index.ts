@@ -192,6 +192,217 @@ const escapeXml = (value: string) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mcd-hrms.vercel.app';
+const ADMIN_WHATSAPP_NUMBER = process.env.ADMIN_WHATSAPP_NUMBER || process.env.ADMIN_WHATSAPP_TO || '';
+
+const last10Digits = (value: string) => String(value || '').replace(/\D/g, '').slice(-10);
+
+function formatWhatsAppNumber(phone: string): string {
+  const raw = String(phone || '').trim();
+  if (!raw) return '';
+  if (raw.startsWith('whatsapp:')) return raw;
+
+  let cleaned = raw.replace(/[\s\-\(\)]/g, '');
+  if (cleaned.startsWith('0')) cleaned = '+91' + cleaned.slice(1);
+  if (!cleaned.startsWith('+')) cleaned = '+91' + cleaned;
+  return `whatsapp:${cleaned}`;
+}
+
+async function sendWhatsAppViaTwilio(
+  to: string,
+  message: string
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || process.env.VITE_TWILIO_ACCOUNT_SID;
+  const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || process.env.VITE_TWILIO_AUTH_TOKEN;
+  const TWILIO_WHATSAPP_NUMBER =
+    process.env.TWILIO_WHATSAPP_NUMBER ||
+    process.env.VITE_TWILIO_WHATSAPP_NUMBER ||
+    'whatsapp:+14155238886';
+
+  const toFormatted = formatWhatsAppNumber(to);
+  if (!toFormatted) return { success: false, error: 'Missing recipient' };
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return { success: false, error: 'Twilio credentials not configured' };
+
+  try {
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization':
+            'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          From: TWILIO_WHATSAPP_NUMBER,
+          To: toFormatted,
+          Body: message,
+        }).toString(),
+      }
+    );
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { success: false, error: (data as any)?.message || 'Failed to send WhatsApp message' };
+    }
+    return { success: true, messageId: (data as any)?.sid };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to send WhatsApp message' };
+  }
+}
+
+type LeaveType = 'Medical' | 'Casual' | 'Privilege';
+
+function inferLeaveType(reason: string): LeaveType {
+  const normalized = reason.toLowerCase();
+  const has = (patterns: Array<string | RegExp>) =>
+    patterns.some((p) => (typeof p === 'string' ? normalized.includes(p) : p.test(reason)));
+
+  const medical = has([
+    'sick',
+    'medical',
+    'fever',
+    'ill',
+    'doctor',
+    'hospital',
+    'pain',
+    'बीमार',
+    'बीमारी',
+    'बुखार',
+    'तबियत',
+    'दवा',
+    'डॉक्टर',
+    'अस्पताल',
+    'चोट',
+  ]);
+
+  const privilege = has([
+    'vacation',
+    'holiday',
+    'travel',
+    'outstation',
+    'function',
+    'marriage',
+    'wedding',
+    'यात्रा',
+    'घूम',
+    'शादी',
+    'विवाह',
+    'कार्यक्रम',
+    'घर',
+    'गांव',
+    'गाँव',
+    'छुट्टियाँ',
+  ]);
+
+  if (medical) return 'Medical';
+  if (privilege) return 'Privilege';
+  return 'Casual';
+}
+
+function formatIsoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function addDays(date: Date, days: number): Date {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function parseDateToken(token: string, now: Date): string | null {
+  const t = token.trim();
+
+  const iso = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) {
+    const d = new Date(`${iso[1]}-${iso[2]}-${iso[3]}T00:00:00Z`);
+    if (!Number.isNaN(d.getTime())) return formatIsoDate(d);
+  }
+
+  const dmy = t.match(/^(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?$/);
+  if (dmy) {
+    const day = Number(dmy[1]);
+    const month = Number(dmy[2]);
+    const yearRaw = dmy[3];
+    const year = yearRaw ? (yearRaw.length === 2 ? 2000 + Number(yearRaw) : Number(yearRaw)) : now.getFullYear();
+    const d = new Date(Date.UTC(year, month - 1, day));
+    if (!Number.isNaN(d.getTime())) return formatIsoDate(d);
+  }
+
+  const lower = t.toLowerCase();
+  if (lower === 'today' || lower === 'aaj' || t.includes('आज')) return formatIsoDate(now);
+  if (lower === 'tomorrow' || lower === 'kal' || t.includes('कल')) return formatIsoDate(addDays(now, 1));
+  if (lower.includes('day after tomorrow') || lower === 'parson' || t.includes('परसों')) return formatIsoDate(addDays(now, 2));
+
+  return null;
+}
+
+function parseLeaveApplication(
+  text: string,
+  now: Date
+): { startDate: string; endDate: string; reason: string } {
+  // Date range (ISO)
+  const isoRange = text.match(/(\d{4}-\d{2}-\d{2})\s*(?:to|\-|–|—)\s*(\d{4}-\d{2}-\d{2})/i);
+  if (isoRange) {
+    const start = parseDateToken(isoRange[1], now) || formatIsoDate(now);
+    const end = parseDateToken(isoRange[2], now) || start;
+    const reason = text.replace(isoRange[0], '').trim();
+    return { startDate: start, endDate: end, reason };
+  }
+
+  // Date range (DMY)
+  const dmyRange = text.match(
+    /(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)\s*(?:to|\-|–|—)\s*(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/i
+  );
+  if (dmyRange) {
+    const start = parseDateToken(dmyRange[1], now) || formatIsoDate(now);
+    const end = parseDateToken(dmyRange[2], now) || start;
+    const reason = text.replace(dmyRange[0], '').trim();
+    return { startDate: start, endDate: end, reason };
+  }
+
+  // Single date
+  const single = text.match(/(\d{4}-\d{2}-\d{2}|\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/);
+  if (single) {
+    const start = parseDateToken(single[1], now) || formatIsoDate(now);
+    const duration = text.match(/(\d{1,2})\s*(?:days|day|दिन)/i);
+    const days = duration ? Math.max(1, Number(duration[1])) : 1;
+    const end = formatIsoDate(addDays(new Date(`${start}T00:00:00Z`), days - 1));
+    const reason = text.replace(single[0], '').replace(duration?.[0] || '', '').trim();
+    return { startDate: start, endDate: end, reason };
+  }
+
+  // Relative date keywords
+  const relative = text.match(/\b(today|tomorrow|day after tomorrow|aaj|kal|parson)\b|आज|कल|परसों/i);
+  const start = relative ? parseDateToken(relative[0], now) || formatIsoDate(now) : formatIsoDate(now);
+  const duration = text.match(/(\d{1,2})\s*(?:days|day|दिन)/i);
+  const days = duration ? Math.max(1, Number(duration[1])) : 1;
+  const end = formatIsoDate(addDays(new Date(`${start}T00:00:00Z`), days - 1));
+  const reason = text.replace(relative?.[0] || '', '').replace(duration?.[0] || '', '').trim();
+  return { startDate: start, endDate: end, reason };
+}
+
+function isLeaveIntent(text: string): boolean {
+  const normalized = text.toLowerCase();
+  return (
+    normalized.startsWith('leave') ||
+    normalized.includes(' leave') ||
+    normalized.includes('छुट्टी') ||
+    normalized.includes('अवकाश') ||
+    normalized.includes('sick') ||
+    normalized.includes('medical')
+  );
+}
+
+function parseAdminLeaveDecision(text: string): { action: 'Approved' | 'Rejected'; leaveId: number } | null {
+  const trimmed = text.trim();
+  const m = trimmed.match(/^(approve|approved|accept|yes)\s+(\d{3,})$/i);
+  if (m) return { action: 'Approved', leaveId: Number(m[2]) };
+  const r = trimmed.match(/^(reject|rejected|deny|no)\s+(\d{3,})$/i);
+  if (r) return { action: 'Rejected', leaveId: Number(r[2]) };
+  return null;
+}
+
 const inferCategoryAndPriority = (
   text: string
 ): { category: string; priority: 'High' | 'Medium' | 'Low' } => {
@@ -253,6 +464,10 @@ app.post('/api/whatsapp/webhook', express.urlencoded({ extended: false }), async
     const phoneNumber = String(From).replace('whatsapp:', '');
     const messageBody = String(Body);
 
+    const fromDigits = last10Digits(phoneNumber);
+    const adminDigits = last10Digits(ADMIN_WHATSAPP_NUMBER);
+    const isAdminSender = Boolean(adminDigits && fromDigits && adminDigits === fromDigits);
+
     // Try to find employee by phone number
     const employee = employees.find(
       (e) =>
@@ -262,6 +477,132 @@ app.post('/api/whatsapp/webhook', express.urlencoded({ extended: false }), async
 
     const userId = employee?.id || 0; // 0 for unknown users
     const userName = employee?.name || ProfileName || 'Unknown User';
+
+    // Admin can approve/reject leave via WhatsApp reply
+    if (isAdminSender) {
+      const decision = parseAdminLeaveDecision(messageBody);
+      if (decision) {
+        const leave = leaves.find((l) => l.id === decision.leaveId);
+
+        if (!leave) {
+          const notFound = `❌ Leave request not found: ${decision.leaveId}`;
+          res.type('text/xml');
+          return res.send(
+            `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${escapeXml(notFound)}</Message></Response>`
+          );
+        }
+
+        leave.status = decision.action;
+        persist('leaves', leaves);
+
+        const emp = employees.find((e) => e.id === leave.userId);
+        if (emp?.mobile) {
+          const statusText = decision.action === 'Approved' ? '✅ Approved / स्वीकृत' : '❌ Rejected / अस्वीकृत';
+          const employeeMsg =
+            `🏢 *MCD HRMS*\n\n` +
+            `Leave Update / छुट्टी अपडेट\n` +
+            `Request #${leave.id}: ${statusText}\n` +
+            `Dates: ${leave.startDate} to ${leave.endDate}\n` +
+            `Type: ${leave.type}\n\n` +
+            `Attendance link / उपस्थिति लिंक: ${FRONTEND_URL}\n\n` +
+            `_Municipal Corporation of Delhi_`;
+          await sendWhatsAppViaTwilio(emp.mobile, employeeMsg);
+        }
+
+        const adminAck = `✅ Updated leave #${leave.id} to ${leave.status}.`;
+        res.type('text/xml');
+        return res.send(
+          `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${escapeXml(adminAck)}</Message></Response>`
+        );
+      }
+    }
+
+    // Employee leave application via WhatsApp
+    if (isLeaveIntent(messageBody)) {
+      if (!employee) {
+        const msg =
+          `⚠️ *Number not registered*\n\n` +
+          `Your WhatsApp number is not linked to an employee record. Please contact admin.\n` +
+          `आपका नंबर सिस्टम में रजिस्टर नहीं है। कृपया एडमिन से संपर्क करें।`;
+        res.type('text/xml');
+        return res.send(
+          `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${escapeXml(msg)}</Message></Response>`
+        );
+      }
+
+      const now = new Date();
+      const parsed = parseLeaveApplication(messageBody, now);
+      const reasonRaw = (parsed.reason || messageBody).replace(/^leave\b\s*[:\-]?/i, '').trim();
+      const reason = sanitize(reasonRaw || messageBody);
+
+      // NLP (best-effort): determine leave type from reason
+      let leaveType: LeaveType = inferLeaveType(reason);
+      try {
+        const ML_API_URL = process.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
+        const analysisRes = await fetch(`${ML_API_URL}/analyze-grievance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: reason }),
+        });
+        if (analysisRes.ok) {
+          const analysis = await analysisRes.json().catch(() => ({}));
+          const hint = String((analysis as any)?.category || '').toLowerCase();
+          if (hint.includes('medical') || hint.includes('sick')) leaveType = 'Medical';
+          if (hint.includes('vacation') || hint.includes('holiday')) leaveType = 'Privilege';
+        }
+      } catch {
+        // ignore
+      }
+
+      const leave: LeaveRequest = {
+        id: Number(Date.now().toString().slice(-9)),
+        userId: employee.id,
+        userName: employee.name,
+        startDate: parsed.startDate,
+        endDate: parsed.endDate,
+        type: leaveType,
+        reason,
+        status: 'Pending',
+        requestDate: new Date().toISOString().split('T')[0],
+      };
+
+      leaves.unshift(leave);
+      persist('leaves', leaves);
+
+      // Notify admin on WhatsApp (best-effort)
+      if (ADMIN_WHATSAPP_NUMBER) {
+        const adminMsg =
+          `📝 *Leave Request Received*\n\n` +
+          `ID: ${leave.id}\n` +
+          `Employee: ${leave.userName} (ID ${leave.userId})\n` +
+          `Dates: ${leave.startDate} to ${leave.endDate}\n` +
+          `Type: ${leave.type}\n` +
+          `Reason: ${leave.reason}\n\n` +
+          `Reply:\n` +
+          `APPROVE ${leave.id}\n` +
+          `REJECT ${leave.id}\n\n` +
+          `Portal: ${FRONTEND_URL}\n\n` +
+          `_MCD HRMS_`;
+        await sendWhatsAppViaTwilio(ADMIN_WHATSAPP_NUMBER, adminMsg);
+      }
+
+      const ackMessage =
+        `✅ *Leave Request Submitted / छुट्टी आवेदन जमा*\n\n` +
+        `Request #${leave.id}\n` +
+        `Dates: ${leave.startDate} to ${leave.endDate}\n` +
+        `Type: ${leave.type}\n\n` +
+        `Admin will review and respond soon.\n` +
+        `एडमिन जल्द ही निर्णय बताएगा।\n\n` +
+        `Attendance link / उपस्थिति लिंक: ${FRONTEND_URL}\n\n` +
+        `_Municipal Corporation of Delhi_`;
+
+      res.type('text/xml');
+      res.send(
+        `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${escapeXml(ackMessage)}</Message></Response>`
+      );
+      console.log('✅ Leave request created from WhatsApp:', leave.id);
+      return;
+    }
 
     // Analyze the complaint using NLP (if ML service available)
     let category = 'General Complaint';
@@ -684,7 +1025,7 @@ app.post('/api/leaves', (req, res) => {
   res.status(201).json(leave);
 });
 
-app.post('/api/leaves/:id/status', (req, res) => {
+app.post('/api/leaves/:id/status', async (req, res) => {
   const parsedStatus = statusSchema.safeParse(req.body);
   if (!parsedStatus.success) return res.status(400).json({ message: 'Invalid payload', issues: parsedStatus.error.format() });
   const leaveId = Number(req.params.id);
@@ -692,6 +1033,24 @@ app.post('/api/leaves/:id/status', (req, res) => {
   if (!leave) return res.status(404).json({ message: 'Leave not found' });
   leave.status = parsedStatus.data.status;
   persist('leaves', leaves);
+
+  // Best-effort: notify employee via WhatsApp when admin approves/rejects from the web portal
+  if (leave.status === 'Approved' || leave.status === 'Rejected') {
+    const emp = employees.find((e) => e.id === leave.userId);
+    if (emp?.mobile) {
+      const statusText = leave.status === 'Approved' ? '✅ Approved / स्वीकृत' : '❌ Rejected / अस्वीकृत';
+      const message =
+        `🏢 *MCD HRMS*\n\n` +
+        `Leave Update / छुट्टी अपडेट\n` +
+        `Request #${leave.id}: ${statusText}\n` +
+        `Dates: ${leave.startDate} to ${leave.endDate}\n` +
+        `Type: ${leave.type}\n\n` +
+        `Attendance link / उपस्थिति लिंक: ${FRONTEND_URL}\n\n` +
+        `_Municipal Corporation of Delhi_`;
+      await sendWhatsAppViaTwilio(emp.mobile, message);
+    }
+  }
+
   res.json(leave);
 });
 
@@ -742,42 +1101,10 @@ app.post('/api/payslips', (req, res) => {
 
 app.post('/api/send-whatsapp', authGuard, async (req, res) => {
   const { to, message } = req.body;
-  
-  const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || process.env.VITE_TWILIO_ACCOUNT_SID;
-  const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || process.env.VITE_TWILIO_AUTH_TOKEN;
-  const TWILIO_WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER || process.env.VITE_TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
 
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
-    return res.status(500).json({ error: 'Twilio credentials not configured' });
-  }
-
-  try {
-    const response = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64'),
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          From: TWILIO_WHATSAPP_NUMBER,
-          To: to,
-          Body: message,
-        }).toString(),
-      }
-    );
-
-    const data = await response.json();
-
-    if (response.ok) {
-      return res.status(200).json({ success: true, messageId: data.sid });
-    } else {
-      return res.status(400).json({ success: false, error: data.message || 'Failed to send message' });
-    }
-  } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message });
-  }
+  const result = await sendWhatsAppViaTwilio(String(to || ''), String(message || ''));
+  if (result.success) return res.status(200).json({ success: true, messageId: result.messageId });
+  return res.status(500).json({ success: false, error: result.error || 'Failed to send message' });
 });
 
 // ============ External API Layer (Step 5) ============

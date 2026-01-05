@@ -25,6 +25,24 @@ Send a WhatsApp message to your Twilio sandbox number:
 
 You should receive an auto-acknowledgement with ticket number.
 
+### 4. WhatsApp Leave Workflow
+
+The same inbound webhook also supports leave applications and admin decisions.
+
+Employee (examples):
+```
+Leave tomorrow fever
+Leave 2026-01-10 to 2026-01-12 family function
+छुट्टी कल बुखार
+छुट्टी 10/01/2026 - 12/01/2026 शादी
+```
+
+Admin (from the configured admin number) replies:
+```
+APPROVE <leaveId>
+REJECT <leaveId>
+```
+
 ## Voice/IVR Integration
 
 ### Webhook Endpoint
@@ -79,7 +97,9 @@ Add to `.env.local`:
 ```
 VITE_TWILIO_ACCOUNT_SID=your_account_sid
 VITE_TWILIO_AUTH_TOKEN=your_auth_token
-VITE_TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+VITE_TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
+ADMIN_WHATSAPP_NUMBER=+919876543210
+FRONTEND_URL=https://mcd-hrms.vercel.app
 ```
 
 ## Security Notes
