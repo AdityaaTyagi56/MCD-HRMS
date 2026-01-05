@@ -200,7 +200,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <p className="text-xs text-neutral-600">{language === 'hi' ? 'कर्मचारी पोर्टल' : 'Employee Portal'}</p>
                 </div>
               </div>
-              
               <div className="flex items-center gap-3">
                 <button className="relative p-2 hover:bg-neutral-100 rounded-xl transition-colors">
                   <Bell size={18} className="text-neutral-600" />
@@ -216,14 +215,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
             </div>
           </header>
-
           {/* Content */}
           <main className="p-4">
             <div className="animate-in fade-in">
               {children}
             </div>
           </main>
-
           {/* Bottom Navigation */}
           <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-neutral-200/50 shadow-soft-lg z-50">
             <div className="flex items-center justify-around py-2 pb-safe">
@@ -237,7 +234,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       : 'text-neutral-700 hover:text-black hover:bg-neutral-50'
                   }`}
                 >
-
                   <item.icon size={20} />
                   <span className="text-xs font-medium">{item.label}</span>
                   {currentView === item.id && (
