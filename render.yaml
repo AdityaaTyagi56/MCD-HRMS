@@ -3,7 +3,7 @@ services:
   - type: web
     name: mcd-hrms-api
     runtime: node
-    buildCommand: npm install --legacy-peer-deps && npm run build
+    buildCommand: npm install --legacy-peer-deps --omit=dev
     startCommand: npx tsx server/index.ts
     envVars:
       - key: NODE_ENV
