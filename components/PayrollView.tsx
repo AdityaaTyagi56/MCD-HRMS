@@ -180,7 +180,7 @@ const PayrollView: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">{t('my_compensation')}</h1>
             <p className="text-gray-500">{t('view_salary_details')}</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
              <button className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm flex items-center gap-2">
                <Building2 size={16} /> {t('tax_documents')}
              </button>
@@ -198,14 +198,14 @@ const PayrollView: React.FC = () => {
                 <div className="flex justify-between items-start mb-8">
                   <div>
                     <p className="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">{t('net_pay')} - {lastPayslip.month}</p>
-                    <h2 className="text-5xl font-bold tracking-tight text-white" style={{ color: '#ffffff' }}>₹{lastPayslip.netSalary.toLocaleString()}</h2>
+                    <h2 className="text-4xl sm:text-5xl font-bold tracking-tight text-white break-words" style={{ color: '#ffffff' }}>₹{lastPayslip.netSalary.toLocaleString()}</h2>
                   </div>
                   <div className="bg-white/10 p-3 rounded-xl backdrop-blur-md border border-white/10">
                     <DollarSign size={32} className="text-emerald-400" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-8">
                   <div>
                     <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">{t('earnings')}</p>
                     <p className="text-xl font-semibold" style={{ color: '#ffffff' }}>₹{lastPayslip.basicSalary.toLocaleString()}</p>
