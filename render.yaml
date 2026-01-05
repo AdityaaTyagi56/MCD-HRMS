@@ -14,7 +14,7 @@ services:
         value: https://mcd-hrms.vercel.app,http://localhost:8001,http://localhost:8010
     healthCheckPath: /health
     plan: free
-    autoDeploy: false
+    autoDeploy: true
 
   # ML/NLP Service (Python FastAPI)
   - type: web
@@ -30,4 +30,4 @@ services:
         value: "1"
     healthCheckPath: /health
     plan: free
-    autoDeploy: false
+    autoDeploy: true

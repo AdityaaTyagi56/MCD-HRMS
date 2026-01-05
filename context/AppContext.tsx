@@ -288,6 +288,81 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     "complaint_submitted_success": { en: "Complaint Submitted!\n\nCategory: ", hi: "शिकायत दर्ज हो गई!\n\nश्रेणी: " },
     "priority": { en: "Priority", hi: "प्राथमिकता" },
     "something_went_wrong": { en: "Something went wrong", hi: "कुछ गलत हुआ" },
+    // Face Recognition (Employee-friendly)
+    "fr_title_enroll": { en: "Face Setup", hi: "चेहरा सेटअप" },
+    "fr_title_verify": { en: "Identity Check", hi: "पहचान जांच" },
+    "fr_title_attendance": { en: "Face Attendance", hi: "चेहरा उपस्थिति" },
+    "fr_initializing_camera": { en: "Starting camera...", hi: "कैमरा शुरू हो रहा है..." },
+    "fr_loading_models": { en: "Loading AI models...", hi: "AI मॉडल लोड हो रहे हैं..." },
+    "fr_starting_camera": { en: "Starting camera...", hi: "कैमरा शुरू हो रहा है..." },
+    "fr_camera_access_error": { en: "Camera access error", hi: "कैमरा अनुमति नहीं मिली" },
+    "fr_camera_init_failed": { en: "Could not start camera. {reason}", hi: "कैमरा शुरू नहीं हो सका। {reason}" },
+
+    "fr_instructions_enroll": { en: "Keep face inside the oval and tap Capture", hi: "चेहरा गोले में रखें और ‘कैप्चर’ दबाएं" },
+    "fr_instructions_verify": { en: "Look at the camera. We will check in 3 quick shots.", hi: "कैमरे की तरफ देखें। 3 फोटो में जांच होगी।" },
+    "fr_instructions_attendance": { en: "Look at the camera to mark attendance", hi: "उपस्थिति के लिए कैमरे की तरफ देखें" },
+    "fr_instructions_attendance_not_enrolled": { en: "Face is not set up yet. Please set up Face first.", hi: "चेहरा सेटअप नहीं है। पहले ‘चेहरा सेटअप’ करें।" },
+    "fr_instructions_default": { en: "Keep your face inside the oval", hi: "चेहरा गोले के अंदर रखें" },
+
+    "fr_face_detected": { en: "Face detected", hi: "चेहरा दिख रहा है" },
+    "fr_no_face": { en: "No face", hi: "चेहरा नहीं दिख रहा" },
+    "fr_face_detected_with_confidence": { en: "{pct}% detected", hi: "{pct}% दिख रहा" },
+    "fr_confidence_pct": { en: "{pct}% confidence", hi: "{pct}% भरोसा" },
+
+    "fr_quality": { en: "Quality", hi: "गुणवत्ता" },
+    "fr_quality_need_face": { en: "Show face", hi: "चेहरा दिखाएं" },
+    "fr_quality_good": { en: "Good", hi: "अच्छी" },
+    "fr_quality_ok": { en: "OK", hi: "ठीक" },
+    "fr_quality_bad": { en: "Bad", hi: "कम" },
+    "fr_hold_still": { en: "Hold still", hi: "शांत रहें" },
+    "fr_hold_still_ok": { en: "Good, stay still", hi: "ठीक है, शांत रहें" },
+    "fr_tip_light": { en: "More light", hi: "रोशनी बढ़ाएं" },
+    "fr_tip_face_center": { en: "Face in oval", hi: "चेहरा गोले में" },
+    "fr_tip_remove_mask": { en: "Remove mask", hi: "मास्क हटाएं" },
+    "fr_improve_quality": { en: "Please improve light and keep face inside the oval", hi: "रोशनी बढ़ाएं और चेहरा गोले में रखें" },
+
+    "fr_wait_before_capture": { en: "Please wait a moment...", hi: "थोड़ा रुकिए..." },
+    "fr_analyzing_hold_still": { en: "Analyzing... please hold still", hi: "जांच हो रही है... शांत रहें" },
+    "fr_retrying_capture": { en: "Retrying... ({current}/{total})", hi: "फिर कोशिश... ({current}/{total})" },
+    "fr_enrollment_complete": { en: "Face setup complete!", hi: "चेहरा सेटअप पूरा!" },
+    "fr_sample_captured": { en: "Sample {current}/3 saved. Move head slightly and capture again.", hi: "{current}/3 फोटो सेव। थोड़ा सिर घुमाएं और फिर कैप्चर करें।" },
+    "fr_capture_failed": { en: "Capture failed: {reason}. Try with better light.", hi: "फोटो नहीं हुआ: {reason}। रोशनी में फिर करें।" },
+
+    "fr_verifying_face": { en: "Checking face...", hi: "चेहरा जांच रहे हैं..." },
+    "fr_identity_verified_welcome": { en: "Verified! Welcome, {name}", hi: "सत्यापित! स्वागत है, {name}" },
+    "fr_face_not_recognized": { en: "Face not recognized. Try again.", hi: "चेहरा नहीं मिला। फिर कोशिश करें।" },
+    "fr_verification_failed": { en: "Verification failed. {reason}", hi: "जांच विफल। {reason}" },
+
+    "fr_enroll_first": { en: "Please set up Face first", hi: "पहले चेहरा सेटअप करें" },
+    "fr_get_ready": { en: "Get ready", hi: "तैयार हो जाएं" },
+    "fr_verifying_identity": { en: "Verifying identity...", hi: "पहचान जांच रहे हैं..." },
+    "fr_attendance_marked_welcome": { en: "Attendance marked! Welcome, {name}", hi: "उपस्थिति दर्ज! स्वागत है, {name}" },
+    "fr_identity_mismatch": { en: "Matched {matchedName}, but you are logged in as {loggedInAs}", hi: "चेहरा {matchedName} से मिला, पर लॉग-इन {loggedInAs} है" },
+    "fr_attendance_failed": { en: "Attendance failed. {reason}", hi: "उपस्थिति विफल। {reason}" },
+
+    "fr_enrollment_progress": { en: "Setup progress", hi: "सेटअप प्रगति" },
+    "fr_samples": { en: "samples", hi: "फोटो" },
+    "fr_enroll_tip_line1": { en: "Tips: good light, look straight, remove cap/glasses", hi: "टिप्स: रोशनी, सीधा देखें, टोपी/चश्मा हटाएं" },
+    "fr_enroll_tip_move_head": { en: "Move your head slightly for next capture", hi: "अगली फोटो के लिए थोड़ा सिर घुमाएं" },
+
+    "fr_analyzing": { en: "Analyzing...", hi: "जांच हो रही है..." },
+    "fr_ready_click_capture": { en: "Ready! Tap Capture", hi: "तैयार! कैप्चर दबाएं" },
+    "fr_capture_sample": { en: "Capture ({current}/{total})", hi: "कैप्चर ({current}/{total})" },
+    "fr_verifying": { en: "Verifying...", hi: "सत्यापन..." },
+    "fr_btn_verify_identity": { en: "Verify", hi: "जांच करें" },
+    "fr_done": { en: "Done", hi: "हो गया" },
+
+    "fr_not_enrolled_title": { en: "Face not set up", hi: "चेहरा सेटअप नहीं है" },
+    "fr_not_enrolled_help": { en: "Please set up Face first", hi: "कृपया पहले चेहरा सेटअप करें" },
+    "fr_security_notice": { en: "Your face data is processed locally and stored securely.", hi: "आपका चेहरा डेटा आपके डिवाइस पर सुरक्षित तरीके से प्रोसेस होता है।" },
+
+    // Attendance UI (Face step)
+    "face_verification": { en: "Face Verification", hi: "चेहरा सत्यापन" },
+    "step_location_verified": { en: "Location Verified", hi: "स्थान सत्यापित" },
+    "step_face_verification": { en: "Face Verification", hi: "चेहरा सत्यापन" },
+    "badge_location_ok": { en: "Location ✓", hi: "स्थान ✓" },
+    "badge_face_ok": { en: "Face ✓", hi: "चेहरा ✓" },
+    "badge_face_id_ok": { en: "Face ID ✓", hi: "फेस आईडी ✓" }
   };
 
   const toggleLanguage = () => {
@@ -310,7 +385,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [apiStatus, setApiStatus] = useState<ApiStatus>('idle');
   const [apiError, setApiError] = useState<string | null>(null);
   
-  const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || "http://localhost:8002";
+  const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || "https://mcd-hrms-ml.onrender.com";
 
   const [employees, setEmployees] = useState<Employee[]>(INITIAL_EMPLOYEES);
   const [grievances, setGrievances] = useState<Grievance[]>(INITIAL_GRIEVANCES);

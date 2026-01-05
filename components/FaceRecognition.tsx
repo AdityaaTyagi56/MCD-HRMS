@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
   Camera,
   CameraOff,
@@ -13,6 +13,7 @@ import {
   ScanFace,
   Fingerprint,
 } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 import {
   loadModels,
   areModelsLoaded,
@@ -44,6 +45,8 @@ export default function FaceRecognition({
   onError,
   onClose,
 }: FaceRecognitionProps) {
+  const { language, toggleLanguage, t } = useApp();
+
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -54,7 +57,8 @@ export default function FaceRecognition({
 
   // State
   const [status, setStatus] = useState<'loading' | 'ready' | 'processing' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('Initializing camera...');
+  const [messageKey, setMessageKey] = useState<string>('fr_initializing_camera');
+  const [messageParams, setMessageParams] = useState<Record<string, string | number> | undefined>(undefined);
   const [faceDetected, setFaceDetected] = useState(false);
   const [faceStable, setFaceStable] = useState(false);
   const [matchResult, setMatchResult] = useState<FaceMatchResult | null>(null);
@@ -63,6 +67,42 @@ export default function FaceRecognition({
   const [modelsReady, setModelsReady] = useState(false);
   const [captureAttempts, setCaptureAttempts] = useState(0);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [detectionConfidence, setDetectionConfidence] = useState<number>(0);
+  const [faceAreaRatio, setFaceAreaRatio] = useState<number>(0);
+
+  const formatTemplate = useCallback((template: string, params?: Record<string, string | number>) => {
+    if (!params) return template;
+    return Object.entries(params).reduce((acc, [key, value]) => {
+      return acc.replaceAll(`{${key}}`, String(value));
+    }, template);
+  }, []);
+
+  const message = useMemo(() => {
+    return formatTemplate(t(messageKey), messageParams);
+  }, [t, messageKey, messageParams, formatTemplate]);
+
+  const qualityScore = useMemo(() => {
+    // Weighted quality score to encourage good lighting + closer framing + stable face
+    const confidenceScore = Math.max(0, Math.min(1, detectionConfidence || 0));
+    // Face area: 0.06 (~small face) -> 1, 0.20 (~good close) -> 1
+    const areaScore = Math.max(0, Math.min(1, (faceAreaRatio - 0.04) / 0.14));
+    const stableScore = faceStable ? 1 : 0.4;
+    return 0.55 * confidenceScore + 0.30 * areaScore + 0.15 * stableScore;
+  }, [detectionConfidence, faceAreaRatio, faceStable]);
+
+  const qualityLabelKey = useMemo(() => {
+    if (!faceDetected) return 'fr_quality_need_face';
+    if (qualityScore >= 0.72) return 'fr_quality_good';
+    if (qualityScore >= 0.55) return 'fr_quality_ok';
+    return 'fr_quality_bad';
+  }, [qualityScore, faceDetected]);
+
+  const canProceed = useMemo(() => {
+    if (!faceDetected) return false;
+    if (status === 'processing' || status === 'loading') return false;
+    // Require a minimum quality for accurate recognition
+    return qualityScore >= 0.55;
+  }, [faceDetected, status, qualityScore]);
 
   // Initialize camera and models
   useEffect(() => {
@@ -71,7 +111,8 @@ export default function FaceRecognition({
     const initialize = async () => {
       try {
         // Load face recognition models
-        setMessage('Loading AI models...');
+        setMessageKey('fr_loading_models');
+        setMessageParams(undefined);
         const modelsLoaded = await loadModels();
         
         if (!mounted) return;
@@ -81,7 +122,8 @@ export default function FaceRecognition({
         }
         
         setModelsReady(true);
-        setMessage('Starting camera...');
+        setMessageKey('fr_starting_camera');
+        setMessageParams(undefined);
 
         // Get camera access
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -113,13 +155,15 @@ export default function FaceRecognition({
         });
 
         setStatus('ready');
-        setMessage(getInstructions());
+        setMessageKey(getInstructions());
+        setMessageParams(undefined);
       } catch (error: any) {
         console.error('Initialization error:', error);
         if (mounted) {
           setCameraError(error.message);
           setStatus('error');
-          setMessage(error.message || 'Failed to initialize');
+          setMessageKey('fr_camera_init_failed');
+          setMessageParams({ reason: error.message || '' });
           onError?.(error.message);
         }
       }
@@ -161,6 +205,15 @@ export default function FaceRecognition({
         }
         
         setFaceDetected(result.detected);
+        setDetectionConfidence(result.confidence ?? 0);
+
+        if (result.detected && result.box && videoRef.current.videoWidth && videoRef.current.videoHeight) {
+          const area = result.box.width * result.box.height;
+          const full = videoRef.current.videoWidth * videoRef.current.videoHeight;
+          setFaceAreaRatio(full ? area / full : 0);
+        } else {
+          setFaceAreaRatio(0);
+        }
 
         // Draw overlay
         const canvas = canvasRef.current;
@@ -174,9 +227,9 @@ export default function FaceRecognition({
 
           if (result.detected && result.box) {
             const isMatch = matchResult?.matched ?? false;
-            const label = result.confidence 
-              ? `${(result.confidence * 100).toFixed(0)}% detected`
-              : 'Face detected';
+            const label = result.confidence
+              ? formatTemplate(t('fr_face_detected_with_confidence'), { pct: (result.confidence * 100).toFixed(0) })
+              : t('fr_face_detected');
             drawFaceOverlay(canvas, result.box, isMatch, label);
           }
         }
@@ -197,23 +250,23 @@ export default function FaceRecognition({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [status, modelsReady, matchResult]);
+  }, [status, modelsReady, matchResult, t, formatTemplate]);
 
   // Get instructions based on mode
   const getInstructions = useCallback(() => {
     switch (mode) {
       case 'enroll':
-        return 'Position your face in the frame and click "Capture" to enroll';
+        return 'fr_instructions_enroll';
       case 'verify':
-        return 'Look at the camera to verify your identity';
+        return 'fr_instructions_verify';
       case 'attendance':
         const hasEnrolled = hasEnrolledFace(employeeId);
         if (!hasEnrolled) {
-          return 'Please enroll your face first before marking attendance';
+          return 'fr_instructions_attendance_not_enrolled';
         }
-        return 'Look at the camera to mark attendance';
+        return 'fr_instructions_attendance';
       default:
-        return 'Position your face in the camera frame';
+        return 'fr_instructions_default';
     }
   }, [mode, employeeId]);
 
@@ -236,13 +289,21 @@ export default function FaceRecognition({
     // Prevent rapid captures (min 1 second between)
     const now = Date.now();
     if (now - lastCaptureTimeRef.current < 1000) {
-      setMessage('Please wait a moment before capturing again...');
+      setMessageKey('fr_wait_before_capture');
+      setMessageParams(undefined);
       return;
     }
     lastCaptureTimeRef.current = now;
 
+    if (!canProceed) {
+      setMessageKey('fr_improve_quality');
+      setMessageParams(undefined);
+      return;
+    }
+
     setStatus('processing');
-    setMessage('Analyzing face... Please hold still');
+    setMessageKey('fr_analyzing_hold_still');
+    setMessageParams(undefined);
     setCaptureAttempts(prev => prev + 1);
 
     // Try multiple times for better detection
@@ -264,7 +325,8 @@ export default function FaceRecognition({
         // Wait a bit before retry
         if (attempt < 2) {
           await new Promise(resolve => setTimeout(resolve, 300));
-          setMessage(`Retrying capture... (${attempt + 2}/3)`);
+          setMessageKey('fr_retrying_capture');
+          setMessageParams({ current: attempt + 2, total: 3 });
         }
       } catch (error: any) {
         console.error(`Capture attempt ${attempt + 1} failed:`, error);
@@ -282,7 +344,8 @@ export default function FaceRecognition({
 
       if (result.samplesCount && result.samplesCount >= 3) {
         setStatus('success');
-        setMessage('✅ Face enrollment complete!');
+        setMessageKey('fr_enrollment_complete');
+        setMessageParams(undefined);
         onSuccess?.({
           matched: true,
           employeeId,
@@ -293,42 +356,79 @@ export default function FaceRecognition({
         });
       } else {
         setStatus('ready');
-        setMessage(`✅ Sample ${result.samplesCount}/3 captured! Move your head slightly and capture again.`);
+        setMessageKey('fr_sample_captured');
+        setMessageParams({ current: result.samplesCount || 0, total: 3 });
       }
     } else {
       setStatus('ready');
-      setMessage(`⚠️ ${result.message}. Please ensure good lighting and face the camera directly.`);
+      setMessageKey('fr_capture_failed');
+      setMessageParams({ reason: result.message });
     }
   };
 
-  // Handle verification
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const multiShot = async <T,>(shots: number, fn: () => Promise<T>): Promise<T[]> => {
+    const results: T[] = [];
+    for (let i = 0; i < shots; i++) {
+      results.push(await fn());
+      if (i < shots - 1) await sleep(250);
+    }
+    return results;
+  };
+
+  const pickBestMatch = (results: FaceMatchResult[]): FaceMatchResult => {
+    // Prefer a matched result with the lowest distance; else lowest distance anyway
+    const sorted = [...results].sort((a, b) => a.distance - b.distance);
+    const bestMatched = sorted.find(r => r.matched);
+    return bestMatched ?? sorted[0] ?? { matched: false, confidence: 0, distance: 1, threshold: 0.5 };
+  };
+
+  // Handle verification (multi-shot)
   const handleVerify = async () => {
     if (!videoRef.current || status === 'processing') return;
 
     setStatus('processing');
-    setMessage('Verifying face...');
+    setMessageKey('fr_verifying_face');
+    setMessageParams(undefined);
+
+    if (!canProceed) {
+      setStatus('ready');
+      setMessageKey('fr_improve_quality');
+      setMessageParams(undefined);
+      return;
+    }
 
     try {
-      const canvas = captureFrame(videoRef.current);
-      const result = await verifyFace(employeeId, canvas);
-      setMatchResult(result);
+      const results = await multiShot(3, async () => {
+        const canvas = captureFrame(videoRef.current!);
+        return verifyFace(employeeId, canvas);
+      });
 
-      if (result.matched) {
+      const matchedCount = results.filter(r => r.matched).length;
+      const best = pickBestMatch(results);
+      setMatchResult(best);
+
+      if (matchedCount >= 2 && best.matched) {
         setStatus('success');
-        setMessage(`✅ Identity verified! Welcome, ${result.employeeName}`);
-        onSuccess?.(result);
+        setMessageKey('fr_identity_verified_welcome');
+        setMessageParams({ name: best.employeeName || employeeName });
+        onSuccess?.(best);
       } else {
         setStatus('error');
-        setMessage('❌ Face not recognized. Please try again.');
+        setMessageKey('fr_face_not_recognized');
+        setMessageParams(undefined);
         setTimeout(() => {
           setStatus('ready');
-          setMessage(getInstructions());
+          setMessageKey(getInstructions());
+          setMessageParams(undefined);
           setMatchResult(null);
         }, 2000);
       }
     } catch (error: any) {
       setStatus('ready');
-      setMessage(error.message || 'Verification failed');
+      setMessageKey('fr_verification_failed');
+      setMessageParams({ reason: error.message || '' });
     }
   };
 
@@ -338,7 +438,14 @@ export default function FaceRecognition({
 
     // Check if enrolled
     if (!hasEnrolledFace(employeeId)) {
-      setMessage('Please enroll your face first');
+      setMessageKey('fr_enroll_first');
+      setMessageParams(undefined);
+      return;
+    }
+
+    if (!canProceed) {
+      setMessageKey('fr_improve_quality');
+      setMessageParams(undefined);
       return;
     }
 
@@ -360,39 +467,52 @@ export default function FaceRecognition({
     if (!videoRef.current) return;
 
     setStatus('processing');
-    setMessage('Verifying your identity...');
+    setMessageKey('fr_verifying_identity');
+    setMessageParams(undefined);
 
     try {
-      const canvas = captureFrame(videoRef.current);
-      const result = await matchFace(canvas);
-      setMatchResult(result);
+      const results = await multiShot(3, async () => {
+        const canvas = captureFrame(videoRef.current!);
+        return matchFace(canvas);
+      });
 
-      if (result.matched && result.employeeId === employeeId) {
+      const best = pickBestMatch(results);
+      setMatchResult(best);
+
+      const matchedThisEmployeeCount = results.filter(r => r.matched && r.employeeId === employeeId).length;
+
+      if (matchedThisEmployeeCount >= 2 && best.matched && best.employeeId === employeeId) {
         setStatus('success');
-        setMessage(`✅ Attendance marked! Welcome, ${result.employeeName}`);
-        onSuccess?.(result);
-      } else if (result.matched) {
+        setMessageKey('fr_attendance_marked_welcome');
+        setMessageParams({ name: best.employeeName || employeeName });
+        onSuccess?.(best);
+      } else if (best.matched) {
         // Matched but wrong person
         setStatus('error');
-        setMessage(`❌ Face matched ${result.employeeName}, but you logged in as ${employeeName}`);
+        setMessageKey('fr_identity_mismatch');
+        setMessageParams({ matchedName: best.employeeName || '', loggedInAs: employeeName });
         onError?.('Identity mismatch');
         setTimeout(() => {
           setStatus('ready');
-          setMessage(getInstructions());
+          setMessageKey(getInstructions());
+          setMessageParams(undefined);
           setMatchResult(null);
         }, 3000);
       } else {
         setStatus('error');
-        setMessage('❌ Face not recognized. Please try again.');
+        setMessageKey('fr_face_not_recognized');
+        setMessageParams(undefined);
         setTimeout(() => {
           setStatus('ready');
-          setMessage(getInstructions());
+          setMessageKey(getInstructions());
+          setMessageParams(undefined);
           setMatchResult(null);
         }, 2000);
       }
     } catch (error: any) {
       setStatus('ready');
-      setMessage(error.message || 'Attendance marking failed');
+      setMessageKey('fr_attendance_failed');
+      setMessageParams({ reason: error.message || '' });
     }
   };
 
@@ -437,13 +557,38 @@ export default function FaceRecognition({
             <Fingerprint className="w-8 h-8" />
             <div>
               <h2 className="text-xl font-bold">
-                {mode === 'enroll' ? 'Face Enrollment' : 
-                 mode === 'verify' ? 'Identity Verification' : 
-                 'Facial Attendance'}
+                {mode === 'enroll'
+                  ? t('fr_title_enroll')
+                  : mode === 'verify'
+                    ? t('fr_title_verify')
+                    : t('fr_title_attendance')}
               </h2>
               <p className="text-indigo-200 text-sm">{employeeName}</p>
             </div>
           </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center bg-white/10 rounded-full p-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (language !== 'hi') toggleLanguage();
+                }}
+                className={`px-3 py-1 text-sm rounded-full transition ${language === 'hi' ? 'bg-white text-indigo-700 font-bold' : 'text-white/90 hover:text-white'}`}
+              >
+                हिंदी
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (language !== 'en') toggleLanguage();
+                }}
+                className={`px-3 py-1 text-sm rounded-full transition ${language === 'en' ? 'bg-white text-indigo-700 font-bold' : 'text-white/90 hover:text-white'}`}
+              >
+                ENG
+              </button>
+            </div>
+
           {onClose && (
             <button
               onClick={() => {
@@ -455,6 +600,7 @@ export default function FaceRecognition({
               <XCircle className="w-6 h-6" />
             </button>
           )}
+          </div>
         </div>
       </div>
 
@@ -464,14 +610,14 @@ export default function FaceRecognition({
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
             <div className="text-center text-white p-6">
               <CameraOff className="w-16 h-16 mx-auto mb-4 text-red-500" />
-              <p className="text-lg font-medium">Camera Access Error</p>
+              <p className="text-lg font-medium">{t('fr_camera_access_error')}</p>
               <p className="text-gray-400 text-sm mt-2">{cameraError}</p>
               <button
                 onClick={() => window.location.reload()}
                 className="mt-4 px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700"
               >
                 <RefreshCw className="w-4 h-4 inline mr-2" />
-                Retry
+                {t('retry')}
               </button>
             </div>
           </div>
@@ -511,9 +657,13 @@ export default function FaceRecognition({
             <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/50 rounded-full px-3 py-1.5">
               <div className={`w-3 h-3 rounded-full ${getStatusColor()} animate-pulse`} />
               <span className="text-white text-sm font-medium">
-                {status === 'loading' ? 'Loading...' :
-                 status === 'processing' ? 'Processing...' :
-                 faceDetected ? 'Face Detected' : 'No Face'}
+                {status === 'loading'
+                  ? t('loading')
+                  : status === 'processing'
+                    ? t('processing')
+                    : faceDetected
+                      ? t('fr_face_detected')
+                      : t('fr_no_face')}
               </span>
             </div>
 
@@ -523,7 +673,7 @@ export default function FaceRecognition({
                 <span className={`text-sm font-bold ${
                   matchResult.matched ? 'text-green-400' : 'text-red-400'
                 }`}>
-                  {matchResult.confidence.toFixed(0)}% confidence
+                  {formatTemplate(t('fr_confidence_pct'), { pct: matchResult.confidence.toFixed(0) })}
                 </span>
               </div>
             )}
@@ -531,15 +681,46 @@ export default function FaceRecognition({
         )}
       </div>
 
+      {/* Simple guidance + quality */}
+      <div className="px-6 py-3 bg-white border-t">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-gray-800">
+            {t('fr_quality')}: <span className="font-bold">{t(qualityLabelKey)}</span>
+          </div>
+          <div className="text-xs text-gray-500">
+            {faceStable ? t('fr_hold_still_ok') : t('fr_hold_still')}
+          </div>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2 mt-2 overflow-hidden">
+          <div
+            className={`h-2 rounded-full transition-all duration-300 ${
+              qualityScore >= 0.72 ? 'bg-green-600' : qualityScore >= 0.55 ? 'bg-yellow-500' : 'bg-red-500'
+            }`}
+            style={{ width: `${Math.round(qualityScore * 100)}%` }}
+          />
+        </div>
+        <div className="mt-2 grid grid-cols-3 gap-2 text-[11px] text-gray-600">
+          <div className="flex items-center gap-1">
+            <span className="text-base">💡</span> {t('fr_tip_light')}
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-base">📷</span> {t('fr_tip_face_center')}
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-base">🙂</span> {t('fr_tip_remove_mask')}
+          </div>
+        </div>
+      </div>
+
       {/* Enrollment Progress */}
       {mode === 'enroll' && (
         <div className="px-6 py-3 bg-gray-50 border-t">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">
-              Enrollment Progress
+              {t('fr_enrollment_progress')}
             </span>
             <span className="text-sm text-gray-500">
-              {enrollmentProgress.current}/{enrollmentProgress.required} samples
+              {enrollmentProgress.current}/{enrollmentProgress.required} {t('fr_samples')}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
@@ -552,9 +733,9 @@ export default function FaceRecognition({
           </div>
           {/* Tips for better enrollment */}
           <div className="mt-2 text-xs text-gray-500 space-y-1">
-            <p>💡 Tips: Good lighting, face camera directly, remove glasses/hat</p>
+            <p>💡 {t('fr_enroll_tip_line1')}</p>
             {enrollmentProgress.current > 0 && enrollmentProgress.current < 3 && (
-              <p>🔄 Move your head slightly for the next capture</p>
+              <p>🔄 {t('fr_enroll_tip_move_head')}</p>
             )}
           </div>
         </div>
@@ -573,7 +754,7 @@ export default function FaceRecognition({
         {mode === 'enroll' && status !== 'success' && (
           <button
             onClick={handleEnrollCapture}
-            disabled={!faceDetected || status === 'processing' || status === 'loading'}
+            disabled={!canProceed || status === 'processing' || status === 'loading'}
             className={`flex-1 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${
               faceStable && faceDetected && status === 'ready'
                 ? 'bg-green-600 hover:bg-green-700 text-white animate-pulse'
@@ -583,12 +764,14 @@ export default function FaceRecognition({
             {status === 'processing' ? (
               <>
                 <Loader className="w-5 h-5 animate-spin" />
-                Analyzing Face...
+                {t('fr_analyzing')}
               </>
             ) : (
               <>
                 <Camera className="w-5 h-5" />
-                {faceStable ? '✓ Ready - Click to Capture!' : `Capture Sample (${enrollmentProgress.current + 1}/${enrollmentProgress.required})`}
+                {faceStable
+                  ? t('fr_ready_click_capture')
+                  : formatTemplate(t('fr_capture_sample'), { current: enrollmentProgress.current + 1, total: enrollmentProgress.required })}
               </>
             )}
           </button>
@@ -597,18 +780,18 @@ export default function FaceRecognition({
         {mode === 'verify' && status !== 'success' && (
           <button
             onClick={handleVerify}
-            disabled={!faceDetected || status === 'processing' || status === 'loading'}
+            disabled={!canProceed || status === 'processing' || status === 'loading'}
             className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {status === 'processing' ? (
               <>
                 <Loader className="w-5 h-5 animate-spin" />
-                Verifying...
+                {t('fr_verifying')}
               </>
             ) : (
               <>
                 <Shield className="w-5 h-5" />
-                Verify Identity
+                {t('fr_btn_verify_identity')}
               </>
             )}
           </button>
@@ -620,32 +803,32 @@ export default function FaceRecognition({
               <div className="flex-1 text-center">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <AlertTriangle className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                  <p className="text-yellow-700 font-medium">Face Not Enrolled</p>
+                  <p className="text-yellow-700 font-medium">{t('fr_not_enrolled_title')}</p>
                   <p className="text-yellow-600 text-sm mt-1">
-                    Please ask admin to enroll your face first
+                    {t('fr_not_enrolled_help')}
                   </p>
                 </div>
               </div>
             ) : (
               <button
                 onClick={handleMarkAttendance}
-                disabled={!faceDetected || status === 'processing' || status === 'loading' || countdown !== null}
+                disabled={!canProceed || status === 'processing' || status === 'loading' || countdown !== null}
                 className="flex-1 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {status === 'processing' ? (
                   <>
                     <Loader className="w-5 h-5 animate-spin" />
-                    Verifying...
+                    {t('fr_verifying')}
                   </>
                 ) : countdown !== null ? (
                   <>
                     <Loader className="w-5 h-5 animate-spin" />
-                    Get Ready... {countdown}
+                    {t('fr_get_ready')} {countdown}
                   </>
                 ) : (
                   <>
                     <UserCheck className="w-5 h-5" />
-                    Mark Attendance
+                    {t('mark_attendance')}
                   </>
                 )}
               </button>
@@ -662,7 +845,7 @@ export default function FaceRecognition({
             className="flex-1 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 flex items-center justify-center gap-2"
           >
             <CheckCircle className="w-5 h-5" />
-            Done
+            {t('fr_done')}
           </button>
         )}
       </div>
@@ -670,8 +853,7 @@ export default function FaceRecognition({
       {/* Security Notice */}
       <div className="px-6 py-3 bg-gray-100 border-t text-center">
         <p className="text-xs text-gray-500">
-          🔒 Your face data is processed locally and stored securely.
-          AI-powered recognition using industry-standard algorithms.
+          🔒 {t('fr_security_notice')}
         </p>
       </div>
     </div>

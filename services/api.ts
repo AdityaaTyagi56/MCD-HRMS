@@ -1,6 +1,6 @@
 import type { Employee, Grievance, LeaveRequest, Payslip, Ward } from '../types';
 
-const FALLBACK_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8010';
+const FALLBACK_BASE = import.meta.env.VITE_API_URL || 'https://mcd-hrms-api.onrender.com';
 const FALLBACK_KEY = import.meta.env.VITE_API_KEY || 'hackathon-demo-key';
 
 let runtimeBase: string | null = null;

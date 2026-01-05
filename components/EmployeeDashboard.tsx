@@ -53,7 +53,7 @@ const EmployeeDashboard: React.FC = () => {
 
   const recognitionRef = useRef<any>(null);
   const locationWatchRef = useRef<number | null>(null);
-  const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
+  const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || 'https://mcd-hrms-ml.onrender.com';
   
   // Office location (MCD Civic Centre, Delhi)
   const OFFICE_LOCATION = { lat: 28.6328, lng: 77.2197, radius: 0.5 };
@@ -681,12 +681,12 @@ const EmployeeDashboard: React.FC = () => {
                     <div style={{ width: '32px', height: '32px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <CheckCircle size={18} style={{ color: '#16a34a' }} />
                     </div>
-                    <span style={{ color: '#16a34a', fontSize: '14px', fontWeight: '600' }}>Location Verified</span>
+                    <span style={{ color: '#16a34a', fontSize: '14px', fontWeight: '600' }}>{t('step_location_verified')}</span>
                     <span style={{ color: '#94a3b8', fontSize: '12px' }}>→</span>
                     <div style={{ width: '32px', height: '32px', background: '#dbeafe', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <ScanFace size={18} style={{ color: '#2563eb' }} />
                     </div>
-                    <span style={{ color: '#2563eb', fontSize: '14px', fontWeight: '600' }}>Face Verification</span>
+                    <span style={{ color: '#2563eb', fontSize: '14px', fontWeight: '600' }}>{t('step_face_verification')}</span>
                   </div>
                 </div>
                 
@@ -698,7 +698,7 @@ const EmployeeDashboard: React.FC = () => {
                   onError={(error) => {
                     console.error('Face verification error:', error);
                     setAttendanceStep('error');
-                    setVerificationResult({ message: 'Face verification failed: ' + error });
+                    setVerificationResult({ message: `${t('face_verification')}: ${t('failed')} - ${error}` });
                   }}
                   onClose={() => setShowAttendanceModal(false)}
                 />
@@ -717,11 +717,11 @@ const EmployeeDashboard: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '16px' }}>
                   <div style={{ background: '#dcfce7', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <CheckCircle size={16} style={{ color: '#16a34a' }} />
-                    <span style={{ color: '#166534', fontSize: '12px', fontWeight: '600' }}>Location ✓</span>
+                    <span style={{ color: '#166534', fontSize: '12px', fontWeight: '600' }}>{t('badge_location_ok')}</span>
                   </div>
                   <div style={{ background: '#dcfce7', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Fingerprint size={16} style={{ color: '#16a34a' }} />
-                    <span style={{ color: '#166534', fontSize: '12px', fontWeight: '600' }}>Face ✓</span>
+                    <span style={{ color: '#166534', fontSize: '12px', fontWeight: '600' }}>{t('badge_face_ok')}</span>
                   </div>
                 </div>
                 
@@ -744,11 +744,11 @@ const EmployeeDashboard: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '16px' }}>
                   <div style={{ background: '#dcfce7', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <MapPin size={14} style={{ color: '#16a34a' }} />
-                    <span style={{ color: '#166534', fontSize: '11px', fontWeight: '600' }}>Location ✓</span>
+                    <span style={{ color: '#166534', fontSize: '11px', fontWeight: '600' }}>{t('badge_location_ok')}</span>
                   </div>
                   <div style={{ background: '#dcfce7', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <ScanFace size={14} style={{ color: '#16a34a' }} />
-                    <span style={{ color: '#166534', fontSize: '11px', fontWeight: '600' }}>Face ID ✓</span>
+                    <span style={{ color: '#166534', fontSize: '11px', fontWeight: '600' }}>{t('badge_face_id_ok')}</span>
                   </div>
                 </div>
                 
@@ -844,7 +844,7 @@ const EmployeeDashboard: React.FC = () => {
               mode="enroll"
               onSuccess={() => {
                 setShowFaceEnrollment(false);
-                alert('✅ Face enrollment successful! You can now mark attendance using Face ID.');
+                alert(`${t('success')}: ${t('fr_enrollment_complete')} ${t('mark_attendance')}`);
               }}
               onError={(error) => {
                 console.error('Enrollment error:', error);
