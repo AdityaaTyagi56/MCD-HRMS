@@ -85,6 +85,8 @@ const persist = (name: string, data: unknown) => {
   }
 };
 
+const writeEmployees = (data: Employee[]) => persist('employees', data);
+
 const load = <T,>(name: string, fallback: T): T => {
   try {
     const file = fileFor(name);
@@ -364,6 +366,7 @@ app.post('/api/whatsapp/webhook', express.urlencoded({ extended: false }), async
       priority,
       status: 'Pending',
       date: new Date().toISOString().split('T')[0],
+      submittedAt: new Date().toISOString(),
       escalationLevel: 0,
       slaBreach: false,
       source: 'whatsapp',
@@ -443,6 +446,7 @@ app.post('/api/voice/webhook', async (req, res) => {
       priority,
       status: 'Pending',
       date: new Date().toISOString().split('T')[0],
+      submittedAt: new Date().toISOString(),
       escalationLevel: 0,
       slaBreach: false,
       source: 'voice',
@@ -669,7 +673,7 @@ app.post('/api/payslips', (req, res) => {
   res.status(201).json(slip);
 });
 
-app.post('/api/send-whatsapp', async (req, res) => {
+app.post('/api/send-whatsapp', authGuard, async (req, res) => {
   const { to, message } = req.body;
   
   const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || process.env.VITE_TWILIO_ACCOUNT_SID;
@@ -2067,7 +2071,7 @@ app.post('/api/face/match', (req: express.Request, res: express.Response) => {
     }
 
     if (bestMatch) {
-      const employee = employees.find(e => e.id === bestMatch!.employeeId);
+      const employee = employees.find(e => e.id === Number(bestMatch!.employeeId));
       console.log(`Face matched to ${bestMatch.employeeId} with confidence ${(bestMatch.confidence * 100).toFixed(1)}%`);
       
       res.json({
@@ -2131,7 +2135,7 @@ app.delete('/api/face/enrollment/:employeeId', (req: express.Request, res: expre
 app.get('/api/face/enrollments', (_req: express.Request, res: express.Response) => {
   try {
     const enrollmentList = Object.entries(faceEnrollments).map(([employeeId, data]) => {
-      const employee = employees.find(e => e.id === employeeId);
+      const employee = employees.find(e => e.id === Number(employeeId));
       return {
         employeeId,
         employeeName: employee?.name || 'Unknown',

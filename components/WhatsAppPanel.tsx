@@ -50,13 +50,17 @@ const WhatsAppPanel: React.FC<WhatsAppPanelProps> = ({ isOpen, onClose }) => {
   };
 
   const getMessagePreview = (): string => {
+    const siteUrl = typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'https://mcd-hrms.vercel.app';
+
     switch (messageType) {
       case 'attendance':
-        return '🏢 *MCD HRMS Alert*\n\nनमस्ते [Employee Name],\n\nकृपया आज की उपस्थिति दर्ज करें।\nPlease mark your attendance for today.';
+        return `🏢 *MCD HRMS*\n\nनमस्ते [Employee Name], कृपया आज की उपस्थिति दर्ज करें।\nHello [Employee Name], please mark your attendance today.\n\nलिंक / Link: ${siteUrl}`;
       case 'salary':
-        return '💰 *Salary Credited*\n\nनमस्ते [Employee Name],\n\nआपका वेतन जमा हो गया है।\nYour salary has been credited.';
+        return `💰 *MCD HRMS*\n\nनमस्ते [Employee Name], आपका वेतन जमा हो गया है।\nHello [Employee Name], your salary has been credited.\n\nविवरण / Details: ${siteUrl}`;
       case 'alert':
-        return '🚨 *URGENT ALERT*\n\nनमस्ते [Employee Name],\n\n[Your message here]';
+        return `🚨 *MCD HRMS - Alert*\n\nनमस्ते [Employee Name],\n[Your message here]\n\nलिंक / Link: ${siteUrl}`;
       default:
         return customMessage || 'Type your message...';
     }
@@ -65,11 +69,6 @@ const WhatsAppPanel: React.FC<WhatsAppPanelProps> = ({ isOpen, onClose }) => {
   const handleSend = async () => {
     if (selectedEmployees.length === 0) {
       alert('Please select at least one employee');
-      return;
-    }
-
-    if (!whatsappService.isConfigured()) {
-      alert('WhatsApp service not configured. Please add Twilio credentials to .env.local');
       return;
     }
 
@@ -279,14 +278,12 @@ const WhatsAppPanel: React.FC<WhatsAppPanelProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer */}
-        {!whatsappService.isConfigured() && (
-          <div className="bg-yellow-50 border-t border-yellow-200 p-3 flex items-center gap-3 text-yellow-800">
-            <AlertCircle size={20} />
-            <span className="text-sm">
-              WhatsApp not configured. Add <code className="bg-yellow-200 px-1 rounded">VITE_TWILIO_ACCOUNT_SID</code> and <code className="bg-yellow-200 px-1 rounded">VITE_TWILIO_AUTH_TOKEN</code> to .env.local
-            </span>
-          </div>
-        )}
+        <div className="bg-gray-50 border-t border-gray-200 p-3 flex items-center gap-3 text-gray-700">
+          <AlertCircle size={20} />
+          <span className="text-sm">
+            WhatsApp is sent via the backend (Twilio credentials are server-side). If sending fails, verify your API base/key and server env vars.
+          </span>
+        </div>
       </div>
     </div>
   );

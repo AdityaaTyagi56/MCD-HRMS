@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  // Cast avoids Vite/Vitest duplicate type-package mismatch with Vite 6.
+  plugins: [react()] as any,
   test: {
     globals: true,
     environment: 'jsdom',

@@ -43,6 +43,7 @@ export interface Employee {
   pan?: string;
   uan?: string;       // EPFO UAN
   esiNumber?: string; // ESI IP Number
+  bankAccount?: string;
 }
 
 export interface Grievance {
@@ -108,6 +109,8 @@ export interface Ward {
 
 export type AppView =
   | 'dashboard'
+  | 'employees'
+  | 'grievances'
   | 'payroll'
   | 'leave'
   | 'transfers'

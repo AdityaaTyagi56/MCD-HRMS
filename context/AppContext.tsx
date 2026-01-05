@@ -30,7 +30,7 @@ interface AppContextType {
   apiError: string | null;
 
   // Actions
-  addGrievance: (grievance: { userId: number; category: string; description: string; priority?: 'High' | 'Medium' | 'Low' }) => Promise<void>;
+  addGrievance: (grievance: { userId: number; category: string; description: string; priority?: 'High' | 'Medium' | 'Low'; location?: string }) => Promise<void>;
   resolveGrievance: (id: number) => void;
   markAttendance: (id: number, coords: { lat: number, lng: number }, photoUrl?: string) => Promise<void>;
   setOfficeLocationToCurrent: () => void;
@@ -441,7 +441,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setApiConfig({ key });
   };
 
-  const addGrievance = async (newGrievance: { userId: number; category: string; description: string; priority?: 'High' | 'Medium' | 'Low' }) => {
+  const addGrievance = async (newGrievance: { userId: number; category: string; description: string; priority?: 'High' | 'Medium' | 'Low'; location?: string }) => {
     // @ts-ignore - API signature mismatch in mock vs real, handling gracefully
     const grievance = await api.submitGrievance({ ...newGrievance, user: 'Unknown' }); 
     setGrievances((prev) => [grievance, ...prev]);

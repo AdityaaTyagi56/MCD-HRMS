@@ -1,11 +1,11 @@
 /**
  * WhatsApp Messaging Service for MCD HRMS
- * Uses Twilio WhatsApp API for sending notifications to employees
+ *
+ * Sends messages via the backend API (/api/send-whatsapp) where Twilio credentials live.
+ * This keeps Twilio secrets off the client.
  */
 
-const TWILIO_ACCOUNT_SID = import.meta.env.VITE_TWILIO_ACCOUNT_SID || '';
-// Auth token is now handled securely on the server side
-// const TWILIO_AUTH_TOKEN = import.meta.env.VITE_TWILIO_AUTH_TOKEN || '';
+import { getApiConfig } from './api';
 
 interface WhatsAppMessage {
   to: string; // Employee mobile number (with country code)
@@ -17,6 +17,13 @@ interface SendResult {
   success: boolean;
   messageId?: string;
   error?: string;
+}
+
+const DEFAULT_APP_URL = 'https://mcd-hrms.vercel.app';
+
+function getAppUrl(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin;
+  return DEFAULT_APP_URL;
 }
 
 /**
@@ -41,27 +48,20 @@ function formatWhatsAppNumber(phone: string): string {
 }
 
 /**
- * Send WhatsApp message via Vercel API
+ * Send WhatsApp message via backend API
  */
 export async function sendWhatsAppMessage(params: WhatsAppMessage): Promise<SendResult> {
-  // We now rely on the server to check configuration
-  // if (!TWILIO_ACCOUNT_SID) {
-  //   console.warn('Twilio credentials not configured');
-  //   return { success: false, error: 'WhatsApp service not configured' };
-  // }
-
   const toNumber = formatWhatsAppNumber(params.to);
   
   try {
-    // Use absolute URL for Vercel deployment
-    const apiUrl = typeof window !== 'undefined' && window.location.origin 
-      ? `${window.location.origin}/api/send-whatsapp`
-      : '/api/send-whatsapp';
+    const { base, key } = getApiConfig();
+    const apiUrl = `${base}/api/send-whatsapp`;
       
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-api-key': key,
       },
       body: JSON.stringify({
         to: toNumber,
@@ -87,11 +87,14 @@ export async function sendWhatsAppMessage(params: WhatsAppMessage): Promise<Send
  * Send attendance reminder to employee
  */
 export async function sendAttendanceReminder(mobile: string, employeeName: string): Promise<SendResult> {
-  const dashboardUrl = typeof window !== 'undefined' && window.location.origin 
-    ? window.location.origin 
-    : 'https://mcd-hrms.vercel.app';
-    
-  const message = `🏢 *MCD HRMS Alert*\n\nनमस्ते ${employeeName},\n\nकृपया आज की उपस्थिति दर्ज करें।\nPlease mark your attendance for today.\n\n📍 Location verification required\n📸 Face authentication required\n\n👉 Mark Attendance: ${dashboardUrl}\n\n_Municipal Corporation of Delhi_`;
+  const dashboardUrl = getAppUrl();
+
+  const message =
+    `🏢 *MCD HRMS*\n\n` +
+    `नमस्ते ${employeeName}, कृपया आज की उपस्थिति दर्ज करें।\n` +
+    `Hello ${employeeName}, please mark your attendance today.\n\n` +
+    `लिंक / Link: ${dashboardUrl}\n\n` +
+    `_Municipal Corporation of Delhi_`;
   
   return sendWhatsAppMessage({ to: mobile, message });
 }
@@ -105,55 +108,16 @@ export async function sendSalaryNotification(
   amount: number, 
   month: string
 ): Promise<SendResult> {
-  const message = `💰 *Salary Credited*\n\nनमस्ते ${employeeName},\n\nआपका वेतन जमा हो गया है।\nYour salary has been credited.\n\n💵 Amount: ₹${amount.toLocaleString('en-IN')}\n📅 Month: ${month}\n🏦 Account: ****XXXX\n\n_Municipal Corporation of Delhi_`;
-  
-  return sendWhatsAppMessage({ to: mobile, message });
-}
+  const dashboardUrl = getAppUrl();
 
-/**
- * Send leave status update
- */
-export async function sendLeaveStatusUpdate(
-  mobile: string,
-  employeeName: string,
-  status: 'Approved' | 'Rejected',
-  leaveType: string,
-  dates: string
-): Promise<SendResult> {
-  const statusEmoji = status === 'Approved' ? '✅' : '❌';
-  const statusHindi = status === 'Approved' ? 'स्वीकृत' : 'अस्वीकृत';
-  
-  const message = `${statusEmoji} *Leave ${status}*\n\nनमस्ते ${employeeName},\n\nआपकी छुट्टी ${statusHindi} हो गई है।\nYour leave request has been ${status.toLowerCase()}.\n\n📋 Type: ${leaveType}\n📅 Dates: ${dates}\n\n_Municipal Corporation of Delhi_`;
-  
-  return sendWhatsAppMessage({ to: mobile, message });
-}
-
-/**
- * Send grievance update
- */
-export async function sendGrievanceUpdate(
-  mobile: string,
-  employeeName: string,
-  ticketId: string,
-  status: string,
-  update: string
-): Promise<SendResult> {
-  const message = `📢 *Grievance Update*\n\nनमस्ते ${employeeName},\n\nआपकी शिकायत में अपडेट है।\nUpdate on your grievance.\n\n🎫 Ticket: #${ticketId}\n📊 Status: ${status}\n📝 Update: ${update}\n\n_Municipal Corporation of Delhi_`;
-  
-  return sendWhatsAppMessage({ to: mobile, message });
-}
-
-/**
- * Send acknowledgement for grievance received via WhatsApp/Voice
- */
-export async function sendGrievanceAcknowledgement(
-  mobile: string,
-  employeeName: string,
-  ticketId: number,
-  category: string,
-  priority: string
-): Promise<SendResult> {
-  const message = `✅ *शिकायत दर्ज / Complaint Registered*\n\nनमस्ते ${employeeName},\n\nआपकी शिकायत दर्ज हो गई है।\nYour complaint has been registered.\n\n🎫 Ticket: #${ticketId}\n📂 Category: ${category}\n⚡ Priority: ${priority}\n\nहम जल्द ही आपकी शिकायत पर कार्रवाई करेंगे।\nWe will address your complaint soon.\n\n_Municipal Corporation of Delhi_`;
+  const message =
+    `💰 *MCD HRMS*\n\n` +
+    `नमस्ते ${employeeName}, आपका वेतन जमा हो गया है।\n` +
+    `Hello ${employeeName}, your salary has been credited.\n\n` +
+    `राशि / Amount: ₹${amount.toLocaleString('en-IN')}\n` +
+    `माह / Month: ${month}\n\n` +
+    `विवरण / Details: ${dashboardUrl}\n\n` +
+    `_Municipal Corporation of Delhi_`;
   
   return sendWhatsAppMessage({ to: mobile, message });
 }
@@ -166,7 +130,14 @@ export async function sendEmergencyAlert(
   employeeName: string,
   alertMessage: string
 ): Promise<SendResult> {
-  const message = `🚨 *URGENT ALERT*\n\nनमस्ते ${employeeName},\n\n${alertMessage}\n\n_Municipal Corporation of Delhi_`;
+  const dashboardUrl = getAppUrl();
+
+  const message =
+    `🚨 *MCD HRMS - Alert*\n\n` +
+    `नमस्ते ${employeeName},\n` +
+    `${alertMessage}\n\n` +
+    `लिंक / Link: ${dashboardUrl}\n\n` +
+    `_Municipal Corporation of Delhi_`;
   
   return sendWhatsAppMessage({ to: mobile, message });
 }
@@ -204,18 +175,14 @@ export async function sendBulkWhatsAppMessages(
  * Check if WhatsApp service is configured
  */
 export function isWhatsAppConfigured(): boolean {
-  // Assume configured if we are running (server will handle errors)
-  // Or check only public SID if available
-  return true; 
+  // Client does not know server env; allow UI and let server return errors.
+  return true;
 }
 
 export const whatsappService = {
   sendMessage: sendWhatsAppMessage,
   sendAttendanceReminder,
   sendSalaryNotification,
-  sendLeaveStatusUpdate,
-  sendGrievanceUpdate,
-  sendGrievanceAcknowledgement,
   sendEmergencyAlert,
   sendBulkMessages: sendBulkWhatsAppMessages,
   isConfigured: isWhatsAppConfigured,

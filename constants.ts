@@ -1,4 +1,4 @@
-import { Employee, Grievance, LeaveRequest, Payslip } from './types';
+import { Employee, Grievance, LeaveRequest, Payslip, Ward } from './types';
 
 // YOUR COORDINATES (Ghaziabad/Noida)
 export const MCD_ZONE_COORDS = {
@@ -124,12 +124,12 @@ const generateEmployees = (): Employee[] => {
 export const INITIAL_EMPLOYEES = generateEmployees();
 
 export const INITIAL_GRIEVANCES: Grievance[] = [
-  { id: 101, userId: 1, user: "Ramesh Gupta", category: "Salary", description: "Salary Delayed for last month", status: "Pending", priority: "High", date: "2025-12-25", escalationLevel: 0, slaBreach: false },
-  { id: 102, userId: 2, user: "Suresh Kumar", category: "Leave", description: "Medical Leave Approval Needed", status: "Resolved", priority: "Low", date: "2025-12-20", escalationLevel: 0, slaBreach: false },
-  { id: 103, userId: 3, user: "Vikram Singh", category: "Harassment", description: "Issue with immediate supervisor", status: "Under Review", priority: "High", date: "2025-12-26", escalationLevel: 1, slaBreach: true },
-  { id: 104, userId: 4, user: "Priya Sharma", category: "Equipment", description: "Broom inventory low in Ward 4", status: "Pending", priority: "Medium", date: "2025-12-27", escalationLevel: 0, slaBreach: false },
+  { id: 101, userId: 1, user: "Ramesh Gupta", category: "Salary", description: "Salary Delayed for last month", status: "Pending", priority: "High", date: "2025-12-25", submittedAt: "2025-12-25T09:00:00.000Z", escalationLevel: 0, slaBreach: false },
+  { id: 102, userId: 2, user: "Suresh Kumar", category: "Leave", description: "Medical Leave Approval Needed", status: "Resolved", priority: "Low", date: "2025-12-20", submittedAt: "2025-12-20T11:30:00.000Z", escalationLevel: 0, slaBreach: false },
+  { id: 103, userId: 3, user: "Vikram Singh", category: "Harassment", description: "Issue with immediate supervisor", status: "Under Review", priority: "High", date: "2025-12-26", submittedAt: "2025-12-26T08:45:00.000Z", escalationLevel: 1, slaBreach: true },
+  { id: 104, userId: 4, user: "Priya Sharma", category: "Equipment", description: "Broom inventory low in Ward 4", status: "Pending", priority: "Medium", date: "2025-12-27", submittedAt: "2025-12-27T14:10:00.000Z", escalationLevel: 0, slaBreach: false },
 
-  { id: 105, userId: 5, user: "Amit Verma", category: "Transfer", description: "Request transfer to South Zone", status: "Pending", priority: "Low", date: "2025-12-28", escalationLevel: 0, slaBreach: false }
+  { id: 105, userId: 5, user: "Amit Verma", category: "Transfer", description: "Request transfer to South Zone", status: "Pending", priority: "Low", date: "2025-12-28", submittedAt: "2025-12-28T10:05:00.000Z", escalationLevel: 0, slaBreach: false }
 ];
 
 // Generate Leaves for the 50 employees
@@ -184,7 +184,7 @@ const generatePayslips = (): Payslip[] => {
 
 export const INITIAL_PAYSLIPS = generatePayslips();
 
-export const INITIAL_WARDS = [
+export const INITIAL_WARDS: Ward[] = [
   { id: 1, zone: 'Zone 1', name: 'Chandni Chowk', population: 180000, riskLevel: 'Medium', notes: 'Old city dense lanes' },
   { id: 2, zone: 'Zone 2', name: 'Karol Bagh', population: 210000, riskLevel: 'Low', notes: 'Mixed commercial/residential' },
   { id: 3, zone: 'Zone 3', name: 'Civil Lines', population: 150000, riskLevel: 'Low', notes: 'Close to Yamuna embankment' },
