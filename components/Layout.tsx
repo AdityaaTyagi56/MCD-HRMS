@@ -237,6 +237,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       : 'text-neutral-700 hover:text-black hover:bg-neutral-50'
                   }`}
                 >
+
                   <item.icon size={20} />
                   <span className="text-xs font-medium">{item.label}</span>
                   {currentView === item.id && (
@@ -257,6 +258,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       )}
     </div>
   );
-};
+}
 
 export default Layout;
