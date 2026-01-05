@@ -97,14 +97,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       size={20} 
                       className={currentView === item.id ? item.color : `${item.color} group-hover:scale-110 transition-transform`}
                     />
-                  { id: 'dashboard', label: language === 'hi' ? 'डैशबोर्ड' : 'Dashboard', icon: LayoutDashboard },
-                  { id: 'employees', label: language === 'hi' ? 'कर्मचारी' : 'Employees', icon: Users },
-                  { id: 'leave', label: language === 'hi' ? 'छुट्टी प्रबंधन' : 'Leave Management', icon: Calendar },
-                  { id: 'payroll', label: language === 'hi' ? 'वेतन' : 'Payroll', icon: IndianRupee },
-                  { id: 'transfers', label: language === 'hi' ? 'स्थानांतरण' : 'Transfers', icon: ArrowRightLeft },
-                  { id: 'performance', label: language === 'hi' ? 'प्रदर्शन' : 'Performance', icon: TrendingUp },
-                  { id: 'service-book', label: language === 'hi' ? 'सेवा पुस्तिका' : 'Service Book', icon: BookOpen },
-                  { id: 'settings', label: language === 'hi' ? 'सेटिंग्स' : 'Settings', icon: Settings },
               </nav>
 
               {/* Footer */}
