@@ -506,7 +506,7 @@ const EmployeeDashboard: React.FC = () => {
             <ScanFace size={22} className="text-warning-700 shrink-0" />
             <div className="text-left min-w-0">
               <div className="text-sm font-bold text-warning-700 truncate">{t('setup_face_id') || 'Set up Face ID'}</div>
-              <div className="text-xs text-warning-700/80 truncate">{t('required_for_attendance') || 'Needed for attendance'}</div>
+              <div className="text-xs text-warning-700 truncate">{t('required_for_attendance') || 'Needed for attendance'}</div>
             </div>
           </div>
           <span className="text-xs font-semibold text-warning-700 shrink-0">{t('enroll_now') || 'Enroll'}</span>
@@ -519,7 +519,7 @@ const EmployeeDashboard: React.FC = () => {
             <Fingerprint size={20} className="text-success-700 shrink-0" />
             <div className="min-w-0">
               <div className="text-sm font-bold text-success-700 truncate">{t('face_id_ready') || 'Face ID ready'}</div>
-              <div className="text-xs text-success-700/80 truncate">
+              <div className="text-xs text-success-700 truncate">
                 {getEnrollmentStatus(employeeData.id).samplesCount} {t('samples') || 'samples saved'}
               </div>
             </div>
@@ -536,15 +536,19 @@ const EmployeeDashboard: React.FC = () => {
       <button
         onClick={handleAttendance}
         disabled={attendanceMarked || !isWithinAttendanceWindow()}
-        className={`w-full rounded-xl p-4 flex items-center gap-3 text-white ${
+        className={`w-full rounded-xl p-4 flex items-center gap-3 ${
           attendanceMarked
-            ? 'bg-success-600'
+            ? 'bg-success-600 text-white'
             : !isWithinAttendanceWindow()
-              ? 'bg-neutral-400'
-              : 'bg-primary-500'
-        } ${attendanceMarked || !isWithinAttendanceWindow() ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
+              ? 'bg-neutral-200 text-neutral-700 border border-neutral-300'
+              : 'bg-primary-500 text-white'
+        } ${attendanceMarked || !isWithinAttendanceWindow() ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
-        <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+        <div
+          className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+            !attendanceMarked && !isWithinAttendanceWindow() ? 'bg-neutral-300' : 'bg-white/20'
+          }`}
+        >
           {attendanceMarked ? <CheckCircle size={24} /> : <MapPin size={24} />}
         </div>
         <div className="text-left flex-1 min-w-0">
