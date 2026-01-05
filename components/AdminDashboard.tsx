@@ -549,10 +549,11 @@ const AdminDashboard: React.FC = () => {
     }
   ];
 
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Alert Ticker */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 rounded-2xl shadow-soft-lg overflow-hidden relative">
+      <div className="p-4 rounded-2xl border" style={{ background: ENTERPRISE_COLORS.primary, color: ENTERPRISE_COLORS.white, borderColor: ENTERPRISE_COLORS.primary }}>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Siren className="animate-pulse" size={20} />
@@ -566,7 +567,7 @@ const AdminDashboard: React.FC = () => {
               <p className="text-sm font-medium">{alerts[tickerIndex]}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-primary-200">
+          <div className="flex items-center gap-2" style={{ color: ENTERPRISE_COLORS.primaryLight }}>
             <Radio size={16} className="animate-pulse" />
             <span className="text-xs">LIVE</span>
           </div>
@@ -578,40 +579,27 @@ const AdminDashboard: React.FC = () => {
         {statsCards.map((card, index) => (
           <div key={card.title} className="group card-hover">
             <div 
-              className="rounded-2xl p-6 shadow-lg relative overflow-hidden min-h-[160px] flex flex-col justify-between"
-              style={{ background: card.bgStyle }}
+              className="rounded-2xl p-6 border flex flex-col justify-between min-h-[160px] relative overflow-hidden"
+              style={{ background: ENTERPRISE_COLORS.gray100, borderColor: ENTERPRISE_COLORS.border, boxShadow: 'none' }}
             >
-              {/* Decorative Elements */}
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" style={{ background: 'rgba(255,255,255,0.1)' }}></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl" style={{ background: 'rgba(0,0,0,0.1)' }}></div>
-              
-              {/* Floating circles pattern */}
-              <div className="absolute top-4 right-4 w-2 h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.3)' }}></div>
-              <div className="absolute top-8 right-8 w-1 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}></div>
-              <div className="absolute bottom-8 left-8 w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }}></div>
-              
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 rounded-xl shadow-lg" style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                    <card.icon style={{ color: '#ffffff' }} size={24} />
+                  <div className="p-3 rounded-xl border" style={{ background: ENTERPRISE_COLORS.white, borderColor: ENTERPRISE_COLORS.border }}>
+                    <card.icon style={{ color: ENTERPRISE_COLORS.primary }} size={24} />
                   </div>
                   <div 
                     className="flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded-full"
-                    style={{ background: card.trend === 'up' ? 'rgba(255,255,255,0.2)' : 'rgba(239,68,68,0.3)' }}
+                    style={{ background: ENTERPRISE_COLORS.primaryLight, color: ENTERPRISE_COLORS.primary }}
                   >
-                    <ArrowUpRight style={{ color: '#ffffff' }} size={14} className={card.trend === 'down' ? 'rotate-90' : ''} />
-                    <span style={{ color: '#ffffff' }}>{card.change}</span>
+                    <ArrowUpRight size={14} />
+                    <span>{card.change}</span>
                   </div>
                 </div>
-                
                 <div>
-                  <h3 className="text-3xl font-bold mb-1" style={{ color: '#ffffff' }}>{card.value}</h3>
-                  <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.9)' }}>{card.title}</p>
+                  <h3 className="text-3xl font-bold mb-1" style={{ color: ENTERPRISE_COLORS.gray900 }}>{card.value}</h3>
+                  <p className="text-sm font-medium" style={{ color: ENTERPRISE_COLORS.gray700 }}>{card.title}</p>
                 </div>
               </div>
-              
-              {/* Bottom accent line */}
-              <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent)' }}></div>
             </div>
           </div>
         ))}

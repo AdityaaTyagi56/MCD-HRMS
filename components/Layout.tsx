@@ -95,20 +95,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   >
                     <item.icon 
                       size={20} 
+              	import { ENTERPRISE_COLORS } from '../constants';
                       className={currentView === item.id ? item.color : `${item.color} group-hover:scale-110 transition-transform`}
                     />
-                    <span className="font-medium">{item.label}</span>
-                    {currentView === item.id && (
-                      <div className="ml-auto">
-                        <Sparkles size={16} className={item.color} />
-                      </div>
-                    )}
-                  </button>
-                ))}
+                  { id: 'dashboard', label: language === 'hi' ? 'डैशबोर्ड' : 'Dashboard', icon: LayoutDashboard },
+                  { id: 'employees', label: language === 'hi' ? 'कर्मचारी' : 'Employees', icon: Users },
+                  { id: 'leave', label: language === 'hi' ? 'छुट्टी प्रबंधन' : 'Leave Management', icon: Calendar },
+                  { id: 'payroll', label: language === 'hi' ? 'वेतन' : 'Payroll', icon: IndianRupee },
+                  { id: 'transfers', label: language === 'hi' ? 'स्थानांतरण' : 'Transfers', icon: ArrowRightLeft },
+                  { id: 'performance', label: language === 'hi' ? 'प्रदर्शन' : 'Performance', icon: TrendingUp },
+                  { id: 'service-book', label: language === 'hi' ? 'सेवा पुस्तिका' : 'Service Book', icon: BookOpen },
+                  { id: 'settings', label: language === 'hi' ? 'सेटिंग्स' : 'Settings', icon: Settings },
               </nav>
 
               {/* Footer */}
-              <div className="p-4 border-t border-neutral-200/50 space-y-3">
+                  <div className="min-h-screen" style={{ background: ENTERPRISE_COLORS.gray50 }}>
                 <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-neutral-50 to-primary-50/30 rounded-xl border border-neutral-200/50">
                   <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">
                     A
