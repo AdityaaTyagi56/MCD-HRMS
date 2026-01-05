@@ -206,6 +206,9 @@ const inferCategoryAndPriority = (
     { category: 'Transfer', patterns: ['transfer', 'ट्रांसफर', 'स्थानांतरण'] },
     { category: 'Harassment', patterns: ['harass', 'abuse', 'threat', 'उत्पीड़', 'शोषण', 'धमकी', 'गाली'] },
     { category: 'Equipment', patterns: ['equipment', 'tool', 'uniform', 'broom', 'jhaadu', 'jhadu', 'सामान', 'उपकरण', 'झाड़ू', 'यूनिफॉर्म', 'नहीं है', 'nhi hai', 'nahi hai'] },
+    { category: 'Attendance', patterns: ['attendance', 'present', 'punch', 'check in', 'check-in', 'उपस्थिति', 'हाज़िरी', 'हाजिरी', 'अटेंडेंस', 'attendance nahi', 'attendance nhi', 'नहीं लग', 'नहीं लग रही', 'mark nahi', 'mark nhi'] },
+    { category: 'Location', patterns: ['location', 'gps', 'geofence', 'map', 'lat', 'lng', 'स्थान', 'लोकेशन', 'जीपीएस', 'मैप', 'location issue', 'लोकेशन इशू', 'सिग्नल', 'signal', 'outside allowed', 'distance'] },
+    { category: 'Face Verification', patterns: ['face', 'camera', 'liveness', 'biometric', 'verify face', 'face verify', 'face verification', 'चेहरा', 'फेस', 'कैमरा', 'लाइवनेस', 'पहचान', 'verify nahi', 'verify nhi', 'नहीं हो रहा', 'नहीं हो रही', 'face nahi', 'face nhi'] },
     { category: 'IT/Portal', patterns: ['site', 'website', 'app', 'portal', 'login', 'otp', 'डाउन', 'वेबसाइट', 'ऐप', 'पोर्टल', 'लॉगिन', 'नहीं चल', 'नहीं चल रही', 'nhi chal', 'nahi chal', 'not working', 'down'] },
     { category: 'Sanitation', patterns: ['garbage', 'waste', 'clean', 'सफाई', 'कूड़ा', 'गंदगी', 'डस्टबिन'] },
   ];
