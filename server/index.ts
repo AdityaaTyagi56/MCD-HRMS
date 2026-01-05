@@ -184,6 +184,103 @@ app.get('/metrics', (_req, res) => {
   });
 });
 
+const escapeXml = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+// WhatsApp Webhook for incoming messages (PUBLIC: Twilio cannot send x-api-key)
+app.post('/api/whatsapp/webhook', express.urlencoded({ extended: false }), async (req, res) => {
+  try {
+    const { From, Body, MessageSid, ProfileName } = req.body;
+
+    console.log('📱 WhatsApp webhook received:', { From, Body, MessageSid });
+
+    // Basic validation
+    if (!From || !Body) {
+      return res.status(400).send('Invalid webhook payload');
+    }
+
+    // Extract phone number (remove whatsapp: prefix)
+    const phoneNumber = String(From).replace('whatsapp:', '');
+    const messageBody = String(Body);
+
+    // Try to find employee by phone number
+    const employee = employees.find(
+      (e) =>
+        e.mobile &&
+        (e.mobile.includes(phoneNumber.slice(-10)) || phoneNumber.includes(e.mobile.slice(-10)))
+    );
+
+    const userId = employee?.id || 0; // 0 for unknown users
+    const userName = employee?.name || ProfileName || 'Unknown User';
+
+    // Analyze the complaint using NLP (if ML service available)
+    let category = 'General Complaint';
+    let priority: 'High' | 'Medium' | 'Low' = 'Medium';
+
+    try {
+      const ML_API_URL = process.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
+      const analysisRes = await fetch(`${ML_API_URL}/analyze-grievance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: messageBody }),
+      });
+
+      if (analysisRes.ok) {
+        const analysis = await analysisRes.json();
+        category = analysis.category || category;
+        priority = analysis.priority || priority;
+      }
+    } catch (err) {
+      console.error('NLP analysis failed for WhatsApp message:', err);
+    }
+
+    // Create grievance
+    const grievance: Grievance = {
+      id: Date.now(),
+      userId,
+      user: userName,
+      category,
+      description: messageBody,
+      priority,
+      status: 'Pending',
+      date: new Date().toISOString().split('T')[0],
+      submittedAt: new Date().toISOString(),
+      escalationLevel: 0,
+      slaBreach: false,
+      source: 'whatsapp',
+      phoneNumber,
+    };
+
+    grievances.unshift(grievance);
+    persist('grievances', grievances);
+
+    const ackMessage =
+      `✅ *शिकायत दर्ज / Complaint Registered*\n\n` +
+      `Ticket #${grievance.id}\n` +
+      `Category: ${category}\n` +
+      `Priority: ${priority}\n\n` +
+      `हम जल्द ही आपकी शिकायत पर कार्रवाई करेंगे।\n` +
+      `We will address your complaint soon.\n\n` +
+      `_Municipal Corporation of Delhi_`;
+
+    // Respond to Twilio immediately with TwiML
+    res.type('text/xml');
+    res.send(
+      `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${escapeXml(ackMessage)}</Message></Response>`
+    );
+
+    console.log('✅ Grievance created from WhatsApp:', grievance.id);
+  } catch (error) {
+    console.error('WhatsApp webhook error:', error);
+    res.status(500).send('Error processing message');
+  }
+});
+
 app.use('/api', authGuard);
 
 app.get('/api/employees', (_req, res) => {
@@ -310,90 +407,6 @@ app.patch('/api/grievances/:id/status', (req, res) => {
   }
   
   res.json(grievance);
-});
-
-// WhatsApp Webhook for incoming messages
-app.post('/api/whatsapp/webhook', express.urlencoded({ extended: false }), async (req, res) => {
-  try {
-    const { From, Body, MessageSid, ProfileName } = req.body;
-    
-    console.log('📱 WhatsApp webhook received:', { From, Body, MessageSid });
-    
-    // Basic validation
-    if (!From || !Body) {
-      return res.status(400).send('Invalid webhook payload');
-    }
-    
-    // Extract phone number (remove whatsapp: prefix)
-    const phoneNumber = From.replace('whatsapp:', '');
-    
-    // Try to find employee by phone number
-    const employee = employees.find(e => 
-      e.mobile && (e.mobile.includes(phoneNumber.slice(-10)) || phoneNumber.includes(e.mobile.slice(-10)))
-    );
-    
-    const userId = employee?.id || 0; // 0 for unknown users
-    const userName = employee?.name || ProfileName || 'Unknown User';
-    
-    // Analyze the complaint using NLP (if ML service available)
-    let category = 'General Complaint';
-    let priority: 'High' | 'Medium' | 'Low' = 'Medium';
-    
-    try {
-      const ML_API_URL = process.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
-      const analysisRes = await fetch(`${ML_API_URL}/analyze-grievance`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: Body })
-      });
-      
-      if (analysisRes.ok) {
-        const analysis = await analysisRes.json();
-        category = analysis.category || category;
-        priority = analysis.priority || priority;
-      }
-    } catch (err) {
-      console.error('NLP analysis failed for WhatsApp message:', err);
-    }
-    
-    // Create grievance
-    const grievance: Grievance = {
-      id: Date.now(),
-      userId,
-      user: userName,
-      category,
-      description: Body,
-      priority,
-      status: 'Pending',
-      date: new Date().toISOString().split('T')[0],
-      submittedAt: new Date().toISOString(),
-      escalationLevel: 0,
-      slaBreach: false,
-      source: 'whatsapp',
-      phoneNumber,
-    };
-    
-    grievances.unshift(grievance);
-    persist('grievances', grievances);
-    
-    // Send acknowledgement back via WhatsApp
-    const ackMessage = `✅ *शिकायत दर्ज / Complaint Registered*\n\n` +
-      `Ticket #${grievance.id}\n` +
-      `Category: ${category}\n` +
-      `Priority: ${priority}\n\n` +
-      `हम जल्द ही आपकी शिकायत पर कार्रवाई करेंगे।\n` +
-      `We will address your complaint soon.\n\n` +
-      `_Municipal Corporation of Delhi_`;
-    
-    // Respond to Twilio immediately with TwiML
-    res.type('text/xml');
-    res.send(`<?xml version="1.0" encoding="UTF-8"?><Response><Message>${ackMessage}</Message></Response>`);
-    
-    console.log('✅ Grievance created from WhatsApp:', grievance.id);
-  } catch (error) {
-    console.error('WhatsApp webhook error:', error);
-    res.status(500).send('Error processing message');
-  }
 });
 
 // Voice/IVR Webhook for transcribed audio complaints
