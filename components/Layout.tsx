@@ -95,7 +95,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   >
                     <item.icon 
                       size={20} 
-              	import { ENTERPRISE_COLORS } from '../constants';
                       className={currentView === item.id ? item.color : `${item.color} group-hover:scale-110 transition-transform`}
                     />
                   { id: 'dashboard', label: language === 'hi' ? 'डैशबोर्ड' : 'Dashboard', icon: LayoutDashboard },
