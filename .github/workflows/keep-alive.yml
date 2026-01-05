@@ -1,0 +1,27 @@
+name: Keep Services Alive
+
+on:
+  schedule:
+    # Run every 14 minutes to prevent Render free-tier spin-down
+    - cron: '*/14 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  ping-services:
+    name: Ping Health Endpoints
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Ping Backend API
+        run: |
+          echo "Pinging Backend API..."
+          curl -sf --max-time 60 "https://mcd-hrms-api.onrender.com/health" || echo "API ping failed or starting up"
+          
+      - name: Ping ML Service
+        run: |
+          echo "Pinging ML Service..."
+          curl -sf --max-time 60 "https://mcd-hrms-ml.onrender.com/health" || echo "ML ping failed or starting up"
+          
+      - name: Log success
+        run: |
+          echo "Keep-alive pings completed at $(date)"
