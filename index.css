@@ -40,31 +40,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Ensure all text is visible with dark colors */
-h1, h2, h3, h4, h5, h6 {
-  color: #000000;
-}
-
-p, span, label, td, th {
-  color: #1a1a1a;
-}
-
-/* Override light text colors - but not for elements with explicit white text */
-.text-neutral-900:not([style*="color"]) { color: #000000 !important; }
-.text-neutral-800:not([style*="color"]) { color: #1a1a1a !important; }
-.text-neutral-700:not([style*="color"]) { color: #333333 !important; }
-.text-neutral-600:not([style*="color"]) { color: #4a4a4a !important; }
-.text-neutral-500:not([style*="color"]) { color: #666666 !important; }
-.text-gray-900:not([style*="color"]) { color: #000000 !important; }
-.text-gray-800:not([style*="color"]) { color: #1a1a1a !important; }
-.text-gray-700:not([style*="color"]) { color: #333333 !important; }
-.text-gray-600:not([style*="color"]) { color: #4a4a4a !important; }
-.text-gray-500:not([style*="color"]) { color: #666666 !important; }
-
-/* Preserve white text on dark backgrounds */
-.text-white { color: #ffffff !important; }
-.text-slate-300 { color: #cbd5e1 !important; }
-.text-slate-400 { color: #94a3b8 !important; }
+/* Important: do not globally override text colors.
+   Tailwind utility classes (e.g., text-neutral-600, text-warning-700)
+   should control contrast per component. */
 
 /* Enhanced focus styles for accessibility */
 button:focus-visible,

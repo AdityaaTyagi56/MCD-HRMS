@@ -248,6 +248,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     "speak_or_type": { en: "Speak or Type", hi: "बोलकर या लिखकर" },
     "need_help": { en: "Need Help?", hi: "मदद चाहिए?" },
     "toll_free": { en: "Toll Free", hi: "टोल फ्री" },
+    "setup_face_id": { en: "Set up Face ID", hi: "फेस आईडी सेटअप करें" },
+    "required_for_attendance": { en: "Required for attendance", hi: "उपस्थिति के लिए आवश्यक" },
+    "enroll_now": { en: "Enroll", hi: "एनरोल करें" },
+    "case_history": { en: "Case History", hi: "केस इतिहास" },
+    "case_single": { en: "case", hi: "केस" },
+    "case_plural": { en: "cases", hi: "केस" },
+    "working_hours": { en: "Working hours: 9 AM - 6 PM", hi: "कार्य समय: सुबह 9 बजे - शाम 6 बजे" },
     
     // Attendance Modal
     "location_verification": { en: "Location Verification", hi: "स्थान सत्यापन" },
