@@ -540,24 +540,26 @@ const EmployeeDashboard: React.FC = () => {
           attendanceMarked
             ? 'bg-success-600 text-white'
             : !isWithinAttendanceWindow()
-              ? 'bg-neutral-200 text-neutral-700 border border-neutral-300'
-              : 'bg-primary-500 text-white'
+              ? 'bg-neutral-200 text-neutral-900 border border-neutral-300'
+              : 'bg-primary-100 text-neutral-900 border border-primary-200'
         } ${attendanceMarked || !isWithinAttendanceWindow() ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <div
           className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-            !attendanceMarked && !isWithinAttendanceWindow() ? 'bg-neutral-300' : 'bg-white/20'
+            !attendanceMarked && !isWithinAttendanceWindow() ? 'bg-neutral-300' : 'bg-white'
           }`}
         >
-          {attendanceMarked ? <CheckCircle size={24} /> : <MapPin size={24} />}
+          {attendanceMarked ? <CheckCircle size={24} /> : <MapPin size={24} className="text-neutral-900" />}
         </div>
         <div className="text-left flex-1 min-w-0">
-          <div className="text-base font-bold truncate">{attendanceMarked ? t('attendance_complete') : t('mark_attendance_now')}</div>
-          <div className="text-xs truncate">
+          <div className="text-base font-bold truncate text-neutral-900">
+            {attendanceMarked ? t('attendance_complete') : t('mark_attendance_now')}
+          </div>
+          <div className="text-xs truncate text-neutral-900">
             {attendanceMarked ? `${t('attendance_marked_at')}: ${employeeData.checkInTime}` : t('tap_here')}
           </div>
         </div>
-        <div className="text-lg font-bold shrink-0">›</div>
+        <div className="text-lg font-bold shrink-0 text-neutral-900">›</div>
       </button>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
