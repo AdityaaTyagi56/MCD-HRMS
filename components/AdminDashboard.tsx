@@ -1130,9 +1130,7 @@ const AdminDashboard: React.FC = () => {
                             style={{ width: `${emp.performance.attendanceScore}%` }}
                           ></div>
                         </div>
-                    <span className="text-xs font-medium text-neutral-700">{emp.performance.attendanceScore}%</span>{emp.performance.attendanceScore}%</span>
-                          {emp.performance.attendanceScore}%
-                        </span>
+                        <span className="text-xs font-medium text-neutral-700">{emp.performance.attendanceScore}%</span>
                       </div>
                     </td>
                   </tr>
