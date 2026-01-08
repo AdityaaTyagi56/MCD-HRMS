@@ -729,6 +729,7 @@ async def register_face(employee_id: int = Form(...), file: UploadFile = File(..
 @app.post("/biolock/verify")
 async def verify_face(employee_id: int = Form(...), file: UploadFile = File(...)):
     """Verify employee face with enrolled embeddings and multi-face logic"""
+    # Lazy load heavy dependencies only when this endpoint is called
     import numpy as np
     from bio_lock import BioLock
     import tempfile
@@ -1721,10 +1722,20 @@ async def prometheus_metrics():
         "format": "prometheus"
     }
 
-# ============ STARTUP ============
-if __name__ == "__main__":
-    print("🚀 Starting MCD HRMS ML Service v2.0...")
+# ============ STARTUP EVENT ============
+@app.on_event("startup")
+async def startup_event():
+    """Log startup - optimized for fast cold start"""
+    import time
+    start_time = time.time()
+    print("🚀 MCD HRMS ML Service v2.0 Starting...")
     print(f"🤖 AI Enabled: {bool(OPENROUTER_API_KEY)}")
+    print("⚡ Lazy loading enabled - heavy ML libraries load on first use")
+    startup_time = time.time() - start_time
+    print(f"✅ Startup complete in {startup_time:.2f}s")
+
+# ============ MAIN ============
+if __name__ == "__main__":
     print("📍 Running on http://localhost:8002")
     print("📖 API Docs: http://localhost:8002/docs")
     uvicorn.run(app, host="0.0.0.0", port=8002)
