@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { AppView } from '../types';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  IndianRupee, 
-  ArrowRightLeft, 
-  TrendingUp, 
-  BookOpen, 
-  Settings, 
-  Menu, 
-  X, 
-  Home, 
-  History, 
-  User, 
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  IndianRupee,
+  ArrowRightLeft,
+  TrendingUp,
+  BookOpen,
+  Settings,
+  Menu,
+  X,
+  Home,
+  History,
+  User,
   Languages,
   Bell,
   Search,
@@ -58,7 +58,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {currentRole === 'admin' ? (
         <div className="flex h-screen overflow-hidden">
           {/* Sidebar */}
-          <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white/80 backdrop-blur-xl border-r border-neutral-200/50 shadow-soft-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}> 
+          <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white/80 backdrop-blur-xl border-r border-neutral-200/50 shadow-soft-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-neutral-200/50">
@@ -67,8 +67,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <Shield className="text-white" size={20} />
                   </div>
                   <div>
-                    <h1 className="font-bold text-lg text-primary-700">MCD HRMS</h1>
-                    <p className="text-xs text-neutral-600">Admin Portal</p>
+                    <h1 className="font-bold text-lg text-primary-900">MCD HRMS</h1>
+                    <p className="text-xs text-neutral-700">Admin Portal</p>
                   </div>
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 hover:bg-neutral-100 rounded-xl transition-colors">
@@ -81,7 +81,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <button
                     key={item.id}
                     onClick={() => handleMenuClick(item.id)}
-                    className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left transition-all duration-200 group ${currentView === item.id ? `${item.bgColor} ${item.color} shadow-inner-soft border border-opacity-50` : 'text-neutral-800 hover:bg-neutral-50 hover:text-black'}`}
+                    className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left transition-all duration-200 group ${currentView === item.id ? `${item.bgColor} ${item.color} shadow-inner-soft border border-opacity-50` : 'text-neutral-700 hover:bg-neutral-50 hover:text-black'}`}
                   >
                     <item.icon size={20} className={currentView === item.id ? item.color : `${item.color} group-hover:scale-110 transition-transform`} />
                   </button>
@@ -92,7 +92,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">A</div>
                 <div className="flex-1">
                   <p className="font-medium text-sm text-black">{language === 'hi' ? 'एडमिन उपयोगकर्ता' : 'Admin User'}</p>
-                  <p className="text-xs text-neutral-600">{language === 'hi' ? 'सिस्टम प्रशासक' : 'System Administrator'}</p>
+                  <p className="text-xs text-neutral-700">{language === 'hi' ? 'सिस्टम प्रशासक' : 'System Administrator'}</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -118,7 +118,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </button>
                   <div>
                     <h2 className="font-bold text-xl text-black responsive-text-lg">{adminMenuItems.find(item => item.id === currentView)?.label || 'Dashboard'}</h2>
-                    <p className="text-sm text-neutral-600">Municipal Corporation of Delhi</p>
+                    <p className="text-sm text-neutral-700">Municipal Corporation of Delhi</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -154,8 +154,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <Shield className="text-white" size={16} />
                 </div>
                 <div>
-                  <h1 className="font-bold text-lg text-primary-700 responsive-text-base">MCD HRMS</h1>
-                  <p className="text-xs text-neutral-600">{language === 'hi' ? 'कर्मचारी पोर्टल' : 'Employee Portal'}</p>
+                  <h1 className="font-bold text-lg text-primary-800 responsive-text-base">MCD HRMS</h1>
+                  <p className="text-xs text-neutral-700">{language === 'hi' ? 'कर्मचारी पोर्टल' : 'Employee Portal'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">

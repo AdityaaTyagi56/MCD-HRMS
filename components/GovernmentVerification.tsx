@@ -23,28 +23,28 @@ interface GovVerificationProps {
 
 export default function GovernmentVerification({ employeeId, employeeName }: GovVerificationProps) {
   const [activeTab, setActiveTab] = useState<'aadhaar' | 'pan' | 'epfo' | 'esi' | 'digilocker'>('aadhaar');
-  
+
   // Aadhaar State
   const [aadhaarNumber, setAadhaarNumber] = useState('');
   const [aadhaarConsent, setAadhaarConsent] = useState(false);
   const [aadhaarLoading, setAadhaarLoading] = useState(false);
   const [aadhaarResult, setAadhaarResult] = useState<AadhaarVerificationResponse | null>(null);
-  
+
   // PAN State
   const [panNumber, setPanNumber] = useState('');
   const [panLoading, setPanLoading] = useState(false);
   const [panResult, setPanResult] = useState<PANVerificationResponse | null>(null);
-  
+
   // EPFO State
   const [uanNumber, setUanNumber] = useState('');
   const [epfoLoading, setEpfoLoading] = useState(false);
   const [epfoResult, setEpfoResult] = useState<EPFOBalanceResponse | null>(null);
-  
+
   // ESI State
   const [ipNumber, setIpNumber] = useState('');
   const [esiLoading, setEsiLoading] = useState(false);
   const [esiResult, setEsiResult] = useState<ESIBalanceResponse | null>(null);
-  
+
   // DigiLocker State
   const [digilockerLoading, setDigilockerLoading] = useState(false);
   const [digilockerResult, setDigilockerResult] = useState<DigiLockerResponse | null>(null);
@@ -154,7 +154,7 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
         <Shield className="w-8 h-8 text-indigo-600" />
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Government Verification</h2>
-          <p className="text-sm text-gray-600">Verify employee credentials with government databases</p>
+          <p className="text-sm text-gray-700">Verify employee credentials with government databases</p>
         </div>
       </div>
 
@@ -162,55 +162,50 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
       <div className="flex gap-2 mb-6 flex-wrap">
         <button
           onClick={() => setActiveTab('aadhaar')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            activeTab === 'aadhaar'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'aadhaar'
               ? 'bg-indigo-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+            }`}
         >
           <CreditCard className="w-4 h-4 inline mr-2" />
           Aadhaar
         </button>
         <button
           onClick={() => setActiveTab('pan')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            activeTab === 'pan'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'pan'
               ? 'bg-indigo-600 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+            }`}
         >
           <FileText className="w-4 h-4 inline mr-2" />
           PAN
         </button>
         <button
           onClick={() => setActiveTab('epfo')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            activeTab === 'epfo'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'epfo'
               ? 'bg-indigo-600 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+            }`}
         >
           <Briefcase className="w-4 h-4 inline mr-2" />
           EPFO
         </button>
         <button
           onClick={() => setActiveTab('esi')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            activeTab === 'esi'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'esi'
               ? 'bg-indigo-600 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+            }`}
         >
           <Building className="w-4 h-4 inline mr-2" />
           ESI
         </button>
         <button
           onClick={() => setActiveTab('digilocker')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            activeTab === 'digilocker'
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'digilocker'
               ? 'bg-indigo-600 text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+            }`}
         >
           <FileText className="w-4 h-4 inline mr-2" />
           DigiLocker
@@ -221,7 +216,7 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
       {activeTab === 'aadhaar' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-800 mb-2">
               Aadhaar Number (12 digits)
             </label>
             <input
@@ -242,7 +237,7 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
               onChange={(e) => setAadhaarConsent(e.target.checked)}
               className="mt-1"
             />
-            <label htmlFor="aadhaar-consent" className="text-sm text-gray-700">
+            <label htmlFor="aadhaar-consent" className="text-sm text-gray-800">
               I consent to verify my Aadhaar details with UIDAI for employment verification purposes as per Aadhaar Act, 2016.
             </label>
           </div>
@@ -266,11 +261,10 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
           </button>
 
           {aadhaarResult && (
-            <div className={`p-4 rounded-lg border-2 ${
-              aadhaarResult.verified
+            <div className={`p-4 rounded-lg border-2 ${aadhaarResult.verified
                 ? 'bg-green-50 border-green-500'
                 : 'bg-red-50 border-red-500'
-            }`}>
+              }`}>
               <div className="flex items-center gap-2 mb-2">
                 {aadhaarResult.verified ? (
                   <CheckCircle className="w-6 h-6 text-green-600" />
@@ -291,7 +285,7 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
                 </div>
               )}
               {aadhaarResult.message && (
-                <p className="text-sm mt-2 text-gray-700">{aadhaarResult.message}</p>
+                <p className="text-sm mt-2 text-gray-800">{aadhaarResult.message}</p>
               )}
               {aadhaarResult.error && (
                 <p className="text-sm mt-2 text-red-700">{aadhaarResult.error}</p>
@@ -305,7 +299,7 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
       {activeTab === 'pan' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-800 mb-2">
               PAN Number (Format: ABCDE1234F)
             </label>
             <input
@@ -337,11 +331,10 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
           </button>
 
           {panResult && (
-            <div className={`p-4 rounded-lg border-2 ${
-              panResult.verified
+            <div className={`p-4 rounded-lg border-2 ${panResult.verified
                 ? 'bg-green-50 border-green-500'
                 : 'bg-red-50 border-red-500'
-            }`}>
+              }`}>
               <div className="flex items-center gap-2 mb-2">
                 {panResult.verified ? (
                   <CheckCircle className="w-6 h-6 text-green-600" />
@@ -360,7 +353,7 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
                 </div>
               )}
               {panResult.message && (
-                <p className="text-sm mt-2 text-gray-700">{panResult.message}</p>
+                <p className="text-sm mt-2 text-gray-800">{panResult.message}</p>
               )}
               {panResult.error && (
                 <p className="text-sm mt-2 text-red-700">{panResult.error}</p>
@@ -374,7 +367,7 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
       {activeTab === 'epfo' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-800 mb-2">
               UAN (Universal Account Number - 12 digits)
             </label>
             <input
@@ -406,11 +399,10 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
           </button>
 
           {epfoResult && (
-            <div className={`p-4 rounded-lg border-2 ${
-              epfoResult.success
+            <div className={`p-4 rounded-lg border-2 ${epfoResult.success
                 ? 'bg-green-50 border-green-500'
                 : 'bg-red-50 border-red-500'
-            }`}>
+              }`}>
               <div className="flex items-center gap-2 mb-2">
                 {epfoResult.success ? (
                   <CheckCircle className="w-6 h-6 text-green-600" />
@@ -441,7 +433,7 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
       {activeTab === 'esi' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-800 mb-2">
               IP Number (Insurance Person Number)
             </label>
             <input
@@ -472,11 +464,10 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
           </button>
 
           {esiResult && (
-            <div className={`p-4 rounded-lg border-2 ${
-              esiResult.success
+            <div className={`p-4 rounded-lg border-2 ${esiResult.success
                 ? 'bg-green-50 border-green-500'
                 : 'bg-red-50 border-red-500'
-            }`}>
+              }`}>
               <div className="flex items-center gap-2 mb-2">
                 {esiResult.success ? (
                   <CheckCircle className="w-6 h-6 text-green-600" />
@@ -531,11 +522,10 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
           </button>
 
           {digilockerResult && (
-            <div className={`p-4 rounded-lg border-2 ${
-              digilockerResult.success
+            <div className={`p-4 rounded-lg border-2 ${digilockerResult.success
                 ? 'bg-green-50 border-green-500'
                 : 'bg-red-50 border-red-500'
-            }`}>
+              }`}>
               <div className="flex items-center gap-2 mb-3">
                 {digilockerResult.success ? (
                   <CheckCircle className="w-6 h-6 text-green-600" />
@@ -551,8 +541,8 @@ export default function GovernmentVerification({ employeeId, employeeName }: Gov
                   {digilockerResult.documents.map((doc, idx) => (
                     <div key={idx} className="bg-white p-3 rounded border border-gray-200">
                       <p className="font-semibold">{doc.docType}</p>
-                      <p className="text-sm text-gray-600">Issuer: {doc.issuer}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-700">Issuer: {doc.issuer}</p>
+                      <p className="text-sm text-gray-700">
                         Size: {(doc.size / 1024).toFixed(2)} KB | Type: {doc.mimeType}
                       </p>
                     </div>

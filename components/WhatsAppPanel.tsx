@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { 
-  MessageCircle, 
-  Send, 
-  Users, 
-  CheckCircle, 
-  AlertCircle, 
+import {
+  MessageCircle,
+  Send,
+  Users,
+  CheckCircle,
+  AlertCircle,
   Loader2,
   X,
   Phone,
@@ -30,13 +30,13 @@ const WhatsAppPanel: React.FC<WhatsAppPanelProps> = ({ isOpen, onClose }) => {
   const [result, setResult] = useState<{ sent: number; failed: number } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredEmployees = employees.filter(emp => 
+  const filteredEmployees = employees.filter(emp =>
     emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const toggleEmployee = (id: number) => {
-    setSelectedEmployees(prev => 
+    setSelectedEmployees(prev =>
       prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
     );
   };
@@ -81,7 +81,7 @@ const WhatsAppPanel: React.FC<WhatsAppPanelProps> = ({ isOpen, onClose }) => {
 
     for (const emp of selectedEmps) {
       let success = false;
-      
+
       try {
         switch (messageType) {
           case 'attendance':
@@ -90,9 +90,9 @@ const WhatsAppPanel: React.FC<WhatsAppPanelProps> = ({ isOpen, onClose }) => {
             break;
           case 'salary':
             const salResult = await whatsappService.sendSalaryNotification(
-              emp.mobile || '', 
-              emp.name, 
-              emp.salary || 25000, 
+              emp.mobile || '',
+              emp.name,
+              emp.salary || 25000,
               'January 2026'
             );
             success = salResult.success;
@@ -106,7 +106,7 @@ const WhatsAppPanel: React.FC<WhatsAppPanelProps> = ({ isOpen, onClose }) => {
             success = msgResult.success;
             break;
         }
-        
+
         if (success) sent++;
         else failed++;
       } catch (e) {
@@ -152,39 +152,37 @@ const WhatsAppPanel: React.FC<WhatsAppPanelProps> = ({ isOpen, onClose }) => {
                 className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
               />
               <div className="flex items-center justify-between mt-3">
-                <button 
+                <button
                   onClick={selectAll}
                   className="text-sm text-green-600 font-medium hover:text-green-800"
                 >
                   {selectedEmployees.length === filteredEmployees.length ? 'Deselect All' : 'Select All'}
                 </button>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-600">
                   {selectedEmployees.length} selected
                 </span>
               </div>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-2">
               {filteredEmployees.map(emp => (
-                <div 
+                <div
                   key={emp.id}
                   onClick={() => toggleEmployee(emp.id)}
-                  className={`p-3 rounded-xl cursor-pointer flex items-center gap-3 mb-2 transition-colors ${
-                    selectedEmployees.includes(emp.id) 
-                      ? 'bg-green-50 border-2 border-green-500' 
+                  className={`p-3 rounded-xl cursor-pointer flex items-center gap-3 mb-2 transition-colors ${selectedEmployees.includes(emp.id)
+                      ? 'bg-green-50 border-2 border-green-500'
                       : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
-                  }`}
+                    }`}
                 >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                    selectedEmployees.includes(emp.id) ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${selectedEmployees.includes(emp.id) ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+                    }`}>
                     {emp.name.charAt(0)}
                   </div>
                   <div className="flex-1">
                     <p className="font-semibold text-sm text-gray-800">{emp.name}</p>
-                    <p className="text-xs text-gray-500">{emp.department}</p>
+                    <p className="text-xs text-gray-600">{emp.department}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
                     <Phone size={12} />
                     <span>{emp.mobile || 'No phone'}</span>
                   </div>
@@ -210,11 +208,10 @@ const WhatsAppPanel: React.FC<WhatsAppPanelProps> = ({ isOpen, onClose }) => {
                   <button
                     key={template.id}
                     onClick={() => setMessageType(template.id as any)}
-                    className={`p-3 rounded-xl text-left flex items-center gap-2 transition-colors border-2 ${
-                      messageType === template.id 
+                    className={`p-3 rounded-xl text-left flex items-center gap-2 transition-colors border-2 ${messageType === template.id
                         ? template.activeClass
                         : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
-                    }`}
+                      }`}
                   >
                     <template.icon size={18} />
                     <span className="text-sm font-medium">{template.label}</span>
@@ -235,9 +232,9 @@ const WhatsAppPanel: React.FC<WhatsAppPanelProps> = ({ isOpen, onClose }) => {
 
               {/* Preview */}
               <div className="bg-gray-100 rounded-xl p-4 mb-4">
-                <p className="text-xs font-medium text-gray-500 uppercase mb-2">Preview</p>
+                <p className="text-xs font-medium text-gray-600 uppercase mb-2">Preview</p>
                 <div className="bg-white rounded-xl p-3 shadow-sm border-l-4 border-green-500">
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                  <pre className="text-sm text-gray-900 whitespace-pre-wrap font-sans">
                     {getMessagePreview()}
                   </pre>
                 </div>
@@ -245,9 +242,8 @@ const WhatsAppPanel: React.FC<WhatsAppPanelProps> = ({ isOpen, onClose }) => {
 
               {/* Result */}
               {result && (
-                <div className={`mb-4 p-4 rounded-xl flex items-center gap-3 ${
-                  result.failed === 0 ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
-                }`}>
+                <div className={`mb-4 p-4 rounded-xl flex items-center gap-3 ${result.failed === 0 ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+                  }`}>
                   {result.failed === 0 ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
                   <span>
                     Sent: {result.sent} | Failed: {result.failed}

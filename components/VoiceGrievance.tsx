@@ -21,7 +21,7 @@ const VoiceGrievance: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('hi-IN');
-  
+
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -73,12 +73,12 @@ const VoiceGrievance: React.FC = () => {
 
   const toggleListening = () => {
     if (supportError) {
-      alert(language === 'hi' 
-        ? "यह ब्राउज़र सपोर्ट नहीं करता। Chrome/Edge का उपयोग करें।" 
+      alert(language === 'hi'
+        ? "यह ब्राउज़र सपोर्ट नहीं करता। Chrome/Edge का उपयोग करें।"
         : "Browser not supported. Use Chrome/Edge.");
       return;
     }
-    
+
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
@@ -95,7 +95,7 @@ const VoiceGrievance: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       // Call the ML backend for analysis
       const response = await fetch(`${ML_API_URL}/analyze-grievance`, {
@@ -109,7 +109,7 @@ const VoiceGrievance: React.FC = () => {
         console.log('Grievance Analysis:', result);
         setSubmitted(true);
         setComplaintText('');
-        
+
         // Show success with category info
         setTimeout(() => setSubmitted(false), 3000);
       } else {
@@ -137,8 +137,8 @@ const VoiceGrievance: React.FC = () => {
           </h2>
         </div>
         <p className="text-yellow-800 mb-4">
-          {language === 'hi' 
-            ? 'वॉइस फीचर के लिए Chrome या Edge ब्राउज़र का उपयोग करें।' 
+          {language === 'hi'
+            ? 'वॉइस फीचर के लिए Chrome या Edge ब्राउज़र का उपयोग करें।'
             : 'Please use Chrome or Edge browser for voice features.'}
         </p>
         <textarea
@@ -147,7 +147,7 @@ const VoiceGrievance: React.FC = () => {
           value={complaintText}
           onChange={(e) => setComplaintText(e.target.value)}
         />
-        <button 
+        <button
           onClick={handleSubmit}
           disabled={isSubmitting}
           className="w-full mt-4 bg-yellow-600 text-white py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-md hover:bg-yellow-700 disabled:opacity-50"
@@ -166,7 +166,7 @@ const VoiceGrievance: React.FC = () => {
         <h2 className="text-2xl font-bold text-gray-800">
           {language === 'hi' ? 'शिकायत दर्ज करें' : 'Register Complaint'}
         </h2>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-600 text-sm mt-1">
           {language === 'hi' ? 'बोलकर या लिखकर शिकायत करें' : 'Speak or type your complaint'}
         </p>
       </div>
@@ -184,11 +184,10 @@ const VoiceGrievance: React.FC = () => {
             <button
               key={lang.code}
               onClick={() => handleLanguageChange(lang.code)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                selectedLanguage === lang.code
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedLanguage === lang.code
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'bg-white text-gray-700 hover:bg-blue-100 border border-gray-200'
-              }`}
+                }`}
             >
               <div className="font-bold">{lang.name}</div>
               <div className="text-xs opacity-80">{lang.label}</div>
@@ -196,12 +195,12 @@ const VoiceGrievance: React.FC = () => {
           ))}
         </div>
       </div>
-      
+
       {/* The Text Area - Auto-filled by Voice */}
       <textarea
         className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-lg h-40 resize-none transition-all"
-        placeholder={language === 'hi' 
-          ? "यहाँ टाइप करें या माइक बटन दबाकर बोलें..." 
+        placeholder={language === 'hi'
+          ? "यहाँ टाइप करें या माइक बटन दबाकर बोलें..."
           : "Type here or press the mic button to speak..."}
         value={complaintText}
         onChange={(e) => setComplaintText(e.target.value)}
@@ -211,11 +210,10 @@ const VoiceGrievance: React.FC = () => {
       <div className="flex justify-center">
         <button
           onClick={toggleListening}
-          className={`p-6 rounded-full transition-all duration-300 shadow-xl ${
-            isListening 
-              ? 'bg-red-600 animate-pulse ring-4 ring-red-300 scale-110' 
+          className={`p-6 rounded-full transition-all duration-300 shadow-xl ${isListening
+              ? 'bg-red-600 animate-pulse ring-4 ring-red-300 scale-110'
               : 'bg-mcd-blue hover:bg-blue-900 hover:scale-105 active:scale-95'
-          }`}
+            }`}
           aria-label={isListening ? 'Stop listening' : 'Start listening'}
         >
           {isListening ? (
@@ -227,23 +225,21 @@ const VoiceGrievance: React.FC = () => {
       </div>
 
       {/* Status Text */}
-      <p className={`text-center text-sm font-medium transition-colors ${
-        isListening ? 'text-red-600' : 'text-gray-500'
-      }`}>
-        {isListening 
+      <p className={`text-center text-sm font-medium transition-colors ${isListening ? 'text-red-700' : 'text-gray-600'
+        }`}>
+        {isListening
           ? (language === 'hi' ? "🔴 सुन रहा हूँ... (Listening...)" : "🔴 Listening...")
           : (language === 'hi' ? "बोलने के लिए बटन दबाएं" : "Tap button to speak")}
       </p>
 
       {/* Submit Button */}
-      <button 
+      <button
         onClick={handleSubmit}
         disabled={isSubmitting || !complaintText.trim()}
-        className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 shadow-lg transition-all active:scale-95 ${
-          submitted 
-            ? 'bg-green-600 text-white' 
+        className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 shadow-lg transition-all active:scale-95 ${submitted
+            ? 'bg-green-600 text-white'
             : 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed'
-        }`}
+          }`}
       >
         {submitted ? (
           <>
@@ -263,9 +259,9 @@ const VoiceGrievance: React.FC = () => {
       </button>
 
       {/* Info Note */}
-      <p className="text-center text-xs text-gray-400">
-        {language === 'hi' 
-          ? 'आपकी शिकायत AI द्वारा सही विभाग को भेजी जाएगी' 
+      <p className="text-center text-xs text-gray-500">
+        {language === 'hi'
+          ? 'आपकी शिकायत AI द्वारा सही विभाग को भेजी जाएगी'
           : 'Your complaint will be routed to the correct department by AI'}
       </p>
     </div>

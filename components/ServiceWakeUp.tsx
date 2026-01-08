@@ -44,18 +44,18 @@ const ServiceWakeUp: React.FC<Props> = ({ onReady }) => {
 
   const checkService = useCallback(async (url: string, name: 'api' | 'ml', attempt: number): Promise<boolean> => {
     if (!mountedRef.current) return false;
-    
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
-      
-      const res = await fetch(`${url}/health`, { 
+
+      const res = await fetch(`${url}/health`, {
         method: 'GET',
         signal: controller.signal,
         cache: 'no-store'
       });
       clearTimeout(timeoutId);
-      
+
       if (res.ok) {
         if (mountedRef.current) {
           setStatus(prev => ({ ...prev, [name]: 'online' }));
@@ -65,14 +65,14 @@ const ServiceWakeUp: React.FC<Props> = ({ onReady }) => {
       throw new Error('Not OK');
     } catch {
       if (!mountedRef.current) return false;
-      
+
       if (attempt < MAX_RETRIES) {
         setStatus(prev => ({ ...prev, [name]: 'waking' }));
         setRetryCount(prev => ({ ...prev, [name]: attempt + 1 }));
-        
+
         const delay = Math.min(INITIAL_DELAY * Math.pow(1.5, attempt), 15000);
         await new Promise(r => setTimeout(r, delay));
-        
+
         if (mountedRef.current) {
           return checkService(url, name, attempt + 1);
         }
@@ -89,7 +89,7 @@ const ServiceWakeUp: React.FC<Props> = ({ onReady }) => {
     const wakeUpServices = async () => {
       setMessage('API सर्वर जगा रहे हैं...');
       const apiOnline = await checkService(API_URL, 'api', 0);
-      
+
       if (mountedRef.current) {
         setMessage('ML सर्वर जगा रहे हैं...');
         await checkService(ML_URL, 'ml', 0);
@@ -102,7 +102,7 @@ const ServiceWakeUp: React.FC<Props> = ({ onReady }) => {
   useEffect(() => {
     const apiDone = status.api === 'online' || status.api === 'offline';
     const mlDone = status.ml === 'online' || status.ml === 'offline';
-    
+
     if (apiDone && mlDone) {
       if (status.api === 'online' || status.ml === 'online') {
         setMessage('तैयार है!');
@@ -117,7 +117,7 @@ const ServiceWakeUp: React.FC<Props> = ({ onReady }) => {
     setStatus({ api: 'checking', ml: 'checking' });
     setRetryCount({ api: 0, ml: 0 });
     setMessage('पुनः प्रयास...');
-    
+
     const wakeUp = async () => {
       await checkService(API_URL, 'api', 0);
       await checkService(ML_URL, 'ml', 0);
@@ -181,19 +181,19 @@ const ServiceWakeUp: React.FC<Props> = ({ onReady }) => {
         <h2 style={{ color: '#1e293b', fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px' }}>
           MCD HRMS
         </h2>
-        <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 24px' }}>
+        <p style={{ color: '#475569', fontSize: '14px', margin: '0 0 24px' }}>
           {message}{isLoading ? dots : ''}
         </p>
 
         {/* Service Status */}
-        <div style={{ 
-          background: '#f8fafc', 
-          borderRadius: '12px', 
+        <div style={{
+          background: '#f8fafc',
+          borderRadius: '12px',
           padding: '16px',
           marginBottom: '20px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ color: '#64748b', fontSize: '13px' }}>Backend API</span>
+            <span style={{ color: '#475569', fontSize: '13px' }}>Backend API</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {getStatusIcon(status.api)}
               <span style={{ fontSize: '12px', color: status.api === 'online' ? '#22c55e' : status.api === 'offline' ? '#ef4444' : '#f59e0b' }}>
@@ -202,7 +202,7 @@ const ServiceWakeUp: React.FC<Props> = ({ onReady }) => {
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#64748b', fontSize: '13px' }}>ML Service</span>
+            <span style={{ color: '#475569', fontSize: '13px' }}>ML Service</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {getStatusIcon(status.ml)}
               <span style={{ fontSize: '12px', color: status.ml === 'online' ? '#22c55e' : status.ml === 'offline' ? '#ef4444' : '#f59e0b' }}>
@@ -287,7 +287,7 @@ const ServiceWakeUp: React.FC<Props> = ({ onReady }) => {
           </button>
         )}
 
-        <p style={{ color: '#94a3b8', fontSize: '11px', margin: 0 }}>
+        <p style={{ color: '#64748b', fontSize: '11px', margin: 0 }}>
           Free tier servers may take 30-60 seconds to wake up
         </p>
       </div>

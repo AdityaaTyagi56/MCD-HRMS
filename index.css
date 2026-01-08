@@ -47,11 +47,11 @@ body {
 
 /* Improved text visibility utilities */
 .text-muted {
-  color: #4b5563 !important;
+  color: #374151 !important; /* gray-700 */
 }
 
 .text-light {
-  color: #6b7280 !important;
+  color: #4b5563 !important; /* gray-600 */
 }
 
 /* Important: do not globally override text colors.

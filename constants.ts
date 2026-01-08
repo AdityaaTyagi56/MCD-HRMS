@@ -5,23 +5,28 @@ export const ENTERPRISE_COLORS = {
   gray100: '#f1f5f9',
   gray200: '#e2e8f0',
   gray300: '#cbd5e1',
+  gray600: '#475569', // Better contrast for text
   gray700: '#334155',
+  gray800: '#1e293b', // Darker for better contrast
   gray900: '#0f172a',
-  primary: '#273c75', // Deep Indigo / Slate Blue
-  primaryDark: '#192a56',
-  primaryLight: '#4f5fa3', // Added for charts
-  accent: '#0052cc', // Government Blue
+  primary: '#1e40af', // Darker blue for better contrast
+  primaryDark: '#1e3a8a',
+  primaryLight: '#3b82f6',
+  accent: '#0052cc',
   border: '#e2e8f0',
   error: '#dc2626',
-  warning: '#f59e0b',
+  warning: '#d97706',
   success: '#059669',
   info: '#2563eb',
   cardBg: '#ffffff',
   cardBorder: '#e2e8f0',
   sidebarBg: '#f8fafc',
   sidebarBorder: '#e2e8f0',
-  sidebarActive: '#273c75',
+  sidebarActive: '#1e40af',
   sidebarActiveText: '#ffffff',
+  textPrimary: '#0f172a', // Darker text for better contrast
+  textSecondary: '#374151',
+  textMuted: '#6b7280',
 };
 import { Employee, Grievance, LeaveRequest, Payslip, Ward } from './types';
 

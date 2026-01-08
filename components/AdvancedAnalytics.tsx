@@ -126,18 +126,17 @@ export default function AdvancedAnalytics() {
             <BarChart3 className="w-7 h-7 text-indigo-600" />
             Advanced Analytics
           </h2>
-          <p className="text-gray-500 mt-1">Comprehensive insights and trends</p>
+          <p className="text-gray-600 mt-1">Comprehensive insights and trends</p>
         </div>
         <div className="flex gap-2">
           {['7d', '30d', '90d', '1y'].map((range) => (
             <button
               key={range}
               onClick={() => setTimeRange(range as any)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                timeRange === range
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${timeRange === range
                   ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-              }`}
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                }`}
             >
               {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : range === '90d' ? '90 Days' : '1 Year'}
             </button>
@@ -290,8 +289,8 @@ export default function AdvancedAnalytics() {
 
       {/* Insights */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <Map className="w-5 h-5 text-blue-600" />
+        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <Map className="w-5 h-5 text-blue-700" />
           Key Insights
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -327,9 +326,9 @@ function MetricCard({ icon, title, value, change, changeType, color }: any) {
   return (
     <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
       <div className={`inline-flex p-3 rounded-lg ${colors[color]} mb-3`}>{icon}</div>
-      <h3 className="text-gray-500 text-sm font-medium">{title}</h3>
-      <p className="text-2xl font-bold text-gray-800 mt-1">{value}</p>
-      <p className={`text-sm mt-2 ${changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
+      <h3 className="text-gray-600 text-sm font-medium">{title}</h3>
+      <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+      <p className={`text-sm mt-2 ${changeType === 'positive' ? 'text-green-700' : 'text-red-700'}`}>
         {change} from last period
       </p>
     </div>
@@ -339,7 +338,7 @@ function MetricCard({ icon, title, value, change, changeType, color }: any) {
 function ChartCard({ title, icon, children }: any) {
   return (
     <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-      <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
         {icon}
         {title}
       </h3>
@@ -350,9 +349,9 @@ function ChartCard({ title, icon, children }: any) {
 
 function InsightCard({ title, description, type }: any) {
   const styles = {
-    positive: 'bg-green-50 border-green-200 text-green-800',
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    info: 'bg-blue-50 border-blue-200 text-blue-800',
+    positive: 'bg-green-50 border-green-200 text-green-900',
+    warning: 'bg-yellow-50 border-yellow-200 text-yellow-900',
+    info: 'bg-blue-50 border-blue-200 text-blue-900',
   };
 
   return (

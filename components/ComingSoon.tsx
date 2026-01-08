@@ -17,9 +17,9 @@ const ComingSoon: React.FC<ComingSoonProps> = ({ title, description }) => {
         <Construction size={64} className="text-mcd-blue hidden sm:block" />
       </div>
       <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{title}</h2>
-      <p className="text-gray-500 max-w-md mb-8">{description}</p>
-      
-      <button 
+      <p className="text-gray-600 max-w-md mb-8">{description}</p>
+
+      <button
         onClick={() => setCurrentView('dashboard')}
         className="flex items-center gap-2 text-mcd-blue font-semibold hover:underline"
       >

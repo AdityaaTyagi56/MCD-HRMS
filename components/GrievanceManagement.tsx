@@ -1,15 +1,15 @@
 import React, { useState, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
-import { 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  Search, 
-  MessageSquare, 
-  User, 
-  Loader2, 
-  Languages, 
-  Mic, 
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Search,
+  MessageSquare,
+  User,
+  Loader2,
+  Languages,
+  Mic,
   Tag,
   Calendar,
   ChevronRight,
@@ -70,13 +70,13 @@ const GrievanceManagement: React.FC = () => {
   const [resolvingId, setResolvingId] = useState<number | null>(null);
   const [translations, setTranslations] = useState<Record<number, { english: string; loading: boolean }>>({});
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  
+
   // Bulk Actions State
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkAction, setBulkAction] = useState<'assign' | 'resolve' | 'escalate' | ''>('');
   const [bulkDepartment, setBulkDepartment] = useState('');
   const [showBulkModal, setShowBulkModal] = useState(false);
-  
+
   // Comment System State
   const [comments, setComments] = useState<Record<number, Array<{ user: string; text: string; timestamp: string }>>>({});
   const [newComment, setNewComment] = useState<Record<number, string>>({});
@@ -190,10 +190,10 @@ const GrievanceManagement: React.FC = () => {
 
   const handleBulkAction = async () => {
     if (selectedIds.size === 0 || !bulkAction) return;
-    
+
     try {
       const idsArray = Array.from(selectedIds);
-      
+
       if (bulkAction === 'resolve') {
         for (const id of idsArray) {
           await resolveGrievance(id);
@@ -204,7 +204,7 @@ const GrievanceManagement: React.FC = () => {
       } else if (bulkAction === 'escalate') {
         logAction('bulk-escalate', 'Admin', idsArray[0], `Escalated ${idsArray.length} grievances`);
       }
-      
+
       setSelectedIds(new Set());
       setBulkAction('');
       setBulkDepartment('');
@@ -219,18 +219,18 @@ const GrievanceManagement: React.FC = () => {
   const addComment = (grievanceId: number) => {
     const commentText = newComment[grievanceId];
     if (!commentText?.trim()) return;
-    
+
     const comment = {
       user: 'Admin',
       text: commentText,
       timestamp: new Date().toISOString()
     };
-    
+
     setComments(prev => ({
       ...prev,
       [grievanceId]: [...(prev[grievanceId] || []), comment]
     }));
-    
+
     setNewComment(prev => ({ ...prev, [grievanceId]: '' }));
     logAction('comment', 'Admin', grievanceId, `Added comment: ${commentText.substring(0, 50)}...`);
   };
@@ -244,10 +244,10 @@ const GrievanceManagement: React.FC = () => {
       details,
       timestamp: new Date().toISOString()
     };
-    
+
     // In real app, this would persist to server
     console.log('📝 Audit Log:', logEntry);
-    
+
     // Store in localStorage for demo
     const existingLogs = JSON.parse(localStorage.getItem('audit_logs') || '[]');
     existingLogs.push(logEntry);
@@ -256,9 +256,9 @@ const GrievanceManagement: React.FC = () => {
 
   const filteredGrievances = grievances.filter(g => {
     const matchesFilter = filter === 'All' || g.status === filter;
-    const matchesSearch = g.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          g.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          g.user.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = g.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      g.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      g.user.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = currentRole === 'admin' ? true : g.userId === currentUserId;
     return matchesFilter && matchesSearch && matchesRole;
   });
@@ -284,12 +284,12 @@ const GrievanceManagement: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900">
                 {currentRole === 'admin' ? 'Employee Grievances' : 'My Grievances'}
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-700">
                 AI-powered complaint analysis & routing
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full text-sm font-medium text-gray-700 border border-gray-200">
               <Mic size={14} className="text-green-500" />
@@ -300,11 +300,10 @@ const GrievanceManagement: React.FC = () => {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                    filter === f 
-                      ? 'bg-amber-500 text-white shadow-sm' 
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${filter === f
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-50'
+                    }`}
                 >
                   {f} {f === 'All' && `(${stats.total})`}
                   {f === 'Pending' && `(${stats.pending})`}
@@ -320,19 +319,19 @@ const GrievanceManagement: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-white/50">
               <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
-              <div className="text-sm text-gray-500">Total</div>
+              <div className="text-sm text-gray-600">Total</div>
             </div>
             <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-white/50">
               <div className="text-3xl font-bold text-orange-600">{stats.pending}</div>
-              <div className="text-sm text-gray-500">Pending</div>
+              <div className="text-sm text-gray-600">Pending</div>
             </div>
             <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-white/50">
               <div className="text-3xl font-bold text-red-600">{stats.highPriority}</div>
-              <div className="text-sm text-gray-500">High Priority</div>
+              <div className="text-sm text-gray-600">High Priority</div>
             </div>
             <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-white/50">
               <div className="text-3xl font-bold text-green-600">{stats.resolved}</div>
-              <div className="text-sm text-gray-500">Resolved</div>
+              <div className="text-sm text-gray-600">Resolved</div>
             </div>
           </div>
         )}
@@ -341,9 +340,9 @@ const GrievanceManagement: React.FC = () => {
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-        <input 
-          type="text" 
-          placeholder="Search by description, category, or employee name..." 
+        <input
+          type="text"
+          placeholder="Search by description, category, or employee name..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none shadow-sm"
@@ -363,7 +362,7 @@ const GrievanceManagement: React.FC = () => {
               />
               <span className="font-semibold text-blue-900">{selectedIds.size} selected</span>
             </div>
-            
+
             <div className="flex gap-2">
               <button
                 onClick={() => { setBulkAction('resolve'); setShowBulkModal(true); }}
@@ -385,7 +384,7 @@ const GrievanceManagement: React.FC = () => {
               </button>
             </div>
           </div>
-          
+
           <button
             onClick={() => setSelectedIds(new Set())}
             className="text-blue-700 hover:text-blue-900 font-medium"
@@ -400,7 +399,7 @@ const GrievanceManagement: React.FC = () => {
         {filteredGrievances.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-xl border border-gray-200 shadow-sm">
             <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageSquare className="text-gray-400" size={32} />
+              <MessageSquare className="text-gray-500" size={32} />
             </div>
             <h3 className="text-lg font-medium text-gray-900">No grievances found</h3>
             <p className="text-gray-500 mt-1">Try adjusting your search or filters</p>
@@ -413,13 +412,12 @@ const GrievanceManagement: React.FC = () => {
             const isExpanded = expandedId === g.id;
 
             return (
-              <div 
-                key={g.id} 
-                className={`bg-white rounded-xl border shadow-sm transition-all duration-300 overflow-hidden ${
-                  g.priority === 'High' ? 'border-l-4 border-l-red-500 border-gray-200' :
-                  g.priority === 'Medium' ? 'border-l-4 border-l-orange-500 border-gray-200' :
-                  'border-l-4 border-l-blue-500 border-gray-200'
-                } ${isExpanded ? 'shadow-lg' : 'hover:shadow-md'}`}
+              <div
+                key={g.id}
+                className={`bg-white rounded-xl border shadow-sm transition-all duration-300 overflow-hidden ${g.priority === 'High' ? 'border-l-4 border-l-red-500 border-gray-200' :
+                    g.priority === 'Medium' ? 'border-l-4 border-l-orange-500 border-gray-200' :
+                      'border-l-4 border-l-blue-500 border-gray-200'
+                  } ${isExpanded ? 'shadow-lg' : 'hover:shadow-md'}`}
               >
                 <div className="p-5">
                   {/* Top Row: Checkbox + Tags */}
@@ -432,17 +430,16 @@ const GrievanceManagement: React.FC = () => {
                         className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     )}
-                    
+
                     <div className="flex flex-wrap items-center gap-2 flex-1">
                       {/* Priority Badge */}
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                        g.priority === 'High' ? 'bg-red-100 text-red-700' : 
-                        g.priority === 'Medium' ? 'bg-orange-100 text-orange-700' : 
-                        'bg-blue-100 text-blue-700'
-                      }`}>
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${g.priority === 'High' ? 'bg-red-100 text-red-700' :
+                          g.priority === 'Medium' ? 'bg-orange-100 text-orange-700' :
+                            'bg-blue-100 text-blue-700'
+                        }`}>
                         {g.priority}
                       </span>
-                      
+
                       {/* Category Badge */}
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium border flex items-center gap-1 ${getCategoryColor(g.category)}`}>
                         {getCategoryIcon(g.category)}
@@ -450,11 +447,10 @@ const GrievanceManagement: React.FC = () => {
                       </span>
 
                       {/* Status Badge */}
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                        g.status === 'Resolved' ? 'bg-green-100 text-green-700' : 
-                        g.status === 'Under Review' ? 'bg-purple-100 text-purple-700' :
-                        'bg-yellow-100 text-yellow-700'
-                      }`}>
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${g.status === 'Resolved' ? 'bg-green-100 text-green-800' :
+                          g.status === 'Under Review' ? 'bg-purple-100 text-purple-800' :
+                            'bg-yellow-100 text-yellow-800'
+                        }`}>
                         {g.status}
                       </span>
                     </div>
@@ -472,14 +468,14 @@ const GrievanceManagement: React.FC = () => {
                         {!hasTranslation && !isTranslating && (
                           <button
                             onClick={() => translateToEnglish(g.id, g.description)}
-                            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm"
+                            className="flex items-center gap-2 text-blue-700 hover:text-blue-800 font-medium text-sm"
                           >
                             <Languages size={16} />
                             Translate to English
                           </button>
                         )}
                         {isTranslating && (
-                          <div className="flex items-center gap-2 text-blue-600 text-sm">
+                          <div className="flex items-center gap-2 text-blue-700 text-sm">
                             <Loader2 size={16} className="animate-spin" />
                             Translating...
                           </div>
@@ -490,7 +486,7 @@ const GrievanceManagement: React.FC = () => {
                               <Languages size={14} />
                               English Translation:
                             </div>
-                            <p className="text-gray-700 text-sm">
+                            <p className="text-gray-800 text-sm">
                               {translations[g.id].english}
                             </p>
                           </div>
@@ -526,7 +522,7 @@ const GrievanceManagement: React.FC = () => {
                             Comment ({comments[g.id]?.length || 0})
                           </button>
                           {g.status !== 'Resolved' && (
-                            <button 
+                            <button
                               onClick={() => handleResolve(g.id)}
                               disabled={resolvingId === g.id}
                               className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white rounded-lg font-medium text-sm hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -551,9 +547,9 @@ const GrievanceManagement: React.FC = () => {
                         onClick={() => setExpandedId(isExpanded ? null : g.id)}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       >
-                        <ChevronRight 
-                          size={18} 
-                          className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+                        <ChevronRight
+                          size={18}
+                          className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
                         />
                       </button>
                     </div>
@@ -618,11 +614,11 @@ const GrievanceManagement: React.FC = () => {
               {bulkAction === 'assign' && 'Assign to Department'}
               {bulkAction === 'escalate' && 'Escalate Grievances'}
             </h3>
-            
-            <p className="text-gray-600 mb-4">
+
+            <p className="text-gray-700 mb-4">
               This action will apply to {selectedIds.size} selected grievance(s).
             </p>
-            
+
             {bulkAction === 'assign' && (
               <select
                 value={bulkDepartment}
@@ -636,7 +632,7 @@ const GrievanceManagement: React.FC = () => {
                 <option value="Health">Health</option>
               </select>
             )}
-            
+
             <div className="flex gap-3">
               <button
                 onClick={() => { setShowBulkModal(false); setBulkAction(''); setBulkDepartment(''); }}
@@ -669,14 +665,14 @@ const GrievanceManagement: React.FC = () => {
                 <X size={20} />
               </button>
             </div>
-            
+
             <textarea
               value={newComment[showCommentModal] || ''}
               onChange={(e) => setNewComment(prev => ({ ...prev, [showCommentModal]: e.target.value }))}
               placeholder="Add your comment here..."
               className="w-full h-32 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 outline-none mb-4"
             />
-            
+
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCommentModal(null)}

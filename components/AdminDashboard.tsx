@@ -73,23 +73,23 @@ const ENTERPRISE_COLORS = typeof IMPORTED_ENTERPRISE_COLORS !== 'undefined' && I
   gray50: '#f8fafc',
   gray100: '#f1f5f9',
   gray200: '#e2e8f0',
-  gray300: '#cbd5e1',
-  gray700: '#334155',
-  gray900: '#0f172a',
-  primary: '#273c75',
-  primaryDark: '#192a56',
-  primaryLight: '#4f5fa3', // Added missing color
+  gray300: '#94a3b8', // Darkened from cbd5e1
+  gray700: '#1e293b', // Darkened from 334155 (slate-800)
+  gray900: '#020617', // Darkened from 0f172a (slate-950)
+  primary: '#1e3a8a', // Darkened blue
+  primaryDark: '#172554',
+  primaryLight: '#3b82f6', // Brighter for better visibility against dark
   accent: '#0052cc',
-  border: '#e2e8f0',
+  border: '#cbd5e1', // Darker border
   error: '#dc2626',
-  warning: '#f59e0b',
-  success: '#059669',
-  info: '#2563eb',
+  warning: '#d97706', // Darker yellow/orange
+  success: '#15803d', // Darker green
+  info: '#1d4ed8', // Darker blue
   cardBg: '#ffffff',
-  cardBorder: '#e2e8f0',
+  cardBorder: '#cbd5e1',
   sidebarBg: '#f8fafc',
-  sidebarBorder: '#e2e8f0',
-  sidebarActive: '#273c75',
+  sidebarBorder: '#cbd5e1',
+  sidebarActive: '#1e3a8a',
   sidebarActiveText: '#ffffff',
 };
 
@@ -634,21 +634,21 @@ const AdminDashboard: React.FC = () => {
 
       {/* SLA Breach Alert Banner */}
       {slaBreaches.length > 0 && showSlaAlert && (
-        <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl p-6 shadow-lg relative overflow-hidden">
+        <div className="bg-gradient-to-r from-red-100 to-orange-100 border-2 border-red-300 rounded-2xl p-6 shadow-lg relative overflow-hidden">
           <button
             onClick={() => setShowSlaAlert(false)}
-            className="absolute top-4 right-4 p-1 rounded-lg hover:bg-white/50 transition-colors"
+            className="absolute top-4 right-4 p-1 rounded-lg hover:bg-white/80 transition-colors"
           >
-            <X size={18} className="text-red-600" />
+            <X size={18} className="text-red-700" />
           </button>
-          
+
           <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-red-100">
-              <AlertTriangle size={28} className="text-red-600" />
+            <div className="p-3 rounded-xl bg-red-200">
+              <AlertTriangle size={28} className="text-red-800" />
             </div>
             <div className="flex-1">
               <h3 className="text-xl font-bold text-red-900 mb-2">⚠️ SLA Breach Alert</h3>
-              <p className="text-red-700 mb-4">
+              <p className="text-red-800 mb-4">
                 {slaBreaches.length} grievance{slaBreaches.length > 1 ? 's' : ''} exceeded 72-hour SLA and {slaBreaches.length > 1 ? 'have been' : 'has been'} auto-escalated
               </p>
               
@@ -686,43 +686,43 @@ const AdminDashboard: React.FC = () => {
       {trendAnalysis && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Rising Issues Card */}
-          <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 shadow-lg border border-orange-200">
+          <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded-2xl p-6 shadow-lg border border-orange-300">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-orange-100">
-                <TrendingUp size={24} className="text-orange-600" />
+              <div className="p-3 rounded-xl bg-orange-200">
+                <TrendingUp size={24} className="text-orange-800" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-orange-900">Rising Issues</h3>
-                <p className="text-sm text-orange-700">Trending complaints</p>
+                <p className="text-sm text-orange-800">Trending complaints</p>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               {trendAnalysis.rising_issues?.slice(0, 3).map((issue: any, idx: number) => (
                 <div key={idx} className="bg-white rounded-lg p-3 border border-orange-200">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-neutral-800">{issue.category || issue}</span>
-                    <span className="text-xs font-medium text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
+                    <span className="font-semibold text-neutral-900">{issue.category || issue}</span>
+                    <span className="text-xs font-medium text-orange-700 bg-orange-100 px-2 py-1 rounded-full">
                       {issue.count ? `${issue.count} cases` : 'Rising'}
                     </span>
                   </div>
                 </div>
               ))}
               {(!trendAnalysis.rising_issues || trendAnalysis.rising_issues.length === 0) && (
-                <p className="text-sm text-neutral-500 text-center py-4">No rising trends detected</p>
+                <p className="text-sm text-neutral-600 text-center py-4">No rising trends detected</p>
               )}
             </div>
           </div>
 
           {/* Sentiment & Priority Actions */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 shadow-lg border border-blue-200">
+          <div className="bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl p-6 shadow-lg border border-blue-300">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-blue-100">
-                <Activity size={24} className="text-blue-600" />
+              <div className="p-3 rounded-xl bg-blue-200">
+                <Activity size={24} className="text-blue-800" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-blue-900">Sentiment Score</h3>
-                <p className="text-sm text-blue-700">Employee satisfaction</p>
+                <p className="text-sm text-blue-800">Employee satisfaction</p>
               </div>
             </div>
             
@@ -758,28 +758,28 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Priority Actions */}
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg border border-purple-200">
+          <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl p-6 shadow-lg border border-purple-300">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-purple-100">
-                <Target size={24} className="text-purple-600" />
+              <div className="p-3 rounded-xl bg-purple-200">
+                <Target size={24} className="text-purple-800" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-purple-900">Priority Actions</h3>
-                <p className="text-sm text-purple-700">Recommended next steps</p>
+                <p className="text-sm text-purple-800">Recommended next steps</p>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               {trendAnalysis.priority_actions?.slice(0, 3).map((action: string, idx: number) => (
                 <div key={idx} className="bg-white rounded-lg p-3 border border-purple-200">
                   <div className="flex items-start gap-2">
-                    <CheckCircle size={16} className="text-purple-600 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-neutral-700 font-medium">{action}</p>
+                    <CheckCircle size={16} className="text-purple-700 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-neutral-800 font-medium">{action}</p>
                   </div>
                 </div>
               ))}
               {(!trendAnalysis.priority_actions || trendAnalysis.priority_actions.length === 0) && (
-                <p className="text-sm text-neutral-500 text-center py-4">No priority actions at this time</p>
+                <p className="text-sm text-neutral-600 text-center py-4">No priority actions at this time</p>
               )}
             </div>
           </div>
@@ -1144,31 +1144,31 @@ const AdminDashboard: React.FC = () => {
       {/* NLP Grievances Section */}
       <div className="bg-white rounded-2xl shadow-soft border border-neutral-200/50 overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-neutral-100" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' }}>
+        <div className="p-6 border-b border-neutral-100 bg-gradient-to-br from-amber-100 to-orange-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl" style={{ background: 'rgba(245,158,11,0.2)' }}>
-                <MessageSquare size={28} style={{ color: '#d97706' }} />
+              <div className="p-3 rounded-xl bg-amber-200">
+                <MessageSquare size={28} className="text-amber-800" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-amber-900">Employee Grievances</h3>
-                <p className="text-sm text-amber-700">AI-powered complaint analysis & routing</p>
+                <p className="text-sm text-amber-800">AI-powered complaint analysis & routing</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80">
-                <Mic size={14} className="text-amber-600" />
-                <span className="text-xs font-medium text-amber-800">Voice NLP Enabled</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-amber-300">
+                <Mic size={14} className="text-amber-700" />
+                <span className="text-xs font-medium text-amber-900">Voice NLP Enabled</span>
               </div>
-              <div className="flex bg-white/80 rounded-lg p-1">
+              <div className="flex bg-white border border-amber-300 rounded-lg p-1">
                 {(['all', 'Pending', 'Resolved'] as const).map((filter) => (
                   <button
                     key={filter}
                     onClick={() => setGrievanceFilter(filter)}
                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                      grievanceFilter === filter 
-                        ? 'bg-amber-500 text-white shadow-sm' 
-                        : 'text-amber-700 hover:bg-amber-100'
+                      grievanceFilter === filter
+                        ? 'bg-amber-600 text-white shadow-sm'
+                        : 'text-amber-900 hover:bg-amber-100'
                     }`}
                   >
                     {filter === 'all' ? 'All' : filter} ({filter === 'all' ? grievances.length : grievances.filter(g => g.status === filter).length})

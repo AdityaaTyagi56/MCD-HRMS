@@ -47,13 +47,13 @@ const LeaveManagement: React.FC = () => {
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
-    
+
     const error = validateForm();
     if (error) {
       setFormError(error);
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       await applyForLeave({
@@ -76,14 +76,14 @@ const LeaveManagement: React.FC = () => {
   const StatusBadge = ({ status }: { status: string }) => {
     const styles = {
       'Pending': 'status-pending',
-      'Approved': 'status-approved', 
+      'Approved': 'status-approved',
       'Rejected': 'status-rejected'
     };
-    
+
     const icons = {
-        'Pending': <Clock size={12} />,
-        'Approved': <Check size={12} />,
-        'Rejected': <X size={12} />
+      'Pending': <Clock size={12} />,
+      'Approved': <Check size={12} />,
+      'Rejected': <X size={12} />
     };
 
     return (
@@ -108,35 +108,33 @@ const LeaveManagement: React.FC = () => {
           {Object.entries(leaveBalances).map(([type, balance]) => (
             <div key={type} className="bg-white rounded-2xl p-6 shadow-soft border border-neutral-200/50 card-hover">
               <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-xl ${
-                  type === 'casual' ? 'bg-primary-100 text-primary-600' :
-                  type === 'medical' ? 'bg-success-100 text-success-600' :
-                  'bg-secondary-100 text-secondary-600'
-                }`}>
+                <div className={`p-3 rounded-xl ${type === 'casual' ? 'bg-primary-100 text-primary-600' :
+                    type === 'medical' ? 'bg-success-100 text-success-600' :
+                      'bg-secondary-100 text-secondary-600'
+                  }`}>
                   <Calendar size={24} />
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-neutral-900">{balance.remaining}</p>
-                  <p className="text-sm text-neutral-500">remaining</p>
+                  <p className="text-sm text-neutral-600">remaining</p>
                 </div>
               </div>
               <h3 className="font-bold text-lg text-neutral-900 capitalize mb-2">{type} Leave</h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-neutral-600">Total</span>
+                  <span className="text-neutral-700">Total</span>
                   <span className="font-medium">{balance.total}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-neutral-600">Used</span>
+                  <span className="text-neutral-700">Used</span>
                   <span className="font-medium">{balance.used}</span>
                 </div>
                 <div className="w-full bg-neutral-200 rounded-full h-2 overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full transition-all ${
-                      type === 'casual' ? 'bg-primary-500' :
-                      type === 'medical' ? 'bg-success-500' :
-                      'bg-secondary-500'
-                    }`}
+                  <div
+                    className={`h-full rounded-full transition-all ${type === 'casual' ? 'bg-primary-500' :
+                        type === 'medical' ? 'bg-success-500' :
+                          'bg-secondary-500'
+                      }`}
                     style={{ width: `${(balance.used / balance.total) * 100}%` }}
                   ></div>
                 </div>
@@ -153,14 +151,14 @@ const LeaveManagement: React.FC = () => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-neutral-900">Apply for Leave</h2>
-              <p className="text-sm text-neutral-500">Submit your leave application</p>
+              <p className="text-sm text-neutral-600">Submit your leave application</p>
             </div>
           </div>
 
           <form onSubmit={handleApply} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Leave Type</label>
+                <label className="block text-sm font-medium text-neutral-800 mb-2">Leave Type</label>
                 <select
                   value={form.type}
                   onChange={(e) => setForm({ ...form, type: e.target.value })}
@@ -172,11 +170,11 @@ const LeaveManagement: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Duration</label>
-                <div className="flex items-center gap-2 text-sm text-neutral-600">
+                <label className="block text-sm font-medium text-neutral-800 mb-2">Duration</label>
+                <div className="flex items-center gap-2 text-sm text-neutral-700">
                   <Calendar size={16} />
                   <span>
-                    {form.startDate && form.endDate 
+                    {form.startDate && form.endDate
                       ? `${Math.ceil((new Date(form.endDate).getTime() - new Date(form.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} days`
                       : 'Select dates'
                     }
@@ -187,7 +185,7 @@ const LeaveManagement: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Start Date</label>
+                <label className="block text-sm font-medium text-neutral-800 mb-2">Start Date</label>
                 <input
                   type="date"
                   value={form.startDate}
@@ -197,7 +195,7 @@ const LeaveManagement: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">End Date</label>
+                <label className="block text-sm font-medium text-neutral-800 mb-2">End Date</label>
                 <input
                   type="date"
                   value={form.endDate}
@@ -209,7 +207,7 @@ const LeaveManagement: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">Reason</label>
+              <label className="block text-sm font-medium text-neutral-800 mb-2">Reason</label>
               <textarea
                 value={form.reason}
                 onChange={(e) => setForm({ ...form, reason: e.target.value })}
@@ -255,11 +253,11 @@ const LeaveManagement: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-neutral-900">Leave History</h2>
-                <p className="text-sm text-neutral-500">Your recent leave applications</p>
+                <p className="text-sm text-neutral-600">Your recent leave applications</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <select 
+              <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as any)}
                 className="px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
@@ -276,23 +274,22 @@ const LeaveManagement: React.FC = () => {
             {filteredLeaves.slice(0, 5).map((leave) => (
               <div key={leave.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-neutral-50 rounded-xl border border-neutral-200/50 hover:bg-neutral-100 transition-colors">
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className={`p-2 rounded-lg ${
-                    leave.type === 'Medical' ? 'bg-success-100 text-success-600' :
-                    leave.type === 'Casual' ? 'bg-primary-100 text-primary-600' :
-                    'bg-secondary-100 text-secondary-600'
-                  }`}>
+                  <div className={`p-2 rounded-lg ${leave.type === 'Medical' ? 'bg-success-100 text-success-600' :
+                      leave.type === 'Casual' ? 'bg-primary-100 text-primary-600' :
+                        'bg-secondary-100 text-secondary-600'
+                    }`}>
                     <Calendar size={16} />
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-neutral-900 truncate">{leave.type} Leave</p>
-                    <p className="text-sm text-neutral-500 truncate">
+                    <p className="text-sm text-neutral-600 truncate">
                       {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
                 <div className="text-left sm:text-right">
                   <StatusBadge status={leave.status} />
-                  <p className="text-xs text-neutral-500 mt-1">
+                  <p className="text-xs text-neutral-600 mt-1">
                     Applied on {new Date(leave.requestDate).toLocaleDateString()}
                   </p>
                 </div>
@@ -311,19 +308,19 @@ const LeaveManagement: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">Leave Management</h1>
-          <p className="text-neutral-500">Review and manage employee leave requests</p>
+          <p className="text-neutral-600">Review and manage employee leave requests</p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search requests..." 
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" size={18} />
+            <input
+              type="text"
+              placeholder="Search requests..."
               className="pl-10 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none w-64"
             />
           </div>
-          <select 
+          <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as any)}
             className="px-4 py-2 bg-white border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
@@ -346,17 +343,16 @@ const LeaveManagement: React.FC = () => {
         ].map((stat, index) => (
           <div key={stat.title} className="bg-white rounded-2xl p-6 shadow-soft border border-neutral-200/50">
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl ${
-                stat.color === 'primary' ? 'bg-primary-100 text-primary-600' :
-                stat.color === 'warning' ? 'bg-warning-100 text-warning-600' :
-                stat.color === 'success' ? 'bg-success-100 text-success-600' :
-                'bg-secondary-100 text-secondary-600'
-              }`}>
+              <div className={`p-3 rounded-xl ${stat.color === 'primary' ? 'bg-primary-100 text-primary-600' :
+                  stat.color === 'warning' ? 'bg-warning-100 text-warning-600' :
+                    stat.color === 'success' ? 'bg-success-100 text-success-600' :
+                      'bg-secondary-100 text-secondary-600'
+                }`}>
                 <stat.icon size={24} />
               </div>
             </div>
             <h3 className="text-2xl font-bold text-neutral-900 mb-1">{stat.value}</h3>
-            <p className="text-sm text-neutral-500">{stat.title}</p>
+            <p className="text-sm text-neutral-600">{stat.title}</p>
           </div>
         ))}
       </div>
@@ -365,19 +361,19 @@ const LeaveManagement: React.FC = () => {
       <div className="bg-white rounded-2xl shadow-soft border border-neutral-200/50 overflow-hidden">
         <div className="p-6 border-b border-neutral-200/50">
           <h2 className="text-lg font-bold text-neutral-900">Leave Requests</h2>
-          <p className="text-sm text-neutral-500">Manage employee leave applications</p>
+          <p className="text-sm text-neutral-600">Manage employee leave applications</p>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-neutral-50">
               <tr>
-                <th className="text-left py-4 px-6 font-medium text-neutral-600 text-sm">Employee</th>
-                <th className="text-left py-4 px-6 font-medium text-neutral-600 text-sm">Leave Type</th>
-                <th className="text-left py-4 px-6 font-medium text-neutral-600 text-sm">Duration</th>
-                <th className="text-left py-4 px-6 font-medium text-neutral-600 text-sm">Reason</th>
-                <th className="text-left py-4 px-6 font-medium text-neutral-600 text-sm">Status</th>
-                <th className="text-left py-4 px-6 font-medium text-neutral-600 text-sm">Actions</th>
+                <th className="text-left py-4 px-6 font-medium text-neutral-700 text-sm">Employee</th>
+                <th className="text-left py-4 px-6 font-medium text-neutral-700 text-sm">Leave Type</th>
+                <th className="text-left py-4 px-6 font-medium text-neutral-700 text-sm">Duration</th>
+                <th className="text-left py-4 px-6 font-medium text-neutral-700 text-sm">Reason</th>
+                <th className="text-left py-4 px-6 font-medium text-neutral-700 text-sm">Status</th>
+                <th className="text-left py-4 px-6 font-medium text-neutral-700 text-sm">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -390,16 +386,15 @@ const LeaveManagement: React.FC = () => {
                       </div>
                       <div>
                         <p className="font-medium text-neutral-900 text-sm">{leave.userName}</p>
-                        <p className="text-xs text-neutral-500">ID: {leave.userId}</p>
+                        <p className="text-xs text-neutral-600">ID: {leave.userId}</p>
                       </div>
                     </div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                      leave.type === 'Medical' ? 'bg-success-100 text-success-700' :
-                      leave.type === 'Casual' ? 'bg-primary-100 text-primary-700' :
-                      'bg-secondary-100 text-secondary-700'
-                    }`}>
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${leave.type === 'Medical' ? 'bg-success-100 text-success-700' :
+                        leave.type === 'Casual' ? 'bg-primary-100 text-primary-700' :
+                          'bg-secondary-100 text-secondary-700'
+                      }`}>
                       <Calendar size={12} />
                       {leave.type}
                     </span>
@@ -409,13 +404,13 @@ const LeaveManagement: React.FC = () => {
                       <p className="text-sm font-medium text-neutral-900">
                         {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
                       </p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-neutral-600">
                         {Math.ceil((new Date(leave.endDate).getTime() - new Date(leave.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} days
                       </p>
                     </div>
                   </td>
                   <td className="py-4 px-6">
-                    <p className="text-sm text-neutral-700 max-w-xs truncate" title={leave.reason}>
+                    <p className="text-sm text-neutral-800 max-w-xs truncate" title={leave.reason}>
                       {leave.reason}
                     </p>
                   </td>

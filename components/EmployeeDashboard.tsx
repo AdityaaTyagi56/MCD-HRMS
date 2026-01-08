@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
-import { 
-  MapPin, 
-  IndianRupee, 
-  Mic, 
-  CheckCircle, 
-  AlertTriangle, 
-  X, 
+import {
+  MapPin,
+  IndianRupee,
+  Mic,
+  CheckCircle,
+  AlertTriangle,
+  X,
   Loader2,
   Calendar,
   MessageSquare,
@@ -32,12 +32,12 @@ const EmployeeDashboard: React.FC = () => {
   const [speechSupported, setSpeechSupported] = useState(true);
   const [micError, setMicError] = useState('');
   const [employeeView, setEmployeeView] = useState<'dashboard' | 'case-history'>('dashboard');
-  
+
   // Enhanced Complaint Form State
   const [complaintCategory, setComplaintCategory] = useState('');
   const [complaintLocation, setComplaintLocation] = useState('');
   const [complaintFile, setComplaintFile] = useState<File | null>(null);
-  
+
   // Attendance State
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [attendanceStep, setAttendanceStep] = useState<'locating' | 'face-verify' | 'verifying' | 'success' | 'error' | 'spoofing'>('locating');
@@ -46,7 +46,7 @@ const EmployeeDashboard: React.FC = () => {
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [verificationProgress, setVerificationProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+
   // Face Recognition State
   const [showFaceEnrollment, setShowFaceEnrollment] = useState(false);
   const [faceVerified, setFaceVerified] = useState(false);
@@ -54,7 +54,7 @@ const EmployeeDashboard: React.FC = () => {
   const recognitionRef = useRef<any>(null);
   const locationWatchRef = useRef<number | null>(null);
   const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || 'https://mcd-hrms-ml.onrender.com';
-  
+
   // Office location (MCD Civic Centre, Delhi)
   const OFFICE_LOCATION = { lat: 28.6328, lng: 77.2197, radius: 0.5 };
 
@@ -114,7 +114,7 @@ const EmployeeDashboard: React.FC = () => {
   // Setup Speech Recognition
   useEffect(() => {
     const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-    
+
     if (!SpeechRecognition) {
       console.log('❌ No Speech Recognition API');
       setSpeechSupported(false);
@@ -127,7 +127,7 @@ const EmployeeDashboard: React.FC = () => {
 
   const startListening = useCallback(() => {
     const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-    
+
     if (!SpeechRecognition) {
       setMicError(t('speech_not_supported'));
       return;
@@ -149,7 +149,7 @@ const EmployeeDashboard: React.FC = () => {
     recognition.onresult = (event: any) => {
       let interim = '';
       let final = '';
-      
+
       for (let i = 0; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
@@ -158,9 +158,9 @@ const EmployeeDashboard: React.FC = () => {
           interim += result[0].transcript;
         }
       }
-      
+
       console.log('📝 Speech:', { final, interim });
-      
+
       if (final.trim()) {
         setTranscript(prev => (prev + ' ' + final).trim());
         setManualComplaint('');
@@ -172,8 +172,8 @@ const EmployeeDashboard: React.FC = () => {
     recognition.onerror = (event: any) => {
       console.error('❌ Speech error:', event.error);
       setIsListening(false);
-      
-      switch(event.error) {
+
+      switch (event.error) {
         case 'not-allowed':
           setMicError(t('mic_permission_required'));
           break;
@@ -216,13 +216,13 @@ const EmployeeDashboard: React.FC = () => {
 
   const handleVoiceSubmit = async (text: string) => {
     if (!text.trim()) return;
-    
+
     // Stop listening if active
     if (isListening) stopListening();
-    
+
     console.log('📝 Submitting:', text);
     setProcessing(true);
-    
+
     try {
       const analysis = await analyzeGrievanceNLP(text);
       await addGrievance({
@@ -232,7 +232,7 @@ const EmployeeDashboard: React.FC = () => {
         priority: analysis.priority,
         location: complaintLocation || undefined,
       });
-      
+
       setShowVoiceModal(false);
       setTranscript('');
       setManualComplaint('');
@@ -252,7 +252,7 @@ const EmployeeDashboard: React.FC = () => {
     // Check if within attendance window
     if (!isWithinAttendanceWindow()) {
       const hours = currentTime.getHours();
-      const message = hours < 7 
+      const message = hours < 7
         ? t('attendance_not_started')
         : t('attendance_ended');
       alert(message);
@@ -278,10 +278,10 @@ const EmployeeDashboard: React.FC = () => {
       const pings: any[] = [];
       const PING_COUNT = 4;
       const PING_INTERVAL = 1500; // 1.5 seconds between pings
-      
+
       for (let i = 0; i < PING_COUNT; i++) {
         setVerificationProgress(Math.round(((i + 1) / PING_COUNT) * 40));
-        
+
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: true,
@@ -298,9 +298,9 @@ const EmployeeDashboard: React.FC = () => {
           altitude: position.coords.altitude,
           speed: position.coords.speed
         });
-        
+
         setLocationPings([...pings]);
-        
+
         if (i < PING_COUNT - 1) {
           await new Promise(resolve => setTimeout(resolve, PING_INTERVAL));
         }
@@ -309,7 +309,7 @@ const EmployeeDashboard: React.FC = () => {
       // Step 2: Facial Recognition Verification
       setAttendanceStep('face-verify');
       setVerificationProgress(50);
-      
+
     } catch (error) {
       console.error('Attendance error:', error);
       setAttendanceStep('error');
@@ -357,11 +357,11 @@ const EmployeeDashboard: React.FC = () => {
       // Mark attendance if verified
       const mainPing = locationPings[0];
       await markAttendance(employeeData.id, { lat: mainPing.lat, lng: mainPing.lng });
-      
+
       setAttendanceStep('success');
       setAttendanceMarked(true);
       setTimeout(() => setShowAttendanceModal(false), 3000);
-      
+
     } catch (error) {
       console.error('Verification error:', error);
       setAttendanceStep('error');
@@ -415,7 +415,7 @@ const EmployeeDashboard: React.FC = () => {
           <h1 className="text-neutral-900 text-xl font-bold mt-3 mb-1">
             {t('case_history') || 'My Case History'}
           </h1>
-          <p className="text-sm text-neutral-600 m-0">
+          <p className="text-sm text-neutral-700 m-0">
             {t('track_cases') || 'See all complaints you have raised'}
           </p>
         </div>
@@ -434,7 +434,7 @@ const EmployeeDashboard: React.FC = () => {
             {myGrievances.length === 0 ? (
               <div className="bg-white border border-neutral-200 rounded-xl p-6 text-center">
                 <div className="text-3xl mb-2">📭</div>
-                <p className="text-sm text-neutral-600 m-0">{t('no_grievances') || 'No grievances submitted yet'}</p>
+                <p className="text-sm text-neutral-700 m-0">{t('no_grievances') || 'No grievances submitted yet'}</p>
               </div>
             ) : (
               myGrievances
@@ -452,18 +452,17 @@ const EmployeeDashboard: React.FC = () => {
                         <p className="text-sm text-neutral-800 m-0 mb-2 leading-snug break-words">
                           {grievance.description.substring(0, 120)}{grievance.description.length > 120 ? '…' : ''}
                         </p>
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-600">
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-700">
                           <span className="whitespace-nowrap">📅 {new Date(grievance.submittedAt).toLocaleDateString()}</span>
                           <span className="whitespace-nowrap">🚨 {grievance.priority}</span>
                           {grievance.location && <span className="truncate max-w-[14rem]">📍 {grievance.location}</span>}
                         </div>
                       </div>
                       <div
-                        className={`shrink-0 self-start px-3 py-1.5 rounded-xl border text-xs font-semibold ${
-                          grievance.status === 'Resolved'
+                        className={`shrink-0 self-start px-3 py-1.5 rounded-xl border text-xs font-semibold ${grievance.status === 'Resolved'
                             ? 'border-success-200 bg-success-50 text-success-700'
                             : 'border-warning-200 bg-warning-50 text-warning-700'
-                        }`}
+                          }`}
                       >
                         {grievance.status === 'Resolved' ? 'Resolved' : 'Pending'}
                       </div>
@@ -483,16 +482,16 @@ const EmployeeDashboard: React.FC = () => {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-12 h-12 rounded-full bg-neutral-200 flex items-center justify-center font-bold text-neutral-900 shrink-0">
-                {employeeData.name.charAt(0)}
+              {employeeData.name.charAt(0)}
             </div>
             <div className="min-w-0">
               <div className="text-base font-bold text-neutral-900 truncate">{`${t('hello')}, ${employeeData.name.split(' ')[0]}`}</div>
-              <div className="text-sm text-neutral-600 truncate">{t('have_good_day')}</div>
+              <div className="text-sm text-neutral-700 truncate">{t('have_good_day')}</div>
             </div>
           </div>
           <div className="text-right shrink-0">
             <div className="text-base font-bold text-neutral-900 tabular-nums">{formatTime(currentTime)}</div>
-            <div className="text-xs text-neutral-500">{isWithinAttendanceWindow() ? t('time_window_in') : t('time_window_out')}</div>
+            <div className="text-xs text-neutral-600">{isWithinAttendanceWindow() ? t('time_window_in') : t('time_window_out')}</div>
           </div>
         </div>
       </div>
@@ -536,18 +535,16 @@ const EmployeeDashboard: React.FC = () => {
       <button
         onClick={handleAttendance}
         disabled={attendanceMarked || !isWithinAttendanceWindow()}
-        className={`w-full rounded-xl p-4 flex items-center gap-3 ${
-          attendanceMarked
+        className={`w-full rounded-xl p-4 flex items-center gap-3 ${attendanceMarked
             ? 'bg-success-600 text-white'
             : !isWithinAttendanceWindow()
               ? 'bg-neutral-200 text-neutral-900 border border-neutral-300'
               : 'bg-primary-100 text-neutral-900 border border-primary-200'
-        } ${attendanceMarked || !isWithinAttendanceWindow() ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+          } ${attendanceMarked || !isWithinAttendanceWindow() ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-            !attendanceMarked && !isWithinAttendanceWindow() ? 'bg-neutral-300' : 'bg-white'
-          }`}
+          className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${!attendanceMarked && !isWithinAttendanceWindow() ? 'bg-neutral-300' : 'bg-white'
+            }`}
         >
           {attendanceMarked ? <CheckCircle size={24} /> : <MapPin size={24} className="text-neutral-900" />}
         </div>
@@ -571,7 +568,7 @@ const EmployeeDashboard: React.FC = () => {
             <IndianRupee size={20} className="text-success-700" />
             <span className="font-bold text-neutral-900">{t('salary_slip')}</span>
           </div>
-          <div className="text-xs text-neutral-600">{t('view_download')}</div>
+          <div className="text-xs text-neutral-700">{t('view_download')}</div>
         </button>
 
         <button
@@ -582,7 +579,7 @@ const EmployeeDashboard: React.FC = () => {
             <Calendar size={20} className="text-warning-700" />
             <span className="font-bold text-neutral-900">{t('leave')}</span>
           </div>
-          <div className="text-xs text-neutral-600">{employeeData.leaveBalance} {t('leave_remaining')}</div>
+          <div className="text-xs text-neutral-700">{employeeData.leaveBalance} {t('leave_remaining')}</div>
         </button>
       </div>
 
@@ -609,7 +606,7 @@ const EmployeeDashboard: React.FC = () => {
         </div>
         <div className="text-left flex-1 min-w-0">
           <div className="font-bold text-neutral-900 truncate">{t('case_history') || 'Case history'}</div>
-          <div className="text-xs text-neutral-600 truncate">
+          <div className="text-xs text-neutral-700 truncate">
             {myGrievances.length} {myGrievances.length === 1 ? t('case_single') || 'case' : t('case_plural') || 'cases'} • {pendingCount} {t('pending') || 'pending'}
           </div>
         </div>
@@ -621,18 +618,17 @@ const EmployeeDashboard: React.FC = () => {
         <a href="tel:1800-123-4567" className="text-neutral-900 font-bold text-base no-underline">
           1800-123-4567 ({t('toll_free')})
         </a>
-        <div className="text-xs text-neutral-600">{t('working_hours') || 'Working hours: 9 AM - 6 PM'}</div>
+        <div className="text-xs text-neutral-700">{t('working_hours') || 'Working hours: 9 AM - 6 PM'}</div>
       </div>
 
       {/* Attendance Modal with Location + Face Verification */}
       {showAttendanceModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[100]">
           <div
-            className={`w-full bg-white rounded-3xl shadow-soft-lg max-h-[90vh] overflow-y-auto ${
-              attendanceStep === 'face-verify' ? 'max-w-xl p-0' : 'max-w-sm p-6'
-            }`}
+            className={`w-full bg-white rounded-3xl shadow-soft-lg max-h-[90vh] overflow-y-auto ${attendanceStep === 'face-verify' ? 'max-w-xl p-0' : 'max-w-sm p-6'
+              }`}
           >
-            
+
             {/* Locating Step */}
             {attendanceStep === 'locating' && (
               <>
@@ -640,16 +636,16 @@ const EmployeeDashboard: React.FC = () => {
                   <Navigation size={36} style={{ color: '#2563eb' }} className="animate-pulse" />
                   <div style={{ position: 'absolute', inset: '-4px', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
                 </div>
-                <h3 style={{ color: '#1e293b', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>📍 {t('location_verification')}</h3>
-                <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>
+                <h3 style={{ color: '#0f172a', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>📍 {t('location_verification')}</h3>
+                <p style={{ color: '#475569', fontSize: '14px', margin: '0 0 16px 0' }}>
                   {locationPings.length === 0 ? t('searching_gps') : `${locationPings.length}/4 ${t('locations_recorded')}`}
                 </p>
-                
+
                 {/* Progress Bar */}
                 <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden', marginBottom: '12px' }}>
                   <div style={{ width: `${verificationProgress}%`, height: '100%', background: 'linear-gradient(90deg, #3b82f6, #2563eb)', borderRadius: '4px', transition: 'width 0.3s ease' }}></div>
                 </div>
-                
+
                 {/* Location Pings Indicator */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
                   {[1, 2, 3, 4].map((i) => (
@@ -660,8 +656,8 @@ const EmployeeDashboard: React.FC = () => {
                     }}></div>
                   ))}
                 </div>
-                
-                <p style={{ color: '#94a3b8', fontSize: '12px', margin: 0 }}>
+
+                <p style={{ color: '#64748b', fontSize: '12px', margin: 0 }}>
                   <Shield size={12} style={{ display: 'inline', marginRight: '4px' }} />
                   {t('ai_location_active')}
                 </p>
@@ -684,7 +680,7 @@ const EmployeeDashboard: React.FC = () => {
                     <span className="text-primary-600 text-sm font-semibold">{t('step_face_verification')}</span>
                   </div>
                 </div>
-                
+
                 <FaceRecognition
                   employeeId={employeeData.id}
                   employeeName={employeeData.name}
@@ -708,7 +704,7 @@ const EmployeeDashboard: React.FC = () => {
                 </div>
                 <h3 style={{ color: '#1e293b', fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>🔍 {t('ai_verification_progress')}</h3>
                 <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>{t('analyzing_location')}</p>
-                
+
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '16px' }}>
                   <div style={{ background: '#dcfce7', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <CheckCircle size={16} style={{ color: '#16a34a' }} />
@@ -719,7 +715,7 @@ const EmployeeDashboard: React.FC = () => {
                     <span style={{ color: '#166534', fontSize: '12px', fontWeight: '600' }}>{t('badge_face_ok')}</span>
                   </div>
                 </div>
-                
+
                 <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
                   <div style={{ width: `${verificationProgress}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #d97706)', borderRadius: '4px', transition: 'width 0.3s ease' }}></div>
                 </div>
@@ -732,9 +728,9 @@ const EmployeeDashboard: React.FC = () => {
                 <div style={{ width: '80px', height: '80px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                   <CheckCircle size={40} style={{ color: '#16a34a' }} />
                 </div>
-                <h3 style={{ color: '#16a34a', fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px 0' }}>✅ {t('verified')}</h3>
-                <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>{t('attendance_success')}</p>
-                
+                <h3 style={{ color: '#15803d', fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px 0' }}>✅ {t('verified')}</h3>
+                <p style={{ color: '#475569', fontSize: '14px', margin: '0 0 16px 0' }}>{t('attendance_success')}</p>
+
                 {/* Verification Badges */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '16px' }}>
                   <div style={{ background: '#dcfce7', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -746,7 +742,7 @@ const EmployeeDashboard: React.FC = () => {
                     <span style={{ color: '#166534', fontSize: '11px', fontWeight: '600' }}>{t('badge_face_id_ok')}</span>
                   </div>
                 </div>
-                
+
                 {verificationResult && (
                   <div style={{ background: '#f0fdf4', borderRadius: '12px', padding: '12px', marginBottom: '12px', textAlign: 'left' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -759,7 +755,7 @@ const EmployeeDashboard: React.FC = () => {
                     </div>
                   </div>
                 )}
-                
+
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#22c55e', fontSize: '12px' }}>
                   <Shield size={14} />
                   <span>{t('verified_by_ai')}</span>
@@ -775,7 +771,7 @@ const EmployeeDashboard: React.FC = () => {
                 </div>
                 <h3 style={{ color: '#dc2626', fontSize: '20px', fontWeight: 'bold', margin: '0 0 8px 0' }}>⚠️ {t('suspicious_location')}</h3>
                 <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>{t('gps_spoofing_suspected')}</p>
-                
+
                 {verificationResult && (
                   <div style={{ background: '#fef2f2', borderRadius: '12px', padding: '12px', marginBottom: '16px', textAlign: 'left' }}>
                     <p style={{ color: '#991b1b', fontSize: '12px', fontWeight: '600', margin: '0 0 8px 0' }}>{t('issues_found')}</p>
@@ -791,7 +787,7 @@ const EmployeeDashboard: React.FC = () => {
                     )}
                   </div>
                 )}
-                
+
                 <button onClick={() => setShowAttendanceModal(false)} style={{ padding: '12px 24px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', width: '100%' }}>
                   {t('close')}
                 </button>
@@ -811,7 +807,7 @@ const EmployeeDashboard: React.FC = () => {
                 <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px 0' }}>
                   {verificationResult?.message || t('location_verification_failed')}
                 </p>
-                
+
                 {verificationResult?.risk_factors?.length > 0 && (
                   <div style={{ background: '#fef2f2', borderRadius: '12px', padding: '12px', marginBottom: '16px', textAlign: 'left' }}>
                     {verificationResult.risk_factors.map((factor: string, idx: number) => (
@@ -819,7 +815,7 @@ const EmployeeDashboard: React.FC = () => {
                     ))}
                   </div>
                 )}
-                
+
                 <button onClick={() => setShowAttendanceModal(false)} style={{ padding: '12px 24px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
                   {t('close')}
                 </button>
@@ -870,17 +866,17 @@ const EmployeeDashboard: React.FC = () => {
                 value={currentText}
                 onChange={(e) => { setManualComplaint(e.target.value); setTranscript(''); }}
                 placeholder={t('type_or_speak')}
-                style={{ 
-                  width: '100%', 
-                  height: '140px', 
-                  padding: '16px', 
+                style={{
+                  width: '100%',
+                  height: '140px',
+                  padding: '16px',
                   background: '#f8fafc',
-                  border: '1px solid #e2e8f0', 
-                  borderRadius: '16px', 
-                  fontSize: '16px', 
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '16px',
+                  fontSize: '16px',
                   lineHeight: '1.5',
-                  resize: 'none', 
-                  fontFamily: 'inherit', 
+                  resize: 'none',
+                  fontFamily: 'inherit',
                   boxSizing: 'border-box',
                   outline: 'none',
                   transition: 'all 0.2s ease',
@@ -981,10 +977,10 @@ const EmployeeDashboard: React.FC = () => {
                   <Mic size={32} style={{ color: 'white' }} />
                 </button>
               </div>
-              <p style={{ 
-                textAlign: 'center', 
-                color: isListening ? '#ef4444' : '#64748b', 
-                fontSize: '14px', 
+              <p style={{
+                textAlign: 'center',
+                color: isListening ? '#ef4444' : '#64748b',
+                fontSize: '14px',
                 fontWeight: '600',
                 margin: 0,
                 height: '20px'

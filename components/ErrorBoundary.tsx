@@ -48,17 +48,17 @@ export default class ErrorBoundary extends Component<Props, State> {
             }}>
               <AlertTriangle size={40} style={{ color: '#dc2626' }} />
             </div>
-            
+
             <h2 style={{ color: '#1e293b', fontSize: '24px', fontWeight: 'bold', margin: '0 0 12px' }}>
               कुछ गलत हुआ
             </h2>
-            <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 8px' }}>
+            <p style={{ color: '#475569', fontSize: '14px', margin: '0 0 8px' }}>
               Something went wrong
             </p>
-            <p style={{ color: '#94a3b8', fontSize: '12px', margin: '0 0 24px' }}>
+            <p style={{ color: '#64748b', fontSize: '12px', margin: '0 0 24px' }}>
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
-            
+
             <button
               onClick={() => window.location.reload()}
               style={{

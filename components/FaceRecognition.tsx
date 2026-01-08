@@ -114,13 +114,13 @@ export default function FaceRecognition({
         setMessageKey('fr_loading_models');
         setMessageParams(undefined);
         const modelsLoaded = await loadModels();
-        
+
         if (!mounted) return;
-        
+
         if (!modelsLoaded) {
           throw new Error('Failed to load face recognition models');
         }
-        
+
         setModelsReady(true);
         setMessageKey('fr_starting_camera');
         setMessageParams(undefined);
@@ -190,7 +190,7 @@ export default function FaceRecognition({
 
       try {
         const result = await detectFaceWithBox(videoRef.current);
-        
+
         // Track stability
         if (result.detected) {
           consecutiveDetections++;
@@ -203,7 +203,7 @@ export default function FaceRecognition({
           stableFaceCountRef.current = 0;
           setFaceStable(false);
         }
-        
+
         setFaceDetected(result.detected);
         setDetectionConfidence(result.confidence ?? 0);
 
@@ -307,21 +307,21 @@ export default function FaceRecognition({
     setCaptureAttempts(prev => prev + 1);
 
     // Try multiple times for better detection
-    let result: { success: boolean; message: string; samplesCount?: number } = { 
-      success: false, 
-      message: 'No face detected', 
-      samplesCount: 0 
+    let result: { success: boolean; message: string; samplesCount?: number } = {
+      success: false,
+      message: 'No face detected',
+      samplesCount: 0
     };
-    
+
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const canvas = captureFrame(videoRef.current!);
         result = await enrollFace(employeeId, employeeName, canvas);
-        
+
         if (result.success) {
           break; // Success, no need to retry
         }
-        
+
         // Wait a bit before retry
         if (attempt < 2) {
           await new Promise(resolve => setTimeout(resolve, 300));
@@ -542,7 +542,7 @@ export default function FaceRecognition({
       case 'loading':
         return <Loader className="w-6 h-6 text-blue-500 animate-spin" />;
       default:
-        return faceDetected 
+        return faceDetected
           ? <ScanFace className="w-6 h-6 text-green-500" />
           : <Camera className="w-6 h-6 text-gray-400" />;
     }
@@ -563,7 +563,7 @@ export default function FaceRecognition({
                     ? t('fr_title_verify')
                     : t('fr_title_attendance')}
               </h2>
-              <p className="text-indigo-200 text-sm">{employeeName}</p>
+              <p className="text-indigo-100 text-sm">{employeeName}</p>
             </div>
           </div>
 
@@ -589,17 +589,17 @@ export default function FaceRecognition({
               </button>
             </div>
 
-          {onClose && (
-            <button
-              onClick={() => {
-                stopCamera();
-                onClose();
-              }}
-              className="text-white/80 hover:text-white p-2"
-            >
-              <XCircle className="w-6 h-6" />
-            </button>
-          )}
+            {onClose && (
+              <button
+                onClick={() => {
+                  stopCamera();
+                  onClose();
+                }}
+                className="text-white/80 hover:text-white p-2"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -647,9 +647,8 @@ export default function FaceRecognition({
             {/* Face Guide Overlay */}
             {status === 'ready' && !countdown && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className={`w-48 h-60 border-4 rounded-[50%] transition-colors duration-300 ${
-                  faceDetected ? 'border-green-500' : 'border-white/50'
-                }`} />
+                <div className={`w-48 h-60 border-4 rounded-[50%] transition-colors duration-300 ${faceDetected ? 'border-green-500' : 'border-white/50'
+                  }`} />
               </div>
             )}
 
@@ -670,9 +669,8 @@ export default function FaceRecognition({
             {/* Confidence Display */}
             {matchResult && status !== 'loading' && (
               <div className="absolute top-4 right-4 bg-black/50 rounded-lg px-3 py-1.5">
-                <span className={`text-sm font-bold ${
-                  matchResult.matched ? 'text-green-400' : 'text-red-400'
-                }`}>
+                <span className={`text-sm font-bold ${matchResult.matched ? 'text-green-400' : 'text-red-400'
+                  }`}>
                   {formatTemplate(t('fr_confidence_pct'), { pct: matchResult.confidence.toFixed(0) })}
                 </span>
               </div>
@@ -693,9 +691,8 @@ export default function FaceRecognition({
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2 mt-2 overflow-hidden">
           <div
-            className={`h-2 rounded-full transition-all duration-300 ${
-              qualityScore >= 0.72 ? 'bg-green-600' : qualityScore >= 0.55 ? 'bg-yellow-500' : 'bg-red-500'
-            }`}
+            className={`h-2 rounded-full transition-all duration-300 ${qualityScore >= 0.72 ? 'bg-green-600' : qualityScore >= 0.55 ? 'bg-yellow-500' : 'bg-red-500'
+              }`}
             style={{ width: `${Math.round(qualityScore * 100)}%` }}
           />
         </div>
@@ -745,7 +742,7 @@ export default function FaceRecognition({
       <div className="px-6 py-4 bg-gray-50 border-t">
         <div className="flex items-center gap-3">
           {getStatusIcon()}
-          <p className="text-gray-700 font-medium">{message}</p>
+          <p className="text-gray-800 font-medium">{message}</p>
         </div>
       </div>
 
@@ -755,11 +752,10 @@ export default function FaceRecognition({
           <button
             onClick={handleEnrollCapture}
             disabled={!canProceed || status === 'processing' || status === 'loading'}
-            className={`flex-1 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${
-              faceStable && faceDetected && status === 'ready'
+            className={`flex-1 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${faceStable && faceDetected && status === 'ready'
                 ? 'bg-green-600 hover:bg-green-700 text-white animate-pulse'
                 : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
-            }`}
+              }`}
           >
             {status === 'processing' ? (
               <>
