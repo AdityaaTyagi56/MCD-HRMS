@@ -63,7 +63,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-neutral-200/50">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-soft">
+                  <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-soft">
                     <Shield className="text-white" size={20} />
                   </div>
                   <div>
@@ -89,7 +89,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </nav>
               {/* Footer */}
               <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-neutral-50 to-primary-50/30 rounded-xl border border-neutral-200/50">
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">A</div>
+                <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">A</div>
                 <div className="flex-1">
                   <p className="font-medium text-sm text-black">{language === 'hi' ? 'एडमिन उपयोगकर्ता' : 'Admin User'}</p>
                   <p className="text-xs text-neutral-600">{language === 'hi' ? 'सिस्टम प्रशासक' : 'System Administrator'}</p>
@@ -130,7 +130,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <Bell size={20} className="text-neutral-600" />
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full border-2 border-white animate-pulse"></div>
                   </button>
-                  <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-soft">A</div>
+                  <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-soft">A</div>
                 </div>
               </div>
             </header>
@@ -150,7 +150,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <header className="bg-white/90 backdrop-blur-xl border-b border-neutral-200/50 shadow-soft sticky top-0 z-40">
             <div className="flex items-center justify-between px-4 py-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-soft">
+                <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center shadow-soft">
                   <Shield className="text-white" size={16} />
                 </div>
                 <div>

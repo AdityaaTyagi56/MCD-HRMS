@@ -9,6 +9,7 @@ export const ENTERPRISE_COLORS = {
   gray900: '#0f172a',
   primary: '#273c75', // Deep Indigo / Slate Blue
   primaryDark: '#192a56',
+  primaryLight: '#4f5fa3', // Added for charts
   accent: '#0052cc', // Government Blue
   border: '#e2e8f0',
   error: '#dc2626',

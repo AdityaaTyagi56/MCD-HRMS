@@ -1,0 +1,627 @@
+openapi: 3.0.3
+info:
+  title: MCD Unified HRMS API
+  description: |
+    Comprehensive API documentation for Municipal Corporation of Delhi HRMS system.
+    
+    ## Features
+    - Employee Management
+    - Attendance Tracking with GPS
+    - Grievance Management
+    - Leave Management
+    - Payroll Management
+    
+    ## Authentication
+    All endpoints require an `x-api-key` header with valid API key.
+    
+  version: 2.0.0
+  contact:
+    name: MCD HRMS Support
+    email: support@mcd-hrms.gov.in
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://mcd-hrms-api.onrender.com
+    description: Production Server
+  - url: http://localhost:8010
+    description: Development Server
+
+security:
+  - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API key for authentication
+
+  schemas:
+    Employee:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Ramesh Gupta"
+        role:
+          type: string
+          example: "Sanitation Worker"
+        department:
+          type: string
+          enum: [Sanitation, Administration, Engineering, Health]
+        status:
+          type: string
+          enum: [Present, Absent, "On Leave"]
+        coords:
+          $ref: '#/components/schemas/LocationCoords'
+        mobile:
+          type: string
+          pattern: '^\+91[6-9]\d{9}$'
+          example: "+918287923955"
+        salary:
+          type: number
+          example: 15000
+        joiningDate:
+          type: string
+          format: date
+        currentPostingDate:
+          type: string
+          format: date
+        retirementDate:
+          type: string
+          format: date
+        performance:
+          $ref: '#/components/schemas/PerformanceMetric'
+
+    LocationCoords:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+          example: 28.6328
+        lng:
+          type: number
+          format: double
+          example: 77.2197
+
+    PerformanceMetric:
+      type: object
+      properties:
+        attendanceScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        grievanceScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        taskCompletion:
+          type: number
+          minimum: 0
+          maximum: 100
+        overallGrade:
+          type: string
+          enum: ["A+", "A", "B", "C", "D"]
+        lastReviewDate:
+          type: string
+          format: date
+
+    Grievance:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        user:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [Pending, "Under Review", Resolved, Escalated]
+        priority:
+          type: string
+          enum: [High, Medium, Low]
+        date:
+          type: string
+          format: date
+        submittedAt:
+          type: string
+          format: date-time
+        escalationLevel:
+          type: integer
+          enum: [0, 1, 2]
+        slaBreach:
+          type: boolean
+        source:
+          type: string
+          enum: [web, whatsapp, voice, ivr]
+
+    LeaveRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [Medical, Casual, Privilege]
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [Pending, Approved, Rejected]
+        requestDate:
+          type: string
+          format: date
+
+    Payslip:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        role:
+          type: string
+        month:
+          type: string
+        year:
+          type: integer
+        basicSalary:
+          type: number
+        deductions:
+          type: number
+        netSalary:
+          type: number
+        daysPresent:
+          type: integer
+        status:
+          type: string
+          enum: [Paid, Pending]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        statusCode:
+          type: integer
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Check if the API server is running
+      tags:
+        - System
+      security: []
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  uptime:
+                    type: number
+                  timestamp:
+                    type: string
+
+  /api/employees:
+    get:
+      summary: List all employees
+      description: Retrieve a list of all employees
+      tags:
+        - Employees
+      responses:
+        '200':
+          description: List of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create new employee
+      description: Add a new employee to the system
+      tags:
+        - Employees
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Employee'
+      responses:
+        '201':
+          description: Employee created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+
+  /api/employees/{id}:
+    get:
+      summary: Get employee by ID
+      description: Retrieve details of a specific employee
+      tags:
+        - Employees
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Employee details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '404':
+          description: Employee not found
+
+    put:
+      summary: Update employee
+      description: Update employee information
+      tags:
+        - Employees
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Employee'
+      responses:
+        '200':
+          description: Employee updated successfully
+        '404':
+          description: Employee not found
+
+    delete:
+      summary: Delete employee
+      description: Remove an employee from the system
+      tags:
+        - Employees
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Employee deleted successfully
+        '404':
+          description: Employee not found
+
+  /api/attendance/mark:
+    post:
+      summary: Mark attendance
+      description: Mark employee attendance with GPS verification
+      tags:
+        - Attendance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - lat
+                - lng
+              properties:
+                userId:
+                  type: integer
+                lat:
+                  type: number
+                  format: double
+                lng:
+                  type: number
+                  format: double
+      responses:
+        '200':
+          description: Attendance marked successfully
+        '400':
+          description: Invalid location or outside office hours
+        '401':
+          description: Unauthorized
+
+  /api/attendance/today:
+    get:
+      summary: Today's attendance
+      description: Get attendance report for today
+      tags:
+        - Attendance
+      responses:
+        '200':
+          description: Today's attendance report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalEmployees:
+                    type: integer
+                  present:
+                    type: integer
+                  absent:
+                    type: integer
+                  onLeave:
+                    type: integer
+
+  /api/grievances:
+    get:
+      summary: List grievances
+      description: Get all grievances
+      tags:
+        - Grievances
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Pending, "Under Review", Resolved, Escalated]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [High, Medium, Low]
+      responses:
+        '200':
+          description: List of grievances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grievance'
+
+    post:
+      summary: Submit grievance
+      description: Submit a new employee grievance
+      tags:
+        - Grievances
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - user
+                - category
+                - description
+              properties:
+                userId:
+                  type: integer
+                user:
+                  type: string
+                category:
+                  type: string
+                description:
+                  type: string
+                priority:
+                  type: string
+                  enum: [High, Medium, Low]
+      responses:
+        '201':
+          description: Grievance submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grievance'
+
+  /api/grievances/{id}:
+    put:
+      summary: Update grievance status
+      description: Update the status of a grievance
+      tags:
+        - Grievances
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Pending, "Under Review", Resolved, Escalated]
+      responses:
+        '200':
+          description: Grievance updated successfully
+        '404':
+          description: Grievance not found
+
+  /api/leaves:
+    get:
+      summary: List leave requests
+      description: Get all leave requests
+      tags:
+        - Leaves
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Pending, Approved, Rejected]
+      responses:
+        '200':
+          description: List of leave requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveRequest'
+
+    post:
+      summary: Apply for leave
+      description: Submit a new leave request
+      tags:
+        - Leaves
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - startDate
+                - endDate
+                - type
+                - reason
+              properties:
+                userId:
+                  type: integer
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                type:
+                  type: string
+                  enum: [Medical, Casual, Privilege]
+                reason:
+                  type: string
+      responses:
+        '201':
+          description: Leave request submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+
+  /api/leaves/{id}:
+    put:
+      summary: Update leave status
+      description: Approve or reject a leave request
+      tags:
+        - Leaves
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Approved, Rejected]
+      responses:
+        '200':
+          description: Leave status updated
+        '404':
+          description: Leave request not found
+
+  /api/payslips:
+    get:
+      summary: List payslips
+      description: Get all payslips
+      tags:
+        - Payroll
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: string
+        - name: year
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of payslips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payslip'
+
+  /api/payslips/release-all:
+    post:
+      summary: Release all salaries
+      description: Mark all pending payslips as paid
+      tags:
+        - Payroll
+      responses:
+        '200':
+          description: All salaries released successfully
+
+tags:
+  - name: System
+    description: System health and status
+  - name: Employees
+    description: Employee management operations
+  - name: Attendance
+    description: Attendance tracking and verification
+  - name: Grievances
+    description: Employee grievance management
+  - name: Leaves
+    description: Leave request management
+  - name: Payroll
+    description: Salary and payslip management
