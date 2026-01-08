@@ -54,6 +54,7 @@ export default function FaceRecognition({
   const animationRef = useRef<number | null>(null);
   const stableFaceCountRef = useRef<number>(0);
   const lastCaptureTimeRef = useRef<number>(0);
+  const lastDetectionTimeRef = useRef<number>(0);
 
   // State
   const [status, setStatus] = useState<'loading' | 'ready' | 'processing' | 'success' | 'error'>('loading');
@@ -177,7 +178,7 @@ export default function FaceRecognition({
     };
   }, [employeeId]);
 
-  // Face detection loop with stability tracking
+  // Face detection loop with throttling
   useEffect(() => {
     if (status !== 'ready' || !modelsReady) return;
 
@@ -187,6 +188,14 @@ export default function FaceRecognition({
 
     const detectLoop = async () => {
       if (!isRunning || !videoRef.current || !canvasRef.current) return;
+
+      const now = Date.now();
+      // Throttle detection to ~30fps (33ms) to prevent UI blocking
+      if (now - lastDetectionTimeRef.current < 50) {
+        animationRef.current = requestAnimationFrame(detectLoop);
+        return;
+      }
+      lastDetectionTimeRef.current = now;
 
       try {
         const result = await detectFaceWithBox(videoRef.current);
@@ -520,13 +529,13 @@ export default function FaceRecognition({
   const getStatusColor = () => {
     switch (status) {
       case 'success':
-        return 'bg-green-500';
+        return 'text-emerald-500';
       case 'error':
-        return 'bg-red-500';
+        return 'text-rose-500';
       case 'processing':
-        return 'bg-yellow-500';
+        return 'text-amber-500';
       default:
-        return faceDetected ? 'bg-green-500' : 'bg-gray-400';
+        return faceDetected ? 'text-emerald-500' : 'text-slate-400';
     }
   };
 
@@ -534,87 +543,89 @@ export default function FaceRecognition({
   const getStatusIcon = () => {
     switch (status) {
       case 'success':
-        return <CheckCircle className="w-6 h-6 text-green-500" />;
+        return <CheckCircle className="w-6 h-6 text-emerald-500" />;
       case 'error':
-        return <XCircle className="w-6 h-6 text-red-500" />;
+        return <XCircle className="w-6 h-6 text-rose-500" />;
       case 'processing':
-        return <Loader className="w-6 h-6 text-yellow-500 animate-spin" />;
+        return <Loader className="w-6 h-6 text-amber-500 animate-spin" />;
       case 'loading':
         return <Loader className="w-6 h-6 text-blue-500 animate-spin" />;
       default:
         return faceDetected
-          ? <ScanFace className="w-6 h-6 text-green-500" />
-          : <Camera className="w-6 h-6 text-gray-400" />;
+          ? <ScanFace className="w-6 h-6 text-emerald-500" />
+          : <Camera className="w-6 h-6 text-slate-400" />;
     }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-2xl overflow-hidden max-w-lg mx-auto">
+    <div className="glass-card bg-white/95 rounded-2xl shadow-2xl overflow-hidden max-w-lg mx-auto border border-white/20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Fingerprint className="w-8 h-8" />
-            <div>
-              <h2 className="text-xl font-bold">
-                {mode === 'enroll'
-                  ? t('fr_title_enroll')
-                  : mode === 'verify'
-                    ? t('fr_title_verify')
-                    : t('fr_title_attendance')}
-              </h2>
-              <p className="text-indigo-100 text-sm">{employeeName}</p>
-            </div>
+      <div className="glass-header px-6 py-4 flex items-center justify-between border-b border-slate-200/50">
+        <div className="flex items-center gap-3">
+          <div className="bg-indigo-50 p-2 rounded-xl">
+            <Fingerprint className="w-6 h-6 text-indigo-600" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">
+              {mode === 'enroll'
+                ? t('fr_title_enroll')
+                : mode === 'verify'
+                  ? t('fr_title_verify')
+                  : t('fr_title_attendance')}
+            </h2>
+            <p className="text-slate-500 text-xs font-medium">{employeeName}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-slate-100 rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => {
+                if (language !== 'hi') toggleLanguage();
+              }}
+              className={`px-2 py-1 text-xs rounded-md transition font-semibold ${language === 'hi' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              हिंदी
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (language !== 'en') toggleLanguage();
+              }}
+              className={`px-2 py-1 text-xs rounded-md transition font-semibold ${language === 'en' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              ENG
+            </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center bg-white/10 rounded-full p-1">
-              <button
-                type="button"
-                onClick={() => {
-                  if (language !== 'hi') toggleLanguage();
-                }}
-                className={`px-3 py-1 text-sm rounded-full transition ${language === 'hi' ? 'bg-white text-indigo-700 font-bold' : 'text-white/90 hover:text-white'}`}
-              >
-                हिंदी
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (language !== 'en') toggleLanguage();
-                }}
-                className={`px-3 py-1 text-sm rounded-full transition ${language === 'en' ? 'bg-white text-indigo-700 font-bold' : 'text-white/90 hover:text-white'}`}
-              >
-                ENG
-              </button>
-            </div>
-
-            {onClose && (
-              <button
-                onClick={() => {
-                  stopCamera();
-                  onClose();
-                }}
-                className="text-white/80 hover:text-white p-2"
-              >
-                <XCircle className="w-6 h-6" />
-              </button>
-            )}
-          </div>
+          {onClose && (
+            <button
+              onClick={() => {
+                stopCamera();
+                onClose();
+              }}
+              className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-colors"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Camera View */}
-      <div className="relative bg-black aspect-video">
+      <div className="relative bg-slate-900 aspect-[4/3] overflow-hidden group">
         {cameraError ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-            <div className="text-center text-white p-6">
-              <CameraOff className="w-16 h-16 mx-auto mb-4 text-red-500" />
-              <p className="text-lg font-medium">{t('fr_camera_access_error')}</p>
-              <p className="text-gray-400 text-sm mt-2">{cameraError}</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-50">
+            <div className="text-center text-white p-6 max-w-xs">
+              <div className="bg-rose-500/10 p-4 rounded-full inline-block mb-4">
+                <CameraOff className="w-12 h-12 text-rose-500" />
+              </div>
+              <p className="text-lg font-bold text-slate-200">{t('fr_camera_access_error')}</p>
+              <p className="text-slate-400 text-sm mt-2 mb-6">{cameraError}</p>
               <button
                 onClick={() => window.location.reload()}
-                className="mt-4 px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                className="px-6 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700 text-white font-medium transition-all shadow-lg shadow-indigo-500/25"
               >
                 <RefreshCw className="w-4 h-4 inline mr-2" />
                 {t('retry')}
@@ -637,8 +648,8 @@ export default function FaceRecognition({
 
             {/* Countdown Overlay */}
             {countdown !== null && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                <div className="text-9xl font-bold text-white animate-pulse">
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-30">
+                <div className="text-9xl font-bold text-white animate-pulse drop-shadow-2xl">
                   {countdown}
                 </div>
               </div>
@@ -647,15 +658,15 @@ export default function FaceRecognition({
             {/* Face Guide Overlay */}
             {status === 'ready' && !countdown && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className={`w-48 h-60 border-4 rounded-[50%] transition-colors duration-300 ${faceDetected ? 'border-green-500' : 'border-white/50'
+                <div className={`w-56 h-72 border-[3px] rounded-[45%] transition-all duration-300 ${faceDetected ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'border-white/30 border-dashed'
                   }`} />
               </div>
             )}
 
-            {/* Status Indicator */}
-            <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/50 rounded-full px-3 py-1.5">
-              <div className={`w-3 h-3 rounded-full ${getStatusColor()} animate-pulse`} />
-              <span className="text-white text-sm font-medium">
+            {/* Status Pill */}
+            <div className="absolute top-4 left-4 flex items-center gap-2 bg-slate-900/80 backdrop-blur-md rounded-full px-4 py-2 border border-white/10 shadow-lg">
+              <div className={`w-2.5 h-2.5 rounded-full ${status === 'processing' ? 'bg-amber-500 animate-pulse' : faceDetected ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+              <span className="text-white text-xs font-semibold tracking-wide">
                 {status === 'loading'
                   ? t('loading')
                   : status === 'processing'
@@ -668,8 +679,8 @@ export default function FaceRecognition({
 
             {/* Confidence Display */}
             {matchResult && status !== 'loading' && (
-              <div className="absolute top-4 right-4 bg-black/50 rounded-lg px-3 py-1.5">
-                <span className={`text-sm font-bold ${matchResult.matched ? 'text-green-400' : 'text-red-400'
+              <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-md rounded-xl px-4 py-2 border border-white/10 shadow-lg">
+                <span className={`text-sm font-bold ${matchResult.matched ? 'text-emerald-400' : 'text-rose-400'
                   }`}>
                   {formatTemplate(t('fr_confidence_pct'), { pct: matchResult.confidence.toFixed(0) })}
                 </span>
@@ -679,178 +690,192 @@ export default function FaceRecognition({
         )}
       </div>
 
-      {/* Simple guidance + quality */}
-      <div className="px-6 py-3 bg-white border-t">
-        <div className="flex items-center justify-between gap-3">
-          <div className="text-sm font-semibold text-gray-800">
-            {t('fr_quality')}: <span className="font-bold">{t(qualityLabelKey)}</span>
+      {/* Quality & Tips */}
+      <div className="px-6 py-4 bg-white border-b border-slate-100">
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <div className="text-sm font-semibold text-slate-700">
+            {t('fr_quality')}:
+            <span className={`ml-2 px-2 py-0.5 rounded text-xs font-bold uppercase ${qualityScore >= 0.72 ? 'bg-emerald-100 text-emerald-700' :
+                qualityScore >= 0.55 ? 'bg-amber-100 text-amber-700' :
+                  'bg-rose-100 text-rose-700'
+              }`}>
+              {t(qualityLabelKey)}
+            </span>
           </div>
-          <div className="text-xs text-gray-500">
-            {faceStable ? t('fr_hold_still_ok') : t('fr_hold_still')}
+          <div className="text-xs font-medium text-slate-500">
+            {faceStable ? (
+              <span className="flex items-center gap-1 text-emerald-600">
+                <CheckCircle size={12} /> {t('fr_hold_still_ok')}
+              </span>
+            ) : (
+              t('fr_hold_still')
+            )}
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2 mt-2 overflow-hidden">
+
+        {/* Quality Bar */}
+        <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden mb-4">
           <div
-            className={`h-2 rounded-full transition-all duration-300 ${qualityScore >= 0.72 ? 'bg-green-600' : qualityScore >= 0.55 ? 'bg-yellow-500' : 'bg-red-500'
+            className={`h-full rounded-full transition-all duration-500 ${qualityScore >= 0.72 ? 'bg-emerald-500' : qualityScore >= 0.55 ? 'bg-amber-500' : 'bg-rose-500'
               }`}
             style={{ width: `${Math.round(qualityScore * 100)}%` }}
           />
         </div>
-        <div className="mt-2 grid grid-cols-3 gap-2 text-[11px] text-gray-600">
-          <div className="flex items-center gap-1">
-            <span className="text-base">💡</span> {t('fr_tip_light')}
+
+        {/* Tips Grid */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 border border-slate-100 text-center">
+            <span className="text-lg mb-1">💡</span>
+            <span className="text-[10px] text-slate-600 font-medium leading-tight">{t('fr_tip_light')}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-base">📷</span> {t('fr_tip_face_center')}
+          <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 border border-slate-100 text-center">
+            <span className="text-lg mb-1">📷</span>
+            <span className="text-[10px] text-slate-600 font-medium leading-tight">{t('fr_tip_face_center')}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-base">🙂</span> {t('fr_tip_remove_mask')}
+          <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-50 border border-slate-100 text-center">
+            <span className="text-lg mb-1">🙂</span>
+            <span className="text-[10px] text-slate-600 font-medium leading-tight">{t('fr_tip_remove_mask')}</span>
           </div>
         </div>
       </div>
 
       {/* Enrollment Progress */}
       {mode === 'enroll' && (
-        <div className="px-6 py-3 bg-gray-50 border-t">
+        <div className="px-6 py-3 bg-indigo-50/50 border-t border-indigo-100">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-xs font-bold text-indigo-900 uppercase tracking-wider">
               {t('fr_enrollment_progress')}
             </span>
-            <span className="text-sm text-gray-500">
-              {enrollmentProgress.current}/{enrollmentProgress.required} {t('fr_samples')}
+            <span className="text-xs font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
+              {enrollmentProgress.current}/{enrollmentProgress.required}
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-white rounded-full h-2 border border-indigo-100 p-0.5">
             <div
-              className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+              className="bg-indigo-600 h-full rounded-full transition-all duration-500 shadow-sm"
               style={{
                 width: `${(enrollmentProgress.current / enrollmentProgress.required) * 100}%`,
               }}
             />
           </div>
-          {/* Tips for better enrollment */}
-          <div className="mt-2 text-xs text-gray-500 space-y-1">
-            <p>💡 {t('fr_enroll_tip_line1')}</p>
-            {enrollmentProgress.current > 0 && enrollmentProgress.current < 3 && (
-              <p>🔄 {t('fr_enroll_tip_move_head')}</p>
-            )}
-          </div>
         </div>
       )}
 
-      {/* Message */}
-      <div className="px-6 py-4 bg-gray-50 border-t">
-        <div className="flex items-center gap-3">
-          {getStatusIcon()}
-          <p className="text-gray-800 font-medium">{message}</p>
+      {/* Message & Action Area */}
+      <div className="p-6 bg-slate-50 rounded-b-2xl border-t border-slate-200">
+        <div className="flex items-center gap-3 mb-4 min-h-[2.5rem]">
+          <div className={`p-2 rounded-full bg-white shadow-sm border border-slate-100`}>
+            {getStatusIcon()}
+          </div>
+          <p className="text-slate-800 font-medium leading-snug">{message}</p>
         </div>
-      </div>
 
-      {/* Actions */}
-      <div className="px-6 py-4 flex gap-3">
-        {mode === 'enroll' && status !== 'success' && (
-          <button
-            onClick={handleEnrollCapture}
-            disabled={!canProceed || status === 'processing' || status === 'loading'}
-            className={`flex-1 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${faceStable && faceDetected && status === 'ready'
-                ? 'bg-green-600 hover:bg-green-700 text-white animate-pulse'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
-              }`}
-          >
-            {status === 'processing' ? (
-              <>
-                <Loader className="w-5 h-5 animate-spin" />
-                {t('fr_analyzing')}
-              </>
-            ) : (
-              <>
-                <Camera className="w-5 h-5" />
-                {faceStable
-                  ? t('fr_ready_click_capture')
-                  : formatTemplate(t('fr_capture_sample'), { current: enrollmentProgress.current + 1, total: enrollmentProgress.required })}
-              </>
-            )}
-          </button>
-        )}
+        <div className="flex gap-3">
+          {mode === 'enroll' && status !== 'success' && (
+            <button
+              onClick={handleEnrollCapture}
+              disabled={!canProceed || status === 'processing' || status === 'loading'}
+              className={`flex-1 py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 ${faceStable && faceDetected && status === 'ready'
+                  ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-indigo-200'
+                  : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                }`}
+            >
+              {status === 'processing' ? (
+                <>
+                  <Loader className="w-4 h-4 animate-spin" />
+                  {t('fr_analyzing')}
+                </>
+              ) : (
+                <>
+                  <Camera className="w-4 h-4" />
+                  {faceStable
+                    ? t('fr_ready_click_capture')
+                    : formatTemplate(t('fr_capture_sample'), { current: enrollmentProgress.current + 1, total: enrollmentProgress.required })}
+                </>
+              )}
+            </button>
+          )}
 
-        {mode === 'verify' && status !== 'success' && (
-          <button
-            onClick={handleVerify}
-            disabled={!canProceed || status === 'processing' || status === 'loading'}
-            className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {status === 'processing' ? (
-              <>
-                <Loader className="w-5 h-5 animate-spin" />
-                {t('fr_verifying')}
-              </>
-            ) : (
-              <>
-                <Shield className="w-5 h-5" />
-                {t('fr_btn_verify_identity')}
-              </>
-            )}
-          </button>
-        )}
+          {mode === 'verify' && status !== 'success' && (
+            <button
+              onClick={handleVerify}
+              disabled={!canProceed || status === 'processing' || status === 'loading'}
+              className={`flex-1 py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 ${canProceed
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-emerald-200'
+                  : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                }`}
+            >
+              {status === 'processing' ? (
+                <>
+                  <Loader className="w-4 h-4 animate-spin" />
+                  {t('fr_verifying')}
+                </>
+              ) : (
+                <>
+                  <Shield className="w-4 h-4" />
+                  {t('fr_btn_verify_identity')}
+                </>
+              )}
+            </button>
+          )}
 
-        {mode === 'attendance' && status !== 'success' && (
-          <>
-            {!hasEnrolledFace(employeeId) ? (
-              <div className="flex-1 text-center">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <AlertTriangle className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                  <p className="text-yellow-700 font-medium">{t('fr_not_enrolled_title')}</p>
-                  <p className="text-yellow-600 text-sm mt-1">
-                    {t('fr_not_enrolled_help')}
-                  </p>
+          {mode === 'attendance' && status !== 'success' && (
+            <>
+              {!hasEnrolledFace(employeeId) ? (
+                <div className="flex-1">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 items-start">
+                    <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-amber-800 font-bold text-sm mb-1">{t('fr_not_enrolled_title')}</p>
+                      <p className="text-amber-700 text-xs leading-relaxed">
+                        {t('fr_not_enrolled_help')}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <button
-                onClick={handleMarkAttendance}
-                disabled={!canProceed || status === 'processing' || status === 'loading' || countdown !== null}
-                className="flex-1 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {status === 'processing' ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    {t('fr_verifying')}
-                  </>
-                ) : countdown !== null ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    {t('fr_get_ready')} {countdown}
-                  </>
-                ) : (
-                  <>
-                    <UserCheck className="w-5 h-5" />
-                    {t('mark_attendance')}
-                  </>
-                )}
-              </button>
-            )}
-          </>
-        )}
+              ) : (
+                <button
+                  onClick={handleMarkAttendance}
+                  disabled={!canProceed || status === 'processing' || status === 'loading' || countdown !== null}
+                  className={`flex-1 py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 ${canProceed && countdown === null
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-200'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                    }`}
+                >
+                  {status === 'processing' ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      {t('fr_verifying')}
+                    </>
+                  ) : countdown !== null ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      {t('fr_get_ready')} {countdown}
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="w-4 h-4" />
+                      {t('mark_attendance')}
+                    </>
+                  )}
+                </button>
+              )}
+            </>
+          )}
 
-        {status === 'success' && (
-          <button
-            onClick={() => {
-              stopCamera();
-              onClose?.();
-            }}
-            className="flex-1 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 flex items-center justify-center gap-2"
-          >
-            <CheckCircle className="w-5 h-5" />
-            {t('fr_done')}
-          </button>
-        )}
-      </div>
-
-      {/* Security Notice */}
-      <div className="px-6 py-3 bg-gray-100 border-t text-center">
-        <p className="text-xs text-gray-500">
-          🔒 {t('fr_security_notice')}
-        </p>
+          {status === 'success' && (
+            <button
+              onClick={() => {
+                stopCamera();
+                onClose?.();
+              }}
+              className="flex-1 py-3.5 rounded-xl font-bold text-sm tracking-wide bg-slate-900 text-white shadow-lg hover:bg-slate-800 hover:shadow-xl flex items-center justify-center gap-2"
+            >
+              <CheckCircle className="w-4 h-4" />
+              {t('fr_done')}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
