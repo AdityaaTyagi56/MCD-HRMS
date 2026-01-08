@@ -624,7 +624,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold mb-1" style={{ color: ENTERPRISE_COLORS.gray900 }}>{card.value}</h3>
-                  <p className="text-sm font-medium" style={{ color: ENTERPRISE_COLORS.gray700 }}>{card.title}</p>
+                  <p className="text-sm text-neutral-700">{card.title}</p>
                 </div>
               </div>
             </div>
@@ -958,7 +958,7 @@ const AdminDashboard: React.FC = () => {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-neutral-500">
+              <div className="flex h-full items-center justify-center text-sm text-neutral-600">
                 Attendance data will appear as employees mark in.
               </div>
             )}
@@ -1045,7 +1045,7 @@ const AdminDashboard: React.FC = () => {
                   >
                     {grade.grade}
                   </div>
-                  <span className="text-sm font-medium text-neutral-800">Grade {grade.grade}</span>
+              <span className="text-sm font-medium text-neutral-700">Grade {grade.grade}</span>
                 </div>
                 <span className="text-sm font-bold text-black">{grade.count}</span>
               </div>
@@ -1130,7 +1130,7 @@ const AdminDashboard: React.FC = () => {
                             style={{ width: `${emp.performance.attendanceScore}%` }}
                           ></div>
                         </div>
-                        <span className="text-xs font-medium text-neutral-700">
+                    <span className="text-xs font-medium text-neutral-700">{emp.performance.attendanceScore}%</span>{emp.performance.attendanceScore}%</span>
                           {emp.performance.attendanceScore}%
                         </span>
                       </div>
