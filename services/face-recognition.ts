@@ -38,7 +38,7 @@ export interface FaceDetectionResult {
 
 const CONFIG = {
   // Face matching threshold - lower means stricter matching
-  matchThreshold: 0.5,
+  matchThreshold: 0.6,
   // Minimum confidence for detection (lowered for better detection)
   minConfidence: 0.5,
   // Minimum samples required for reliable enrollment
@@ -96,9 +96,9 @@ export async function loadModels(): Promise<boolean> {
 
   try {
     const faceapi = await loadFaceApi();
-    
+
     console.log('📦 Loading face recognition models...');
-    
+
     // Load all required models in parallel
     await Promise.all([
       faceapi.nets.ssdMobilenetv1.loadFromUri(CONFIG.modelUrl),
@@ -109,10 +109,10 @@ export async function loadModels(): Promise<boolean> {
 
     modelsLoaded = true;
     console.log('✅ Face recognition models loaded successfully');
-    
+
     // Load enrolled faces from localStorage
     loadEnrolledFaces();
-    
+
     return true;
   } catch (error) {
     console.error('❌ Failed to load face recognition models:', error);
@@ -145,10 +145,10 @@ export async function detectFaces(
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const faceapi = await loadFaceApi();
-      
+
       // Detect all faces with landmarks and descriptors
       const detections = await faceapi
-        .detectAllFaces(input, new faceapi.SsdMobilenetv1Options({ 
+        .detectAllFaces(input, new faceapi.SsdMobilenetv1Options({
           minConfidence: CONFIG.minConfidence,
           maxResults: 10
         }))
@@ -165,24 +165,24 @@ export async function detectFaces(
         return { detected: false, faceCount: 0 };
       }
 
-    // Get the largest face (assuming it's the main subject)
-    const mainDetection = detections.reduce((prev, curr) => {
-      const prevBox = prev.detection.box;
-      const currBox = curr.detection.box;
-      return (prevBox.width * prevBox.height) > (currBox.width * currBox.height) ? prev : curr;
-    });
+      // Get the largest face (assuming it's the main subject)
+      const mainDetection = detections.reduce((prev, curr) => {
+        const prevBox = prev.detection.box;
+        const currBox = curr.detection.box;
+        return (prevBox.width * prevBox.height) > (currBox.width * currBox.height) ? prev : curr;
+      });
 
-    // Convert Float32Array to regular array for serialization
-    const descriptor: number[] = Array.from(mainDetection.descriptor) as number[];
-    
-    // Extract landmark points
-    const landmarks = mainDetection.landmarks.positions.map((p: { x: number; y: number }) => [p.x, p.y]);
+      // Convert Float32Array to regular array for serialization
+      const descriptor: number[] = Array.from(mainDetection.descriptor) as number[];
 
-    // Get expressions
-    const expressions: Record<string, number> = {};
-    Object.entries(mainDetection.expressions).forEach(([key, value]) => {
-      expressions[key] = value as number;
-    });
+      // Extract landmark points
+      const landmarks = mainDetection.landmarks.positions.map((p: { x: number; y: number }) => [p.x, p.y]);
+
+      // Get expressions
+      const expressions: Record<string, number> = {};
+      Object.entries(mainDetection.expressions).forEach(([key, value]) => {
+        expressions[key] = value as number;
+      });
 
       return {
         detected: true,
@@ -219,7 +219,7 @@ export async function detectFaceWithBox(
 
   try {
     const faceapi = await loadFaceApi();
-    
+
     const detection = await faceapi
       .detectSingleFace(input, new faceapi.SsdMobilenetv1Options({ minConfidence: CONFIG.minConfidence }));
 
@@ -287,9 +287,9 @@ export async function enrollFace(
   // Add new descriptor
   enrollment.descriptors.push(detection.descriptor);
   enrollment.photoUrl = photoUrl || enrollment.photoUrl;
-  
+
   enrolledFaces.set(employeeId, enrollment);
-  
+
   // Save to localStorage
   saveEnrolledFaces();
 
@@ -298,8 +298,8 @@ export async function enrollFace(
 
   return {
     success: true,
-    message: isComplete 
-      ? `✅ Face enrollment complete with ${samplesCount} samples!` 
+    message: isComplete
+      ? `✅ Face enrollment complete with ${samplesCount} samples!`
       : `📸 Sample ${samplesCount}/${CONFIG.minEnrollmentSamples} captured. Please capture more samples for better accuracy.`,
     samplesCount,
   };
@@ -382,7 +382,7 @@ export async function matchFace(
   for (const [employeeId, enrollment] of enrolledFaces) {
     for (const storedDescriptor of enrollment.descriptors) {
       const distance = euclideanDistance(detection.descriptor, storedDescriptor);
-      
+
       if (!bestMatch || distance < bestMatch.distance) {
         bestMatch = {
           employeeId,
@@ -577,13 +577,13 @@ export async function syncEnrollmentToServer(employeeId: number): Promise<boolea
 export async function loadEnrollmentFromServer(employeeId: number): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE}/face/enrollment/${employeeId}`);
-    
+
     if (!response.ok) {
       return false;
     }
 
     const data = await response.json();
-    
+
     if (data.enrolled && data.descriptors) {
       enrolledFaces.set(employeeId, {
         employeeId,
@@ -594,7 +594,7 @@ export async function loadEnrollmentFromServer(employeeId: number): Promise<bool
       console.log(`✅ Loaded enrollment from server for employee ${employeeId}`);
       return true;
     }
-    
+
     return false;
   } catch (error) {
     console.warn('Failed to load from server (using local):', error);
@@ -625,7 +625,7 @@ export async function verifyFaceWithServer(
     }
 
     const data = await response.json();
-    
+
     return {
       matched: data.matched,
       employeeId: data.matched ? employeeId : undefined,
@@ -689,7 +689,7 @@ export function drawFaceOverlay(
     ctx.fillStyle = color;
     const textWidth = ctx.measureText(label).width;
     ctx.fillRect(box.x, box.y - 25, textWidth + 20, 25);
-    
+
     // Draw label text
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 14px sans-serif';

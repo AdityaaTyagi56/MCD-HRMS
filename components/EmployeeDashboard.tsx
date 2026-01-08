@@ -17,13 +17,14 @@ import {
   Navigation,
   Wifi,
   ScanFace,
-  Fingerprint
+  Fingerprint,
+  Languages
 } from 'lucide-react';
 import FaceRecognition from './FaceRecognition';
 import { hasEnrolledFace, getEnrollmentStatus } from '../services/face-recognition';
 
 const EmployeeDashboard: React.FC = () => {
-  const { language, setCurrentView, addGrievance, markAttendance, t, grievances } = useApp();
+  const { language, toggleLanguage, setCurrentView, addGrievance, markAttendance, t, grievances } = useApp();
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -135,7 +136,7 @@ const EmployeeDashboard: React.FC = () => {
 
     // Create fresh instance each time
     const recognition = new SpeechRecognition();
-    recognition.lang = 'hi-IN';
+    recognition.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
     recognition.continuous = true;
     recognition.interimResults = true;
     recognitionRef.current = recognition;
@@ -200,7 +201,7 @@ const EmployeeDashboard: React.FC = () => {
       console.error('Failed to start:', e);
       setMicError(t('speech_start_failed'));
     }
-  }, [t]);
+  }, [t, language]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
@@ -508,191 +509,157 @@ const EmployeeDashboard: React.FC = () => {
   }
 
   return (
-    <div className="pb-24 space-y-4 max-w-lg mx-auto md:max-w-4xl">
-      {/* Header Profile Card */}
-      <div className="glass-card rounded-2xl p-5 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center font-bold text-xl text-primary-600 shadow-sm border border-primary-100 shrink-0">
+    <div className="pb-24 space-y-5 max-w-lg mx-auto md:max-w-4xl">
+      {/* LANGUAGE TOGGLE HEADER */}
+      <div className="glass-card rounded-2xl p-4 flex items-center justify-between gap-4 border border-slate-200/50 shadow-sm sticky top-0 z-20 backdrop-blur-xl bg-white/90">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100">
             {employeeData.name.charAt(0)}
           </div>
-          <div className="min-w-0">
-            <div className="text-lg font-bold text-slate-800 truncate">{`${t('hello')}, ${employeeData.name.split(' ')[0]}`}</div>
-            <div className="text-sm text-slate-500 truncate font-medium">{t('have_good_day')}</div>
+          <div>
+            <h2 className="text-sm font-bold text-slate-800 leading-tight">{employeeData.name.split(' ')[0]}</h2>
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Employee</p>
           </div>
         </div>
-        <div className="text-right shrink-0 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
-          <div className="text-lg font-bold text-slate-900 tabular-nums tracking-tight">{formatTime(currentTime)}</div>
-          <div className={`text-xs font-bold uppercase tracking-wide ${isWithinAttendanceWindow() ? 'text-emerald-600' : 'text-slate-400'}`}>
+
+        <button
+          onClick={toggleLanguage}
+          className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-4 py-2 rounded-full transition-all active:scale-95"
+        >
+          <Languages size={18} className="text-indigo-600" />
+          <span className="text-sm font-bold text-slate-700">
+            {language === 'en' ? 'English' : 'हिंदी'}
+          </span>
+          <span className="text-xs text-slate-400 font-medium ml-1">
+            {language === 'en' ? 'Change' : 'बदलें'}
+          </span>
+        </button>
+      </div>
+
+      {/* ATTENDANCE HERO CARD */}
+      <div className="glass-card rounded-3xl overflow-hidden shadow-lg border border-slate-200/60 bg-white">
+        {/* Status Header */}
+        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Clock size={16} className="text-slate-400" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+              {formatTime(currentTime)}
+            </span>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${isWithinAttendanceWindow() ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+            }`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${isWithinAttendanceWindow() ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
             {isWithinAttendanceWindow() ? t('time_window_in') : t('time_window_out')}
           </div>
+        </div>
+
+        {/* Main Action Area */}
+        <div className="p-6 text-center">
+          {!attendanceMarked ? (
+            <button
+              onClick={handleAttendance}
+              disabled={!isWithinAttendanceWindow()}
+              className={`w-full py-8 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all transform active:scale-[0.98] ${isWithinAttendanceWindow()
+                  ? 'bg-gradient-to-b from-blue-600 to-indigo-700 text-white shadow-xl shadow-blue-200'
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                }`}
+            >
+              <div className={`p-4 rounded-full ${isWithinAttendanceWindow() ? 'bg-white/20' : 'bg-slate-200 text-slate-300'}`}>
+                <Fingerprint size={48} strokeWidth={1.5} />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-2xl font-bold">{t('mark_attendance_now')}</h3>
+                <p className={`text-sm font-medium ${isWithinAttendanceWindow() ? 'text-blue-100' : 'text-slate-400'}`}>
+                  {t('tap_here') || 'Tap to Verify & Mark'}
+                </p>
+              </div>
+            </button>
+          ) : (
+            <div className="w-full py-8 rounded-2xl bg-emerald-50 border border-emerald-100 flex flex-col items-center justify-center gap-3">
+              <div className="p-4 rounded-full bg-emerald-100 text-emerald-600">
+                <CheckCircle size={48} strokeWidth={2} />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-2xl font-bold text-emerald-800">{t('attendance_complete')}</h3>
+                <p className="text-sm font-medium text-emerald-600">
+                  {t('attendance_marked_at')} {employeeData.checkInTime}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Face ID Status */}
-      {!hasEnrolledFace(employeeData.id) ? (
+      {!hasEnrolledFace(employeeData.id) && (
         <button
           onClick={() => setShowFaceEnrollment(true)}
-          className="w-full flex items-center justify-between gap-4 bg-amber-50/80 backdrop-blur-sm border border-amber-200 rounded-2xl px-5 py-4 shadow-sm hover:bg-amber-100/80 transition-colors group"
+          className="w-full flex items-center justify-between gap-4 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 shadow-sm active:bg-amber-100 transition-colors"
         >
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 group-hover:scale-110 transition-transform">
-              <ScanFace size={20} />
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+              <ScanFace size={24} />
             </div>
-            <div className="text-left min-w-0">
-              <div className="text-base font-bold text-amber-900 truncate">{t('setup_face_id') || 'Set up Face ID'}</div>
-              <div className="text-sm text-amber-700 truncate">{t('required_for_attendance') || 'Needed for attendance verification'}</div>
+            <div className="text-left">
+              <div className="text-base font-bold text-amber-900">{t('setup_face_id') || 'Set up Face ID'}</div>
+              <div className="text-sm text-amber-700 opacity-80">{t('required_for_attendance') || 'Needed for attendance verification'}</div>
             </div>
           </div>
-          <span className="text-xs font-bold text-amber-800 bg-amber-200/50 px-3 py-1.5 rounded-full shrink-0">{t('enroll_now') || 'ENROLL'}</span>
+          <span className="text-2xl font-bold text-amber-300">›</span>
         </button>
-      ) : (
-        <div className="w-full flex items-center justify-between gap-4 bg-emerald-50/80 backdrop-blur-sm border border-emerald-200 rounded-2xl px-5 py-3 shadow-sm">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-              <Fingerprint size={16} />
-            </div>
-            <div className="min-w-0">
-              <div className="text-sm font-bold text-emerald-900 truncate">{t('face_id_ready') || 'Face ID Active'}</div>
-              <div className="text-xs text-emerald-700 truncate font-medium">
-                {getEnrollmentStatus(employeeData.id).samplesCount} {t('samples') || 'samples verified'}
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowFaceEnrollment(true)}
-            className="shrink-0 text-emerald-700 hover:text-emerald-800 text-xs font-bold px-3 py-1.5 hover:bg-emerald-100 rounded-lg transition-colors"
-          >
-            {t('update') || 'Update'}
-          </button>
-        </div>
       )}
 
-      {/* Attendance Action Button */}
-      <button
-        onClick={handleAttendance}
-        disabled={attendanceMarked || !isWithinAttendanceWindow()}
-        className={`w-full rounded-2xl p-1.5 relative overflow-hidden group transition-all duration-300 transform active:scale-98 ${attendanceMarked
-          ? 'cursor-not-allowed opacity-90'
-          : !isWithinAttendanceWindow()
-            ? 'cursor-not-allowed opacity-70 grayscale'
-            : 'hover:shadow-lg shadow-md hover:-translate-y-0.5'
-          }`}
-      >
-        <div className={`absolute inset-0 rounded-2xl ${attendanceMarked ? 'bg-gradient-to-br from-emerald-500 to-teal-600' :
-          !isWithinAttendanceWindow() ? 'bg-slate-200' :
-            'bg-gradient-to-br from-blue-600 to-indigo-600 animate-pulse-slow'
-          }`}></div>
-
-        <div className={`relative rounded-xl p-5 flex items-center gap-4 h-full border ${attendanceMarked ? 'bg-emerald-500 border-none' :
-          !isWithinAttendanceWindow() ? 'bg-slate-100 border-slate-200' :
-            'bg-white/10 backdrop-blur-sm border-white/20'
-          }`}>
-          <div
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg ${attendanceMarked ? 'bg-white/20 text-white' :
-              !isWithinAttendanceWindow() ? 'bg-slate-200 text-slate-400' :
-                'bg-white text-blue-600'
-              }`}
-          >
-            {attendanceMarked ? <CheckCircle size={28} strokeWidth={3} /> : <MapPin size={28} strokeWidth={2.5} />}
-          </div>
-
-          <div className="text-left flex-1 min-w-0">
-            <div className={`text-lg font-bold truncate ${attendanceMarked || (!attendanceMarked && isWithinAttendanceWindow()) ? 'text-white' : 'text-slate-500'}`}>
-              {attendanceMarked ? t('attendance_complete') : t('mark_attendance_now')}
-            </div>
-            <div className={`text-sm truncate font-medium opacity-90 ${attendanceMarked || (!attendanceMarked && isWithinAttendanceWindow()) ? 'text-purple-50' : 'text-slate-400'}`}>
-              {attendanceMarked ? `${t('attendance_marked_at')}: ${employeeData.checkInTime}` : t('tap_here')}
-            </div>
-          </div>
-
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${attendanceMarked || (!attendanceMarked && isWithinAttendanceWindow()) ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-400'}`}>
-            <span className="text-xl font-bold">›</span>
-          </div>
-        </div>
-      </button>
-
-      {/* Quick Actions Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <button
-          onClick={() => setCurrentView('payroll')}
-          className="glass-card hover:bg-slate-50 border border-slate-200/60 rounded-2xl p-5 text-left transition-all duration-200 hover:shadow-md group"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
-              <IndianRupee size={20} strokeWidth={2.5} />
-            </div>
-            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">New</span>
-          </div>
-          <span className="block font-bold text-slate-800 text-lg mb-0.5">{t('salary_slip')}</span>
-          <div className="text-xs font-medium text-slate-500">{t('view_download')}</div>
-        </button>
-
+      {/* BIG BUTTON GRID */}
+      <div className="grid grid-cols-2 gap-4">
         <button
           onClick={() => setCurrentView('leave')}
-          className="glass-card hover:bg-slate-50 border border-slate-200/60 rounded-2xl p-5 text-left transition-all duration-200 hover:shadow-md group"
+          className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 text-left group"
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
-              <Calendar size={20} strokeWidth={2.5} />
-            </div>
-            <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-full">{employeeData.leaveBalance} Left</span>
+          <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 mb-3 group-hover:scale-110 transition-transform">
+            <Calendar size={24} />
           </div>
-          <span className="block font-bold text-slate-800 text-lg mb-0.5">{t('leave')}</span>
-          <div className="text-xs font-medium text-slate-500">Apply or check balance</div>
+          <h3 className="font-bold text-slate-800 text-lg">{t('leave')}</h3>
+          <p className="text-xs text-slate-500 font-medium mt-1">{employeeData.leaveBalance} days remaining</p>
+        </button>
+
+        <button
+          onClick={() => setCurrentView('payroll')}
+          className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 text-left group"
+        >
+          <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-3 group-hover:scale-110 transition-transform">
+            <IndianRupee size={24} />
+          </div>
+          <h3 className="font-bold text-slate-800 text-lg">{t('salary_slip')}</h3>
+          <p className="text-xs text-slate-500 font-medium mt-1">View & Download</p>
         </button>
       </div>
 
-      {/* Voice Complaint Button */}
+      {/* Voice Complaint Button - LARGE & ACCESSIBLE */}
       <button
         onClick={() => setShowVoiceModal(true)}
-        className="w-full bg-rose-50 hover:bg-rose-100/80 border border-rose-100 rounded-2xl p-5 flex items-center gap-4 transition-all duration-200 group"
+        className="w-full bg-rose-50 border border-rose-100 rounded-2xl p-6 flex items-center gap-5 active:bg-rose-100 transition-all shadow-sm"
       >
-        <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0 border border-rose-100 group-hover:scale-105 transition-transform">
-          <Mic size={24} className="text-rose-500" />
+        <div className="w-16 h-16 rounded-full bg-white shadow-sm border border-rose-100 flex items-center justify-center text-rose-500 animate-pulse-slow">
+          <Mic size={32} />
         </div>
-        <div className="text-left flex-1 min-w-0">
-          <div className="font-bold text-rose-800 truncate text-lg">{t('file_complaint_voice')}</div>
-          <div className="text-sm text-rose-600/80 truncate font-medium">{t('speak_or_type')}</div>
+        <div className="text-left flex-1">
+          <h3 className="font-bold text-rose-900 text-xl">{t('file_complaint_voice')}</h3>
+          <p className="text-rose-700/80 font-medium mt-1">{t('speak_or_type')}</p>
         </div>
-        <div className="text-2xl font-bold text-rose-300 group-hover:text-rose-400 transition-colors">›</div>
       </button>
 
-      {/* Case History Button */}
+      {/* Case History Link */}
       <button
         onClick={() => setEmployeeView('case-history')}
-        className="w-full glass-card hover:bg-slate-50 rounded-2xl p-5 flex items-center gap-4 transition-all duration-200 group border border-slate-200/60"
+        className="w-full p-4 flex items-center justify-between text-slate-500 hover:text-slate-700 font-medium transition-colors"
       >
-        <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-          <MessageSquare size={22} className="text-slate-600" />
-        </div>
-        <div className="text-left flex-1 min-w-0">
-          <div className="font-bold text-slate-800 truncate text-lg">{t('case_history') || 'Case history'}</div>
-          <div className="text-sm text-slate-500 truncate font-medium">
-            {myGrievances.length} {myGrievances.length === 1 ? 'Case' : 'Cases'} • <span className={pendingCount > 0 ? 'text-amber-600 font-bold' : ''}>{pendingCount} Pending</span>
-          </div>
-        </div>
-        <div className="text-2xl font-bold text-slate-300 group-hover:text-slate-400 transition-colors">›</div>
+        <span>View Past Complaints ({myGrievances.length})</span>
+        <span>→</span>
       </button>
-
-      {/* Help Footer */}
-      <div className="glass-card hover:bg-slate-50/50 rounded-2xl p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-            <Phone size={18} />
-          </div>
-          <div>
-            <div className="font-bold text-slate-800 text-sm">Help & Support</div>
-            <div className="text-xs text-slate-500">{t('working_hours') || '9:00 AM - 6:00 PM'}</div>
-          </div>
-        </div>
-        <a href="tel:1800-123-4567" className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-800 font-bold text-sm transition-colors no-underline">
-          Call Now
-        </a>
-      </div>
 
       {/* Attendance Modal with Location + Face Verification */}
       {showAttendanceModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] transition-opacity duration-300">
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 z-[100] transition-opacity duration-300">
           <div
             className={`w-full bg-white rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 ${attendanceStep === 'face-verify' ? 'max-w-xl' : 'max-w-sm'
               }`}
@@ -712,40 +679,26 @@ const EmployeeDashboard: React.FC = () => {
 
               {/* Locating Step */}
               {attendanceStep === 'locating' && (
-                <div className="text-center py-4">
-                  <div className="w-24 h-24 mx-auto mb-6 relative flex items-center justify-center">
+                <div className="text-center py-8">
+                  <div className="w-32 h-32 mx-auto mb-8 relative flex items-center justify-center">
                     <div className="absolute inset-0 bg-blue-50 rounded-full animate-pulse-slow"></div>
-                    <div className="relative z-10 w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Navigation size={40} className="text-blue-600 animate-pulse" />
+                    <div className="relative z-10 w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Navigation size={48} className="text-blue-600 animate-pulse" />
                     </div>
                     <div className="absolute inset-0 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
                   </div>
 
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">📍 {t('location_verification')}</h3>
-                  <p className="text-slate-500 text-sm mb-6">
+                  <h3 className="text-2xl font-bold text-slate-800 mb-2">📍 {t('location_verification')}</h3>
+                  <p className="text-slate-500 text-base mb-8 font-medium">
                     {locationPings.length === 0 ? t('searching_gps') : `${locationPings.length}/4 ${t('locations_recorded')}`}
                   </p>
 
-                  {/* Progress Bar */}
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
-                    <div
-                      className="h-full bg-blue-500 rounded-full transition-all duration-300 ease-out"
-                      style={{ width: `${verificationProgress}%` }}
-                    ></div>
-                  </div>
-
-                  {/* Location Pings Indicator */}
-                  <div className="flex justify-center gap-2 mb-4">
+                  <div className="flex justify-center gap-3">
                     {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className={`w-3 h-3 rounded-full transition-colors duration-300 ${locationPings.length >= i ? 'bg-emerald-500 shadow-sm' : 'bg-slate-200'
+                      <div key={i} className={`h-2 flex-1 rounded-full transition-colors duration-300 ${locationPings.length >= i ? 'bg-blue-500' : 'bg-slate-100'
                         }`}></div>
                     ))}
                   </div>
-
-                  <p className="text-slate-400 text-xs flex items-center justify-center gap-1.5">
-                    <Shield size={12} />
-                    {t('ai_location_active')}
-                  </p>
                 </div>
               )}
 
@@ -802,287 +755,119 @@ const EmployeeDashboard: React.FC = () => {
                   </div>
 
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full transition-all duration-300"
-                      style={{ width: `${verificationProgress}%` }}
-                    ></div>
+                    <div className="h-full bg-amber-500 rounded-full animate-progress"></div>
                   </div>
                 </div>
               )}
 
               {/* Success Step */}
               {attendanceStep === 'success' && (
-                <div className="text-center py-4">
-                  <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
-                    <CheckCircle size={48} className="text-emerald-500" />
+                <div className="text-center py-8">
+                  <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce-small">
+                    <CheckCircle size={48} className="text-emerald-600" />
                   </div>
-                  <h3 className="text-2xl font-bold text-emerald-600 mb-2">✅ {t('verified')}</h3>
-                  <p className="text-slate-500 text-sm mb-6">{t('attendance_success')}</p>
-
-                  {/* Verification Badges */}
-                  <div className="flex justify-center gap-3 mb-6">
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-full text-emerald-700 border border-emerald-100">
-                      <MapPin size={14} />
-                      <span className="text-xs font-bold">{t('badge_location_ok')}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-full text-emerald-700 border border-emerald-100">
-                      <ScanFace size={14} />
-                      <span className="text-xs font-bold">{t('badge_face_id_ok')}</span>
-                    </div>
-                  </div>
-
-                  {verificationResult && (
-                    <div className="bg-emerald-50/50 rounded-xl p-4 text-left border border-emerald-100 mb-4">
-                      <div className="flex justify-between mb-2">
-                        <span className="text-xs font-medium text-emerald-800">{t('confidence_score')}</span>
-                        <span className="text-sm font-bold text-emerald-700">{verificationResult.confidence}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs font-medium text-emerald-800">{t('in_office_zone')}</span>
-                        <span className="text-sm font-bold text-emerald-700">{verificationResult.metrics?.zone_percentage || 100}%</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-center gap-2 text-emerald-600 text-xs font-medium">
-                    <Shield size={14} />
-                    <span>{t('verified_by_ai')}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Spoofing Detected Step */}
-              {attendanceStep === 'spoofing' && (
-                <div className="text-center py-4">
-                  <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5">
-                    <AlertTriangle size={48} className="text-red-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-red-600 mb-2">⚠️ {t('suspicious_location')}</h3>
-                  <p className="text-slate-500 text-sm mb-6">{t('gps_spoofing_suspected')}</p>
-
-                  {verificationResult && (
-                    <div className="bg-red-50/50 rounded-xl p-4 text-left border border-red-100 mb-6">
-                      <p className="text-xs font-bold text-red-800 mb-2 uppercase tracking-wide">{t('issues_found')}</p>
-                      {verificationResult.spoofing_indicators?.map((indicator: string, idx: number) => (
-                        <div key={idx} className="flex items-start gap-2 text-red-700 text-xs mb-1 last:mb-0">
-                          <span className="mt-0.5">•</span>
-                          <span>{indicator}</span>
-                        </div>
-                      ))}
-                      {verificationResult.ai_analysis && (
-                        <p className="text-xs text-red-900 mt-3 italic bg-red-100/50 p-2 rounded-lg">
-                          AI: {verificationResult.ai_analysis}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
+                  <h3 className="text-2xl font-bold text-slate-800 mb-2">{t('attendance_marked_success')}</h3>
+                  <p className="text-slate-500 font-medium mb-6">
+                    {t('have_great_day')}
+                  </p>
                   <button
                     onClick={() => setShowAttendanceModal(false)}
-                    className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-200"
+                    className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors"
                   >
                     {t('close')}
                   </button>
-                  <p className="text-xs text-slate-400 mt-4">
-                    {t('retry_at_office')}
-                  </p>
                 </div>
               )}
 
               {/* Error Step */}
               {attendanceStep === 'error' && (
-                <div className="text-center py-4">
-                  <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5">
-                    <AlertTriangle size={48} className="text-red-500" />
+                <div className="text-center py-6">
+                  <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <X size={40} className="text-rose-500" />
                   </div>
-                  <h3 className="text-xl font-bold text-red-600 mb-2">❌ {t('error_exclamation')}</h3>
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">{t('verification_failed')}</h3>
                   <p className="text-slate-500 text-sm mb-6">
-                    {verificationResult?.message || t('location_verification_failed')}
+                    {verificationResult?.message || t('location_mismatch_help')}
                   </p>
-
-                  {verificationResult?.risk_factors?.length > 0 && (
-                    <div className="bg-red-50 rounded-xl p-4 text-left border border-red-100 mb-6">
-                      {verificationResult.risk_factors.map((factor: string, idx: number) => (
-                        <p key={idx} className="text-xs text-red-700 mb-1 last:mb-0 flex gap-1">
-                          <span>•</span> {factor}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-
                   <button
                     onClick={() => setShowAttendanceModal(false)}
-                    className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold transition-colors"
+                    className="w-full py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-colors"
                   >
-                    {t('close')}
+                    {t('try_again')}
                   </button>
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Voice Complaint Modal */}
+      {showVoiceModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
+          <div className="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl animate-slide-up sm:animate-none">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Mic className="text-rose-500" />
+                {t('voice_complaint')}
+              </h3>
+              <button onClick={() => setShowVoiceModal(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="text-center py-8">
+              <button
+                onClick={isListening ? stopListening : startListening}
+                className={`w-28 h-28 rounded-full flex items-center justify-center mx-auto transition-all duration-300 shadow-xl ${isListening ? 'bg-rose-500 text-white scale-110 shadow-rose-200' : 'bg-rose-50 text-rose-500 hover:bg-rose-100'
+                  }`}
+              >
+                {isListening ? <Mic size={48} className="animate-pulse" /> : <MicOff size={40} />}
+              </button>
+              <p className="mt-6 font-bold text-lg text-slate-800">
+                {isListening ? t('listening') : t('tap_to_speak')}
+              </p>
+              <p className="text-slate-500 text-sm mt-1">
+                {isListening ? "Say your complaint clearly..." : "Tap the mic button to start recording"}
+              </p>
+            </div>
+
+            <div className="bg-slate-50 rounded-2xl p-4 mb-6 min-h-[100px] border border-slate-100">
+              {transcript || manualComplaint ? (
+                <p className="text-slate-800 text-lg leading-relaxed">{transcript || manualComplaint}</p>
+              ) : (
+                <p className="text-slate-400 text-center italic mt-6">{t('transcript_placeholder')}</p>
+              )}
+            </div>
+
+            <button
+              onClick={() => handleVoiceSubmit(transcript || manualComplaint)}
+              disabled={(!transcript && !manualComplaint) || processing}
+              className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold text-lg disabled:opacity-50 hover:bg-slate-800 transition-all shadow-lg"
+            >
+              {processing ? <Loader2 className="mx-auto animate-spin" /> : t('submit_complaint')}
+            </button>
           </div>
         </div>
       )}
 
       {/* Face Enrollment Modal */}
       {showFaceEnrollment && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] transition-opacity duration-300">
-          <div className="w-full max-w-xl bg-white rounded-3xl overflow-hidden shadow-2xl">
-            <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-              <h3 className="font-bold text-slate-800">{t('face_enrollment')}</h3>
-              <button
-                onClick={() => setShowFaceEnrollment(false)}
-                className="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 z-[60]">
+          <div className="w-full max-w-lg">
             <FaceRecognition
               employeeId={employeeData.id}
               employeeName={employeeData.name}
               mode="enroll"
+              onClose={() => setShowFaceEnrollment(false)}
               onSuccess={() => {
                 setShowFaceEnrollment(false);
-                alert(`${t('success')}: ${t('fr_enrollment_complete')} ${t('mark_attendance')}`);
+                alert(t('enrollment_success'));
               }}
-              onError={(error) => {
-                console.error('Enrollment error:', error);
-              }}
-              onClose={() => setShowFaceEnrollment(false)}
             />
           </div>
         </div>
       )}
-
-      {/* Voice Modal */}
-      {showVoiceModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] transition-opacity duration-300">
-          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto p-6 relative">
-
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-3">
-                <span className="bg-blue-50 p-2.5 rounded-xl text-blue-600">
-                  <Mic size={20} />
-                </span>
-                {t('file_complaint_voice')}
-              </h2>
-              <button
-                onClick={() => { stopListening(); setShowVoiceModal(false); setTranscript(''); setManualComplaint(''); setMicError(''); }}
-                className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="relative mb-6">
-              <textarea
-                value={currentText}
-                onChange={(e) => { setManualComplaint(e.target.value); setTranscript(''); }}
-                placeholder={t('type_or_speak')}
-                className="w-full h-36 p-4 bg-slate-50 border border-slate-200 rounded-2xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-slate-700 placeholder:text-slate-400"
-              />
-              {!currentText && !isListening && (
-                <div className="absolute bottom-4 right-4 pointer-events-none opacity-50">
-                  <Mic size={20} className="text-slate-400" />
-                </div>
-              )}
-            </div>
-
-            {/* Enhanced Form Fields */}
-            <div className="mb-4">
-              <label className="block text-slate-500 text-xs font-bold uppercase tracking-wide mb-2">
-                Category (Optional)
-              </label>
-              <div className="relative">
-                <select
-                  value={complaintCategory}
-                  onChange={(e) => setComplaintCategory(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
-                >
-                  <option value="">Auto-detect category</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                  <span className="text-xs">▼</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-8">
-              <label className="block text-slate-500 text-xs font-bold uppercase tracking-wide mb-2">
-                Location (Optional)
-              </label>
-              <div className="relative">
-                <select
-                  value={complaintLocation}
-                  onChange={(e) => setComplaintLocation(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
-                >
-                  <option value="">Select ward/location</option>
-                  {wards.map(ward => (
-                    <option key={ward} value={ward}>{ward}</option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                  <span className="text-xs">▼</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Error Message */}
-            {micError && (
-              <div className="bg-red-50 border border-red-100 rounded-xl p-3 mb-6 flex items-center gap-3">
-                <MicOff size={18} className="text-red-500 shrink-0" />
-                <span className="text-sm font-medium text-red-700">{micError}</span>
-              </div>
-            )}
-
-            {/* Mic Button - Centered and Enhanced */}
-            <div className="flex flex-col items-center gap-4 mb-8">
-              <div className="relative">
-                {isListening && (
-                  <div className="absolute inset-0 rounded-full bg-red-500/20 animate-ping"></div>
-                )}
-                <button
-                  onClick={isListening ? stopListening : startListening}
-                  className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl hover:scale-105 active:scale-95 ${!speechSupported ? 'bg-slate-300 cursor-not-allowed' :
-                    isListening ? 'bg-red-500 shadow-red-500/30' :
-                      'bg-blue-600 shadow-blue-600/30'
-                    }`}
-                >
-                  <Mic size={32} className="text-white" />
-                </button>
-              </div>
-              <p className={`text-sm font-bold ${isListening ? 'text-red-500 animate-pulse' : 'text-slate-500'}`}>
-                {!speechSupported ? `⚠️ ${t('voice_not_supported')}` : isListening ? t('listening_speak') : t('press_to_speak')}
-              </p>
-            </div>
-
-            <button
-              onClick={() => handleVoiceSubmit(currentText)}
-              disabled={processing || !currentText.trim()}
-              className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg ${processing || !currentText.trim()
-                ? 'bg-slate-100 text-slate-400 shadow-none cursor-not-allowed'
-                : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0'
-                }`}
-            >
-              {processing ? (
-                <>
-                  <Loader2 size={24} className="animate-spin" />
-                  {t('sending')}
-                </>
-              ) : (
-                <>
-                  <MessageSquare size={24} />
-                  {t('send_complaint')}
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };
