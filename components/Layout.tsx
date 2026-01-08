@@ -19,7 +19,9 @@ import {
   Bell,
   Search,
   Shield,
-  Sparkles
+  Sparkles,
+  LogOut,
+  ChevronDown
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -27,18 +29,18 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { currentRole, switchRole, currentView, setCurrentView, language, toggleLanguage, t } = useApp();
+  const { currentRole, switchRole, currentView, setCurrentView, language, toggleLanguage } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const adminMenuItems = [
-    { id: 'dashboard', label: language === 'hi' ? 'डैशबोर्ड' : 'Dashboard', icon: LayoutDashboard, color: 'text-primary-600', bgColor: 'bg-primary-50' },
-    { id: 'employees', label: language === 'hi' ? 'कर्मचारी' : 'Employees', icon: Users, color: 'text-secondary-600', bgColor: 'bg-secondary-50' },
-    { id: 'leave', label: language === 'hi' ? 'छुट्टी प्रबंधन' : 'Leave Management', icon: Calendar, color: 'text-success-600', bgColor: 'bg-success-50' },
-    { id: 'payroll', label: language === 'hi' ? 'वेतन' : 'Payroll', icon: IndianRupee, color: 'text-warning-600', bgColor: 'bg-warning-50' },
-    { id: 'transfers', label: language === 'hi' ? 'स्थानांतरण' : 'Transfers', icon: ArrowRightLeft, color: 'text-error-600', bgColor: 'bg-error-50' },
-    { id: 'performance', label: language === 'hi' ? 'प्रदर्शन' : 'Performance', icon: TrendingUp, color: 'text-primary-600', bgColor: 'bg-primary-50' },
-    { id: 'service-book', label: language === 'hi' ? 'सेवा पुस्तिका' : 'Service Book', icon: BookOpen, color: 'text-secondary-600', bgColor: 'bg-secondary-50' },
-    { id: 'settings', label: language === 'hi' ? 'सेटिंग्स' : 'Settings', icon: Settings, color: 'text-neutral-600', bgColor: 'bg-neutral-50' },
+    { id: 'dashboard', label: language === 'hi' ? 'डैशबोर्ड' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'employees', label: language === 'hi' ? 'कर्मचारी' : 'Employees', icon: Users },
+    { id: 'leave', label: language === 'hi' ? 'छुट्टी प्रबंधन' : 'Leave Management', icon: Calendar },
+    { id: 'payroll', label: language === 'hi' ? 'वेतन' : 'Payroll', icon: IndianRupee },
+    { id: 'transfers', label: language === 'hi' ? 'स्थानांतरण' : 'Transfers', icon: ArrowRightLeft },
+    { id: 'performance', label: language === 'hi' ? 'प्रदर्शन' : 'Performance', icon: TrendingUp },
+    { id: 'service-book', label: language === 'hi' ? 'सेवा पुस्तिका' : 'Service Book', icon: BookOpen },
+    { id: 'settings', label: language === 'hi' ? 'सेटिंग्स' : 'Settings', icon: Settings },
   ];
 
   const employeeMenuItems = [
@@ -52,147 +54,223 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setSidebarOpen(false);
   };
 
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-primary-50/30 to-secondary-50/20">
+    <div className="min-h-screen bg-slate-50 selection:bg-primary-100 selection:text-primary-900 overflow-hidden">
+      {/* Background Ambience */}
+      <div className="fixed inset-0 bg-gradient-mesh opacity-[0.03] pointer-events-none z-0" />
+
       {currentRole === 'admin' ? (
-        <div className="flex h-screen overflow-hidden">
-          {/* Sidebar */}
-          <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white/80 backdrop-blur-xl border-r border-neutral-200/50 shadow-soft-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex h-screen relative z-10">
+          {/* Floating Sidebar (Desktop) */}
+          <aside className="hidden lg:flex flex-col w-72 fixed inset-y-4 left-4 glass-panel rounded-2xl z-50 overflow-hidden transition-all duration-300">
+            {/* Header */}
+            <div className="p-6 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20 text-white">
+                  <Shield size={20} className="fill-current opacity-90" />
+                </div>
+                <div>
+                  <h1 className="font-bold text-lg text-slate-800 tracking-tight leading-tight">MCD HRMS</h1>
+                  <p className="text-xs text-slate-500 font-medium">Admin Portal</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
+              {adminMenuItems.map((item) => {
+                const isActive = currentView === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleMenuClick(item.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative overflow-hidden
+                      ${isActive
+                        ? 'text-primary-700 bg-primary-50/80 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50/80'
+                      }`}
+                  >
+                    {isActive && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary-500 rounded-r-full" />
+                    )}
+                    <item.icon
+                      size={20}
+                      className={`transition-colors duration-200 ${isActive ? 'text-primary-600' : 'text-slate-400 group-hover:text-slate-600'}`}
+                      strokeWidth={isActive ? 2.5 : 2}
+                    />
+                    <span className="relative z-10">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-white/10 bg-slate-50/50">
+              <div className="flex items-center gap-3 mb-4 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                <div className="w-9 h-9 bg-slate-800 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                  OP
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-slate-900 truncate">Om Prakash</p>
+                  <p className="text-xs text-secondary-600 truncate font-medium">System Admin</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={toggleLanguage}
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg hover:border-slate-300 hover:bg-slate-50 transition-all text-xs font-medium text-slate-600"
+                >
+                  <Languages size={14} />
+                  {language === 'hi' ? 'EN' : 'हिंदी'}
+                </button>
+                <button
+                  onClick={() => switchRole('employee')}
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-all text-xs font-medium shadow-lg shadow-slate-800/20"
+                >
+                  <User size={14} />
+                  Employee
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* Mobile Sidebar Overlay */}
+          <div className={`fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setSidebarOpen(false)} />
+
+          {/* Mobile Sidebar */}
+          <aside className={`fixed inset-y-0 left-0 w-72 bg-white z-50 transform transition-transform duration-300 lg:hidden shadow-2xl ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <div className="flex flex-col h-full">
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-neutral-200/50">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-soft">
-                    <Shield className="text-white" size={20} />
+                  <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-600/20">
+                    <Shield size={20} />
                   </div>
                   <div>
-                    <h1 className="font-bold text-lg text-primary-900">MCD HRMS</h1>
-                    <p className="text-xs text-neutral-700">Admin Portal</p>
+                    <h1 className="font-bold text-lg text-slate-900">MCD HRMS</h1>
+                    <p className="text-xs text-slate-500">Admin Portal</p>
                   </div>
                 </div>
-                <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 hover:bg-neutral-100 rounded-xl transition-colors">
+                <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500">
                   <X size={20} />
                 </button>
               </div>
-              {/* Navigation */}
-              <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+              <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                 {adminMenuItems.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => handleMenuClick(item.id)}
-                    className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left transition-all duration-200 group ${currentView === item.id ? `${item.bgColor} ${item.color} shadow-inner-soft border border-opacity-50` : 'text-neutral-700 hover:bg-neutral-50 hover:text-black'}`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${currentView === item.id ? 'bg-primary-50 text-primary-700' : 'text-slate-600 hover:bg-slate-50'}`}
                   >
-                    <item.icon size={20} className={currentView === item.id ? item.color : `${item.color} group-hover:scale-110 transition-transform`} />
+                    <item.icon size={20} className={currentView === item.id ? 'text-primary-600' : 'text-slate-400'} />
+                    {item.label}
                   </button>
                 ))}
               </nav>
-              {/* Footer */}
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-neutral-50 to-primary-50/30 rounded-xl border border-neutral-200/50">
-                <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">A</div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm text-black">{language === 'hi' ? 'एडमिन उपयोगकर्ता' : 'Admin User'}</p>
-                  <p className="text-xs text-neutral-700">{language === 'hi' ? 'सिस्टम प्रशासक' : 'System Administrator'}</p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={toggleLanguage} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors text-sm font-medium shadow-soft">
-                  <Languages size={16} />
-                  {language === 'hi' ? 'EN' : 'हिंदी'}
-                </button>
-                <button onClick={() => switchRole(currentRole === 'admin' ? 'employee' : 'admin')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-secondary-50 text-secondary-700 border border-secondary-200 rounded-lg hover:bg-secondary-100 transition-colors text-sm font-medium shadow-soft">
-                  <User size={16} />
-                  {language === 'hi' ? 'कर्मचारी' : 'Employee'}
-                </button>
-              </div>
             </div>
-          </div>
-          {/* Main Content */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Top Bar */}
-            <header className="bg-white/80 backdrop-blur-xl border-b border-neutral-200/50 shadow-soft">
-              <div className="flex items-center justify-between px-6 py-4">
-                <div className="flex items-center gap-4">
-                  <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 hover:bg-neutral-100 rounded-xl transition-colors">
-                    <Menu size={20} />
-                  </button>
-                  <div>
-                    <h2 className="font-bold text-xl text-black responsive-text-lg">{adminMenuItems.find(item => item.id === currentView)?.label || 'Dashboard'}</h2>
-                    <p className="text-sm text-neutral-700">Municipal Corporation of Delhi</p>
-                  </div>
+          </aside>
+
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col min-w-0 lg:pl-[20rem] transition-all duration-300">
+            {/* Glass Header */}
+            <header className="glass-header h-16 px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 transition-all duration-300">
+              <div className="flex items-center gap-4">
+                <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 hover:bg-slate-100 rounded-lg text-slate-600">
+                  <Menu size={20} />
+                </button>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                    {adminMenuItems.find(item => item.id === currentView)?.label || 'Dashboard'}
+                  </h2>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="hidden md:flex relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
-                    <input type="text" placeholder="Search..." className="pl-10 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none w-64 transition-all" />
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="hidden md:flex relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search size={16} className="text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                   </div>
-                  <button className="relative p-2 hover:bg-neutral-100 rounded-xl transition-colors">
-                    <Bell size={20} className="text-neutral-600" />
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-error-500 rounded-full border-2 border-white animate-pulse"></div>
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="block w-64 pl-10 pr-4 py-2 bg-slate-100/50 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:bg-white transition-all placeholder:text-slate-400 text-slate-700"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 border-l border-slate-200 pl-4 ml-2">
+                  <button className="relative p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500 hover:text-slate-700">
+                    <Bell size={20} />
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error-500 rounded-full ring-2 ring-white"></span>
                   </button>
-                  <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-soft">A</div>
+                  <button className="p-1 rounded-full border-2 border-white shadow-sm ring-1 ring-slate-200">
+                    <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      OP
+                    </div>
+                  </button>
                 </div>
               </div>
             </header>
-            {/* Content */}
-            <main className="flex-1 overflow-auto p-6">
-              <div className="animate-in fade-in">{children}</div>
+
+            {/* Scrollable Content */}
+            <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 lg:p-8 scroll-smooth">
+              <div className="max-w-7xl mx-auto animate-enter">
+                {children}
+              </div>
+              <div className="h-6" /> {/* Bottom spacer */}
             </main>
           </div>
-          {/* Sidebar Overlay */}
-          {sidebarOpen && (
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
-          )}
         </div>
       ) : (
-        <div className="min-h-screen pb-20">
-          {/* Top Bar */}
-          <header className="bg-white/90 backdrop-blur-xl border-b border-neutral-200/50 shadow-soft sticky top-0 z-40">
-            <div className="flex items-center justify-between px-4 py-4">
+        <div className="min-h-screen pb-24 lg:pb-0 bg-slate-50">
+          {/* Employee Header */}
+          <header className="glass-header px-4 py-3 sticky top-0 z-40 bg-white/90">
+            <div className="max-w-md mx-auto flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center shadow-soft">
-                  <Shield className="text-white" size={16} />
+                <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-600/20">
+                  <Shield size={18} />
                 </div>
                 <div>
-                  <h1 className="font-bold text-lg text-primary-800 responsive-text-base">MCD HRMS</h1>
-                  <p className="text-xs text-neutral-700">{language === 'hi' ? 'कर्मचारी पोर्टल' : 'Employee Portal'}</p>
+                  <h1 className="font-bold text-lg text-slate-900 leading-none">MCD HRMS</h1>
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-primary-600">Employee Portal</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button className="relative p-2 hover:bg-neutral-100 rounded-xl transition-colors">
-                  <Bell size={18} className="text-neutral-600" />
-                  <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-error-500 rounded-full border border-white animate-pulse"></div>
+                <button className="relative p-2 bg-slate-50 rounded-full text-slate-600">
+                  <Bell size={20} />
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-error-500 rounded-full border-2 border-white"></span>
                 </button>
-                <button onClick={toggleLanguage} className="flex items-center gap-1 px-3 py-1.5 bg-neutral-100 rounded-lg text-sm font-medium text-neutral-700 hover:bg-neutral-200 transition-colors shadow-soft">
-                  <Languages size={14} />
-                  {language === 'hi' ? 'EN' : 'हिंदी'}
-                </button>
+                <div className="w-9 h-9 bg-slate-200 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                  <div className="w-full h-full flex items-center justify-center bg-slate-800 text-white text-xs font-bold">EM</div>
+                </div>
               </div>
             </div>
           </header>
+
           {/* Content */}
-          <main className="p-4">
-            <div className="animate-in fade-in">{children}</div>
+          <main className="max-w-md mx-auto p-4 animate-enter">
+            {children}
           </main>
+
           {/* Bottom Navigation */}
-          <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-neutral-200/50 shadow-soft-lg z-50">
-            <div className="flex items-center justify-around py-2 pb-safe">
+          <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200 z-50 pb-safe">
+            <div className="max-w-md mx-auto grid grid-cols-4 gap-1 p-2">
               {employeeMenuItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleMenuClick(item.id)}
-                  className={`flex flex-col items-center gap-1 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === item.id ? 'text-primary-600 bg-primary-50 shadow-inner-soft' : 'text-neutral-700 hover:text-black hover:bg-neutral-50'}`}
+                  className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 
+                    ${currentView === item.id ? 'text-primary-600 bg-primary-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
                 >
-                  <item.icon size={20} />
-                  <span className="text-xs font-medium">{item.label}</span>
-                  {currentView === item.id && (
-                    <div className="w-1 h-1 bg-primary-500 rounded-full animate-pulse"></div>
-                  )}
+                  <item.icon size={22} strokeWidth={currentView === item.id ? 2.5 : 2} />
+                  <span className="text-[10px] font-medium">{item.label}</span>
                 </button>
               ))}
-              <button onClick={() => switchRole('admin')} className="flex flex-col items-center gap-1 px-4 py-3 rounded-xl text-secondary-600 hover:text-secondary-700 hover:bg-secondary-50 transition-all duration-200">
-                <Shield size={20} />
-                <span className="text-xs font-medium">{language === 'hi' ? 'एडमिन' : 'Admin'}</span>
+              <button
+                onClick={() => switchRole('admin')}
+                className="flex flex-col items-center gap-1 p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all duration-200"
+              >
+                <Shield size={22} />
+                <span className="text-[10px] font-medium">{language === 'hi' ? 'एडमिन' : 'Admin'}</span>
               </button>
             </div>
           </nav>

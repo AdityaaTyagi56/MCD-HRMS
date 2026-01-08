@@ -173,16 +173,17 @@ const PayrollView: React.FC = () => {
     const lastPayslip = myPayslips[0]; // Logic assumes index 0 is latest for this mock
 
     return (
-      <div className="space-y-8 max-w-6xl mx-auto animate-in fade-in duration-500">
+      <div className="space-y-8 max-w-6xl mx-auto animate-enter">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t('my_compensation')}</h1>
-            <p className="text-gray-600">{t('view_salary_details')}</p>
+            <h1 className="text-3xl font-bold text-slate-900">{t('my_compensation')}</h1>
+            <p className="text-slate-500 font-medium mt-1">{t('view_salary_details')}</p>
           </div>
           <div className="flex gap-3 flex-wrap">
-            <button className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm flex items-center gap-2">
-              <Building2 size={16} /> {t('tax_documents')}
+            <button className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2 hover:shadow-md hover:-translate-y-0.5">
+              <Building2 size={18} className="text-slate-400 group-hover:text-primary-600 transition-colors" />
+              {t('tax_documents')}
             </button>
           </div>
         </div>
@@ -191,84 +192,99 @@ const PayrollView: React.FC = () => {
         {lastPayslip && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Card */}
-            <div className="lg:col-span-2 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-xl p-8 text-white relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-white/10 transition-all duration-700"></div>
+            <div className="lg:col-span-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl shadow-2xl p-8 text-white relative overflow-hidden group border border-slate-700/50">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-blue-500/20 transition-all duration-700"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full -ml-16 -mb-16 blur-3xl group-hover:bg-indigo-500/20 transition-all duration-700"></div>
 
               <div className="relative z-10">
-                <div className="flex justify-between items-start mb-8">
+                <div className="flex justify-between items-start mb-10">
                   <div>
-                    <p className="text-slate-400 text-sm font-medium mb-1 uppercase tracking-wider">{t('net_pay')} - {lastPayslip.month}</p>
-                    <h2 className="text-4xl sm:text-5xl font-bold tracking-tight text-white break-words" style={{ color: '#ffffff' }}>₹{lastPayslip.netSalary.toLocaleString()}</h2>
+                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 bg-slate-800/50 inline-block px-3 py-1 rounded-lg border border-slate-700/50">{t('net_pay')} - {lastPayslip.month}</p>
+                    <h2 className="text-5xl sm:text-6xl font-bold tracking-tight text-white mt-1">₹{lastPayslip.netSalary.toLocaleString()}</h2>
                   </div>
-                  <div className="bg-white/10 p-3 rounded-xl backdrop-blur-md border border-white/10">
-                    <DollarSign size={32} className="text-emerald-400" />
+                  <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner">
+                    <DollarSign size={36} className="text-emerald-400" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 mb-10">
                   <div>
-                    <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">{t('earnings')}</p>
-                    <p className="text-xl font-semibold" style={{ color: '#ffffff' }}>₹{lastPayslip.basicSalary.toLocaleString()}</p>
+                    <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+                      <TrendingUp size={14} className="text-emerald-400" />
+                      {t('earnings')}
+                    </p>
+                    <p className="text-2xl font-bold text-white tracking-tight">₹{lastPayslip.basicSalary.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">{t('deductions')}</p>
-                    <p className="text-xl font-semibold" style={{ color: '#fca5a5' }}>-₹{lastPayslip.deductions.toLocaleString()}</p>
+                    <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+                      <AlertCircle size={14} className="text-rose-400" />
+                      {t('deductions')}
+                    </p>
+                    <p className="text-2xl font-bold text-rose-300 tracking-tight">-₹{lastPayslip.deductions.toLocaleString()}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-6 border-t border-white/10">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${lastPayslip.status === 'Paid' ? 'bg-emerald-400' : 'bg-amber-400'} animate-pulse`}></div>
-                    <span className="text-sm font-medium text-slate-300">{t('status')}: {lastPayslip.status}</span>
+                  <div className="flex items-center gap-3 bg-slate-800/50 px-4 py-2 rounded-full border border-white/5">
+                    <div className={`w-2.5 h-2.5 rounded-full ${lastPayslip.status === 'Paid' ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]' : 'bg-amber-400'} animate-pulse`}></div>
+                    <span className="text-sm font-bold text-slate-200 tracking-wide">{lastPayslip.status.toUpperCase()}</span>
                   </div>
                   <button
                     onClick={() => generatePayslipPDF(lastPayslip)}
-                    className="flex items-center gap-2 bg-white text-slate-900 px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-50 transition-all hover:scale-105 active:scale-95 shadow-lg"
+                    className="flex items-center gap-2 bg-white text-slate-950 px-6 py-3 rounded-xl text-sm font-bold hover:bg-blue-50 transition-all hover:scale-105 active:scale-95 shadow-lg active:shadow-sm"
                   >
-                    <Download size={16} /> {t('download_slip')}
+                    <Download size={18} /> {t('download_slip')}
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Stats Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col justify-between">
+            <div className="glass-card bg-white p-6 rounded-3xl border border-slate-200/60 shadow-xl flex flex-col justify-between">
               <div>
-                <h3 className="text-lg font-bold text-gray-800 mb-4">{t('salary_structure')}</h3>
-                <div className="space-y-4">
+                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
+                  {t('salary_structure')}
+                </h3>
+                <div className="space-y-6">
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-700">{t('basic_pay')}</span>
-                      <span className="font-medium">70%</span>
+                    <div className="flex justify-between text-sm mb-2 font-medium">
+                      <span className="text-slate-600">{t('basic_pay')}</span>
+                      <span className="text-slate-900 font-bold">70%</span>
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-mcd-blue w-[70%] rounded-full"></div>
+                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-600 w-[70%] rounded-full shadow-[0_2px_10px_rgba(37,99,235,0.3)]"></div>
                     </div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-700">{t('hra_allowances')}</span>
-                      <span className="font-medium">20%</span>
+                    <div className="flex justify-between text-sm mb-2 font-medium">
+                      <span className="text-slate-600">{t('hra_allowances')}</span>
+                      <span className="text-slate-900 font-bold">20%</span>
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-purple-500 w-[20%] rounded-full"></div>
+                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-violet-500 w-[20%] rounded-full shadow-[0_2px_10px_rgba(139,92,246,0.3)]"></div>
                     </div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-700">{t('pf_tax')}</span>
-                      <span className="font-medium">10%</span>
+                    <div className="flex justify-between text-sm mb-2 font-medium">
+                      <span className="text-slate-600">{t('pf_tax')}</span>
+                      <span className="text-slate-900 font-bold">10%</span>
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-red-400 w-[10%] rounded-full"></div>
+                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-rose-500 w-[10%] rounded-full shadow-[0_2px_10px_rgba(244,63,94,0.3)]"></div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="flex items-center gap-3 text-sm text-gray-700">
-                  <Calendar size={16} className="text-mcd-blue" />
-                  <span>{t('next_payday')}: <span className="font-semibold text-gray-900">{new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></span>
+              <div className="mt-8 pt-6 border-t border-slate-100">
+                <div className="flex items-center gap-3 text-sm bg-blue-50/50 p-4 rounded-xl border border-blue-100/50">
+                  <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                    <Calendar size={18} />
+                  </div>
+                  <div>
+                    <p className="text-slate-500 text-xs font-bold uppercase">{t('next_payday')}</p>
+                    <p className="font-bold text-slate-900 text-base">{new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -276,55 +292,61 @@ const PayrollView: React.FC = () => {
         )}
 
         {/* History Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-lg font-bold text-gray-800">{t('payment_history')}</h3>
-            <button className="text-sm text-mcd-blue font-medium hover:underline flex items-center gap-1">
-              {t('view_all')} <ArrowRight size={14} />
+        <div className="glass-card bg-white rounded-3xl border border-slate-200/60 shadow-xl overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <FileText className="text-slate-400" size={20} />
+              {t('payment_history')}
+            </h3>
+            <button className="text-sm text-primary-600 font-bold hover:text-primary-700 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-lg hover:bg-primary-50">
+              {t('view_all')} <ArrowRight size={16} />
             </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-gray-50/50 text-xs uppercase tracking-wider text-gray-600 font-semibold">
+              <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-bold">
                 <tr>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[140px]">{t('month_year')}</th>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">{t('earnings')}</th>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">{t('deductions')}</th>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">{t('net_pay')}</th>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[120px]">{t('status')}</th>
-                  <th className="px-6 py-4 whitespace-nowrap min-w-[90px]">{t('action')}</th>
+                  <th className="px-6 py-4 whitespace-nowrap">{t('month_year')}</th>
+                  <th className="px-6 py-4 whitespace-nowrap">{t('earnings')}</th>
+                  <th className="px-6 py-4 whitespace-nowrap">{t('deductions')}</th>
+                  <th className="px-6 py-4 whitespace-nowrap">{t('net_pay')}</th>
+                  <th className="px-6 py-4 whitespace-nowrap">{t('status')}</th>
+                  <th className="px-6 py-4 whitespace-nowrap text-right">{t('action')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-slate-100">
                 {myPayslips.map(slip => (
-                  <tr key={slip.id} className="hover:bg-gray-50 transition-colors group">
+                  <tr key={slip.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-mcd-blue">
-                          <FileText size={16} />
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-bold shadow-sm border border-blue-100">
+                          {slip.month.substring(0, 3)}
                         </div>
-                        <span className="font-medium text-gray-900">{slip.month} {slip.year}</span>
+                        <div>
+                          <p className="font-bold text-slate-900">{slip.year}</p>
+                          <p className="text-xs text-slate-500 font-medium">Monthly Salary</p>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-700">₹{slip.basicSalary.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-red-600">-₹{slip.deductions.toLocaleString()}</td>
-                    <td className="px-6 py-4 font-bold text-gray-900">₹{slip.netSalary.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-emerald-600 font-medium">+₹{slip.basicSalary.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-rose-600 font-medium">-₹{slip.deductions.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-bold text-slate-900 text-lg">₹{slip.netSalary.toLocaleString()}</td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${slip.status === 'Paid'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                          : 'bg-amber-50 text-amber-700 border-amber-100'
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${slip.status === 'Paid'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100 shadow-sm'
+                        : 'bg-amber-50 text-amber-700 border-amber-100 shadow-sm'
                         }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${slip.status === 'Paid' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
                         {slip.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => generatePayslipPDF(slip)}
-                        className="text-gray-400 hover:text-mcd-blue transition-colors"
+                        className="text-slate-400 hover:text-primary-600 hover:bg-primary-50 p-2 rounded-lg transition-all"
                         title="Download PDF"
                       >
-                        <Download size={18} />
+                        <Download size={20} />
                       </button>
                     </td>
                   </tr>
@@ -342,66 +364,80 @@ const PayrollView: React.FC = () => {
   const pendingCount = payslips.filter(p => p.status === 'Pending').length;
 
   return (
-    <div className="space-y-6 flex flex-col h-[calc(100vh-140px)] animate-in fade-in duration-500">
+    <div className="space-y-6 flex flex-col h-[calc(100vh-140px)] animate-enter">
       {/* Admin Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 flex-shrink-0">
         {/* Integrity Shield Card */}
-        <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
-          <p className="text-indigo-100 text-sm font-medium relative z-10">{t('security_core')}</p>
-          <h2 className="text-2xl font-bold mt-1 relative z-10">{t('integrity_shield')}</h2>
+        <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 p-6 rounded-3xl shadow-xl text-white relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-white/20 transition-all"></div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldCheck size={20} className="text-indigo-200" />
+              <p className="text-indigo-100 text-xs font-bold uppercase tracking-wider">{t('security_core')}</p>
+            </div>
+            <h2 className="text-2xl font-bold mb-6 tracking-tight">{t('integrity_shield')}</h2>
 
-          <button
-            onClick={handleIntegrityScan}
-            disabled={isScanning}
-            className="mt-4 w-full py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all border border-white/10"
-          >
-            {isScanning ? (
-              <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-            ) : (
-              <ShieldCheck size={16} />
-            )}
-            {isScanning ? t('scanning') : t('run_integrity_scan')}
-          </button>
+            <button
+              onClick={handleIntegrityScan}
+              disabled={isScanning}
+              className="w-full py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all border border-white/10 shadow-lg active:scale-95"
+            >
+              {isScanning ? (
+                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+              ) : (
+                <ShieldCheck size={18} />
+              )}
+              {isScanning ? t('scanning') : t('run_integrity_scan')}
+            </button>
+          </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full -mr-10 -mt-10 blur-2xl"></div>
-          <p className="text-gray-600 text-sm font-medium relative z-10">{t('total_disbursed')} (Oct)</p>
-          <h2 className="text-3xl font-bold text-gray-900 mt-2 relative z-10">₹{totalProcessed.toLocaleString()}</h2>
-          <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1 relative z-10 font-medium">
-            <TrendingUp size={14} /> +12% {t('from_last_month')}
-          </p>
+        <div className="glass-card bg-white p-6 rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+          <div className="relative z-10">
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{t('total_disbursed')} (Oct)</p>
+            <h2 className="text-4xl font-bold text-slate-800 tracking-tight">₹{totalProcessed.toLocaleString()}</h2>
+            <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1 font-bold bg-emerald-50 inline-block px-2 py-1 rounded-lg">
+              <TrendingUp size={14} /> +12% {t('from_last_month')}
+            </p>
+          </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-10 -mt-10 blur-2xl"></div>
-          <p className="text-gray-600 text-sm font-medium relative z-10">{t('pending_processing')}</p>
-          <h2 className="text-3xl font-bold text-gray-900 mt-2 relative z-10">{pendingCount}</h2>
-          <p className="text-xs text-orange-600 mt-2 flex items-center gap-1 relative z-10 font-medium">
-            <Clock size={14} /> {t('action_required')}
-          </p>
+        <div className="glass-card bg-white p-6 rounded-3xl border border-slate-200/60 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+          <div className="relative z-10">
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">{t('pending_processing')}</p>
+            <h2 className="text-4xl font-bold text-slate-800 tracking-tight">{pendingCount}</h2>
+            <p className="text-xs text-amber-600 mt-2 flex items-center gap-1 font-bold bg-amber-50 inline-block px-2 py-1 rounded-lg">
+              <Clock size={14} /> {t('action_required')}
+            </p>
+          </div>
         </div>
 
-        <div className="bg-gradient-to-br from-mcd-blue to-blue-700 p-6 rounded-2xl shadow-lg text-white flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-10 -mt-10 blur-3xl"></div>
-          <div>
-            <p className="text-blue-100 text-sm font-medium mb-1">{t('quick_action')}</p>
-            <h3 className="text-lg font-bold">{t('payroll_run')}: {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</h3>
+        <div className="bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-3xl shadow-xl text-white flex flex-col justify-between relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-10 -mt-10 blur-3xl group-hover:bg-white/20 transition-all"></div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1 bg-blue-500/30 rounded">
+                <DollarSign size={14} className="text-blue-100" />
+              </div>
+              <p className="text-blue-100 text-xs font-bold uppercase tracking-wider">{t('quick_action')}</p>
+            </div>
+            <h3 className="text-lg font-bold mb-4">{t('payroll_run')}: {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</h3>
           </div>
           <button
             onClick={handleReleaseSalaries}
             disabled={pendingCount === 0 || isReleasing}
             aria-label={pendingCount === 0 ? 'All salaries processed' : 'Release all pending salaries'}
-            className={`mt-4 w-full py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${pendingCount === 0
-                ? 'bg-white/20 text-white/50 cursor-not-allowed'
-                : 'bg-white text-mcd-blue hover:bg-blue-50 shadow-md'
+            className={`relative z-10 mt-auto w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 ${pendingCount === 0
+              ? 'bg-white/10 text-white/50 cursor-not-allowed border border-white/5'
+              : 'bg-white text-blue-700 hover:bg-blue-50 border border-transparent'
               }`}
           >
             {isReleasing ? (
               <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></span>
             ) : (
-              <DollarSign size={16} />
+              <DollarSign size={18} />
             )}
             {pendingCount === 0 ? t('all_processed') : isReleasing ? t('processing_ellipsis') : t('release_all_salaries')}
           </button>
@@ -410,15 +446,21 @@ const PayrollView: React.FC = () => {
 
       {/* Integrity Scan Results */}
       {scanResult && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-in slide-in-from-top-4 duration-500">
-          <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className={scanResult.anomalies_detected > 0 ? "text-amber-500" : "text-emerald-500"} size={20} />
-              <h3 className="font-bold text-gray-800">{t('integrity_scan_report')}</h3>
+        <div className="glass-card bg-white rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden animate-slide-up">
+          <div className={`p-5 border-b flex justify-between items-center ${scanResult.anomalies_detected > 0 ? 'bg-amber-50/50 border-amber-100' : 'bg-emerald-50/50 border-emerald-100'
+            }`}>
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-xl ${scanResult.anomalies_detected > 0 ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                <ShieldCheck size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg">{t('integrity_scan_report')}</h3>
+                <p className="text-xs font-medium opacity-70">AI-Powered Verification</p>
+              </div>
             </div>
-            <span className={`px-3 py-1 rounded-full text-xs font-bold ${scanResult.anomalies_detected > 0
-                ? "bg-amber-100 text-amber-700"
-                : "bg-emerald-100 text-emerald-700"
+            <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm border ${scanResult.anomalies_detected > 0
+              ? "bg-amber-100 text-amber-700 border-amber-200"
+              : "bg-emerald-100 text-emerald-700 border-emerald-200"
               }`}>
               {scanResult.anomalies_detected > 0 ? t('action_required') : t('secure')}
             </span>
@@ -426,40 +468,42 @@ const PayrollView: React.FC = () => {
 
           <div className="p-6">
             {scanResult.anomalies_detected === 0 ? (
-              <div className="flex flex-col items-center justify-center py-6 text-center">
-                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
-                  <CheckCircle className="text-emerald-600" size={24} />
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 shadow-sm border border-emerald-100">
+                  <CheckCircle className="text-emerald-500" size={32} />
                 </div>
-                <h4 className="text-lg font-bold text-gray-900">{t('no_anomalies_detected')}</h4>
-                <p className="text-gray-600 text-sm mt-1">{t('all_records_passed')}</p>
+                <h4 className="text-xl font-bold text-slate-800">{t('no_anomalies_detected')}</h4>
+                <p className="text-slate-500 text-sm mt-2 max-w-md">{t('all_records_passed')}</p>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100">
-                  <AlertTriangle className="text-amber-600 mt-0.5 flex-shrink-0" size={20} />
+                <div className="flex items-start gap-4 p-5 bg-amber-50 rounded-2xl border border-amber-100 shadow-sm">
+                  <div className="p-2 bg-amber-100 rounded-lg shrink-0">
+                    <AlertTriangle className="text-amber-600" size={24} />
+                  </div>
                   <div>
-                    <h4 className="font-bold text-amber-900">{t('anomalies_detected')}</h4>
-                    <p className="text-sm text-amber-700 mt-1">
+                    <h4 className="font-bold text-amber-900 text-lg">{t('anomalies_detected')}</h4>
+                    <p className="text-sm text-amber-800 mt-1 font-medium">
                       {t('integrity_engine_flagged').replace('{count}', scanResult.anomalies_detected)}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid gap-3">
+                <div className="grid gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                   {scanResult.details && scanResult.details.map((anomaly: any, idx: number) => (
-                    <div key={idx} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:border-amber-300 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold">
+                    <div key={idx} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:border-amber-300 transition-all hover:shadow-md group">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold border border-amber-200">
                           !
                         </div>
                         <div>
-                          <div className="font-bold text-gray-900">Employee ID: {anomaly.employee_id}</div>
-                          <div className="text-xs text-gray-500">Anomaly Score: {anomaly.anomaly_score ? anomaly.anomaly_score.toFixed(4) : 'N/A'}</div>
+                          <div className="font-bold text-slate-900">Employee ID: {anomaly.employee_id}</div>
+                          <div className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded mt-1 inline-block">Anomaly Score: {anomaly.anomaly_score ? anomaly.anomaly_score.toFixed(4) : 'N/A'}</div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium text-amber-600">{t('flagged_for_review')}</div>
-                        <div className="text-xs text-gray-400">{t('ghost_employee_check')}</div>
+                        <div className="text-sm font-bold text-amber-600">{t('flagged_for_review')}</div>
+                        <div className="text-xs text-slate-400 group-hover:text-slate-600 transition-colors">{t('ghost_employee_check')}</div>
                       </div>
                     </div>
                   ))}
@@ -471,67 +515,67 @@ const PayrollView: React.FC = () => {
       )}
 
       {/* Employee List Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center flex-shrink-0 bg-gray-50/50">
+      <div className="glass-card bg-white rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden flex flex-col flex-1">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center flex-shrink-0 bg-slate-50/50">
           <div>
-            <h3 className="text-lg font-bold text-gray-800">{t('employee_payroll_status')}</h3>
-            <p className="text-sm text-gray-600">{t('manage_track_salaries')}</p>
+            <h3 className="text-lg font-bold text-slate-800">{t('employee_payroll_status')}</h3>
+            <p className="text-sm text-slate-500 mt-1">{t('manage_track_salaries')}</p>
           </div>
           <div className="flex gap-2">
-            <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+            <button className="p-2.5 text-slate-400 hover:text-primary-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200 shadow-sm">
               <Download size={20} />
             </button>
           </div>
         </div>
 
-        <div className="overflow-y-auto flex-1">
+        <div className="overflow-y-auto flex-1 custom-scrollbar">
           <table className="w-full text-left">
-            <thead className="bg-gray-50/50 text-xs uppercase tracking-wider text-gray-600 font-semibold sticky top-0 z-10 backdrop-blur-sm">
-              <tr className="border-b border-gray-200">
-                <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[220px]">{t('employee')}</th>
-                <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[160px]">{t('role')}</th>
-                <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[140px]">{t('days_present')}</th>
-                <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[140px]">{t('net_pay')}</th>
-                <th className="px-6 py-4 bg-gray-50/50 whitespace-nowrap min-w-[140px]">{t('status')}</th>
+            <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 font-bold sticky top-0 z-10 backdrop-blur-sm border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-4 min-w-[220px]">{t('employee')}</th>
+                <th className="px-6 py-4 min-w-[160px]">{t('role')}</th>
+                <th className="px-6 py-4 min-w-[140px]">{t('days_present')}</th>
+                <th className="px-6 py-4 min-w-[140px]">{t('net_pay')}</th>
+                <th className="px-6 py-4 min-w-[140px]">{t('status')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-100">
               {payslips.map(slip => (
-                <tr key={slip.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={slip.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="px-6 py-4 align-middle">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-mcd-blue flex items-center justify-center text-xs font-bold">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow-md">
                         {slip.userName.charAt(0)}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">{slip.userName}</div>
-                        <div className="text-xs text-gray-600">ID: MCD-{slip.userId.toString().padStart(4, '0')}</div>
+                        <div className="font-bold text-slate-900">{slip.userName}</div>
+                        <div className="text-xs text-slate-500 font-medium">ID: MCD-{slip.userId.toString().padStart(4, '0')}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 align-middle">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 capitalize">
                       {slip.role}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm align-middle">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 h-2.5 bg-slate-100 rounded-full overflow-hidden shadow-inner">
                         <div
                           className="h-full bg-blue-500 rounded-full"
                           style={{ width: `${(slip.daysPresent / 30) * 100}%` }}
                         ></div>
                       </div>
-                      <span className="text-gray-700 font-medium">{slip.daysPresent}</span>
+                      <span className="text-slate-700 font-bold">{slip.daysPresent}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-800 align-middle">₹{slip.netSalary.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-800 align-middle">₹{slip.netSalary.toLocaleString()}</td>
                   <td className="px-6 py-4 align-middle">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${slip.status === 'Paid'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                        : 'bg-amber-50 text-amber-700 border-amber-100'
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${slip.status === 'Paid'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-100 shadow-sm'
+                      : 'bg-amber-50 text-amber-700 border-amber-100 shadow-sm'
                       }`}>
-                      {slip.status === 'Paid' ? <CheckCircle size={12} /> : <Clock size={12} />}
+                      {slip.status === 'Paid' ? <CheckCircle size={14} /> : <Clock size={14} />}
                       {slip.status}
                     </span>
                   </td>

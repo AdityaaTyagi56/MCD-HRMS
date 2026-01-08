@@ -67,30 +67,26 @@ import { fetchDelhiWeather, pickHighestRiskWard, WeatherSnapshot } from '../serv
 import { Ward } from '../types';
 import { ENTERPRISE_COLORS as IMPORTED_ENTERPRISE_COLORS } from '../constants';
 
-// Fallback in case import fails or is undefined
-const ENTERPRISE_COLORS = typeof IMPORTED_ENTERPRISE_COLORS !== 'undefined' && IMPORTED_ENTERPRISE_COLORS !== null ? IMPORTED_ENTERPRISE_COLORS : {
+// Premium Enterprise Color Palette matching tailwind.config.js
+const ENTERPRISE_COLORS = {
   white: '#ffffff',
-  gray50: '#f8fafc',
-  gray100: '#f1f5f9',
-  gray200: '#e2e8f0',
-  gray300: '#94a3b8', // Darkened from cbd5e1
-  gray700: '#1e293b', // Darkened from 334155 (slate-800)
-  gray900: '#020617', // Darkened from 0f172a (slate-950)
-  primary: '#1e3a8a', // Darkened blue
-  primaryDark: '#172554',
-  primaryLight: '#3b82f6', // Brighter for better visibility against dark
-  accent: '#0052cc',
-  border: '#cbd5e1', // Darker border
-  error: '#dc2626',
-  warning: '#d97706', // Darker yellow/orange
-  success: '#15803d', // Darker green
-  info: '#1d4ed8', // Darker blue
-  cardBg: '#ffffff',
-  cardBorder: '#cbd5e1',
-  sidebarBg: '#f8fafc',
-  sidebarBorder: '#cbd5e1',
-  sidebarActive: '#1e3a8a',
-  sidebarActiveText: '#ffffff',
+  slate50: '#f8fafc',
+  slate100: '#f1f5f9',
+  slate200: '#e2e8f0',
+  slate300: '#cbd5e1',
+  slate400: '#94a3b8',
+  slate500: '#64748b',
+  slate600: '#475569',
+  slate700: '#334155',
+  slate800: '#1e293b',
+  slate900: '#0f172a',
+  primary: '#2563eb', // Blue 600
+  primaryDark: '#1d4ed8', // Blue 700
+  primaryLight: '#eff6ff', // Blue 50
+  success: '#10b981', // Emerald 500
+  warning: '#f59e0b', // Amber 500
+  error: '#ef4444', // Red 500
+  border: '#e2e8f0',
 };
 
 const AdminDashboard: React.FC = () => {
@@ -270,10 +266,10 @@ const AdminDashboard: React.FC = () => {
   }, [selectedTimeRange, employees]);
 
   const departmentData = [
-    { name: 'Sanitation', value: employees.filter(e => e.department === 'Sanitation').length, color: '#0ea5e9', performance: 85 },
-    { name: 'Administration', value: employees.filter(e => e.department === 'Administration').length, color: '#d97706', performance: 92 },
-    { name: 'Engineering', value: employees.filter(e => e.department === 'Engineering').length, color: '#22c55e', performance: 78 },
-    { name: 'Health', value: employees.filter(e => e.department === 'Health').length, color: '#8b5cf6', performance: 88 },
+    { name: 'Sanitation', value: employees.filter(e => e.department === 'Sanitation').length, color: '#3b82f6', performance: 85 }, // Blue
+    { name: 'Administration', value: employees.filter(e => e.department === 'Administration').length, color: '#f59e0b', performance: 92 }, // Amber
+    { name: 'Engineering', value: employees.filter(e => e.department === 'Engineering').length, color: '#10b981', performance: 78 }, // Emerald
+    { name: 'Health', value: employees.filter(e => e.department === 'Health').length, color: '#8b5cf6', performance: 88 }, // Violet
   ];
 
   // Fetch trend analysis and SLA breaches
@@ -604,29 +600,38 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Stats Cards Grid */}
+      {/* Stats Cards Grid - Premium Glass Design */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsCards.map((card, index) => (
-          <div key={card.title} className="group card-hover">
-            <div
-              className="rounded-2xl p-6 border flex flex-col justify-between min-h-[160px] relative overflow-hidden"
-              style={{ background: ENTERPRISE_COLORS.gray100, borderColor: ENTERPRISE_COLORS.border, boxShadow: 'none' }}
-            >
+          <div key={card.title} className="group">
+            <div className="glass-card relative overflow-hidden rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300">
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <card.icon size={80} className="transform rotate-12" />
+              </div>
+
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 rounded-xl border" style={{ background: ENTERPRISE_COLORS.white, borderColor: ENTERPRISE_COLORS.border }}>
-                    <card.icon style={{ color: ENTERPRISE_COLORS.primary }} size={24} />
+                  <div className={`p-3 rounded-2xl bg-gradient-to-br ${index === 0 ? 'from-blue-50 to-indigo-50 text-blue-600' :
+                    index === 1 ? 'from-emerald-50 to-teal-50 text-emerald-600' :
+                      index === 2 ? 'from-amber-50 to-orange-50 text-amber-600' :
+                        'from-purple-50 to-pink-50 text-purple-600'
+                    } shadow-sm group-hover:scale-110 transition-transform duration-300`}>
+                    <card.icon size={24} />
                   </div>
-                  <div
-                    className="flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded-full"
-                    style={{ background: ENTERPRISE_COLORS.primaryLight, color: ENTERPRISE_COLORS.primary }}
-                  >
-                    <ArrowUpRight size={14} />
+                  <div className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border ${card.trend === 'up'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                    : 'bg-rose-50 text-rose-700 border-rose-100'
+                    }`}>
+                    {card.trend === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                     <span>{card.change}</span>
                   </div>
                 </div>
+
                 <div>
-                  <h3 className="text-3xl font-bold mb-1" style={{ color: ENTERPRISE_COLORS.gray900 }}>{card.value}</h3>
-                  <p className="text-sm text-neutral-800">{card.title}</p>
+                  <h3 className="text-3xl font-bold text-slate-800 tracking-tight group-hover:text-primary-600 transition-colors">
+                    {card.value}
+                  </h3>
+                  <p className="text-sm font-medium text-slate-500 mt-1">{card.title}</p>
                 </div>
               </div>
             </div>
@@ -734,8 +739,8 @@ const AdminDashboard: React.FC = () => {
                   {trendAnalysis.sentiment_score || 0}%
                 </span>
                 <span className={`text-sm font-medium px-2 py-1 rounded-full ${(trendAnalysis.sentiment_score || 0) > 70 ? 'bg-green-100 text-green-700' :
-                    (trendAnalysis.sentiment_score || 0) > 40 ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
+                  (trendAnalysis.sentiment_score || 0) > 40 ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
                   }`}>
                   {(trendAnalysis.sentiment_score || 0) > 70 ? 'Good' :
                     (trendAnalysis.sentiment_score || 0) > 40 ? 'Fair' : 'Poor'}
@@ -803,100 +808,92 @@ const AdminDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* WhatsApp Messaging Card */}
         <div
-          className="rounded-2xl p-6 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
-          style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)' }}
+          className="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
           onClick={() => setShowWhatsAppPanel(true)}
         >
-          <div className="absolute top-0 right-0 w-40 h-40 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" style={{ background: 'rgba(255,255,255,0.15)' }}></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#25D366] to-[#128C7E] opacity-90 transition-opacity group-hover:opacity-100" />
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10" />
 
-          <div className="relative z-10 flex items-start justify-between">
+          <div className="relative z-10 flex items-start justify-between text-white">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                  <MessageCircle size={28} style={{ color: '#ffffff' }} />
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3.5 rounded-2xl bg-white/20 backdrop-blur-sm shadow-inner">
+                  <MessageCircle size={32} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold" style={{ color: '#ffffff' }}>WhatsApp Notifications</h3>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>Send bulk messages to employees</p>
+                  <h3 className="text-xl font-bold leading-tight">WhatsApp Hub</h3>
+                  <p className="text-sm text-white/80 font-medium">Broadcast & Communication</p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
-                  📅 Attendance Reminders
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
-                  💰 Salary Alerts
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
-                  🚨 Emergency Broadcast
-                </span>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <div className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-xs font-semibold">
+                  📅 Attendance
+                </div>
+                <div className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-xs font-semibold">
+                  💰 Payroll
+                </div>
+                <div className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-xs font-semibold">
+                  🚨 Alerts
+                </div>
               </div>
 
-              <button
-                className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all group-hover:scale-105"
-                style={{ background: 'rgba(255,255,255,0.95)', color: '#128C7E' }}
-              >
-                <Send size={16} />
-                Open WhatsApp Panel
+              <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-[#128C7E] text-sm font-bold shadow-lg shadow-black/10 transition-transform group-hover:scale-105 active:scale-95">
+                <Send size={16} strokeWidth={2.5} />
+                Open Panel
               </button>
             </div>
 
-            <div className="hidden md:flex flex-col items-end gap-2">
-              <div className="text-right">
-                <p className="text-3xl font-bold" style={{ color: '#ffffff' }}>{employees.length}</p>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>Employees</p>
-              </div>
+            <div className="hidden md:block text-right">
+              <div className="text-4xl font-bold tracking-tight">{employees.length}</div>
+              <div className="text-xs font-medium text-white/70 uppercase tracking-wider">Active Users</div>
             </div>
           </div>
         </div>
 
         {/* AI Assistant Card */}
         <div
-          className="rounded-2xl p-6 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
-          style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+          className="group relative overflow-hidden rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
           onClick={() => setShowAIPanel(true)}
         >
-          <div className="absolute top-0 right-0 w-40 h-40 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" style={{ background: 'rgba(255,255,255,0.15)' }}></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 opacity-90 transition-opacity group-hover:opacity-100" />
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10" />
 
-          <div className="relative z-10 flex items-start justify-between">
+          <div className="relative z-10 flex items-start justify-between text-white">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                  <Brain size={28} style={{ color: '#ffffff' }} />
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3.5 rounded-2xl bg-white/20 backdrop-blur-sm shadow-inner">
+                  <Brain size={32} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold" style={{ color: '#ffffff' }}>AI Assistant</h3>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>Intelligent workforce analytics</p>
+                  <h3 className="text-xl font-bold leading-tight">AI Analytics</h3>
+                  <p className="text-sm text-white/80 font-medium">Smart Workforce Insights</p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
-                  🔍 Fraud Detection
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
-                  📊 Performance Insights
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
-                  🤖 Smart Analysis
-                </span>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <div className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-xs font-semibold">
+                  🔍 Fraud Check
+                </div>
+                <div className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-xs font-semibold">
+                  📊 Reports
+                </div>
+                <div className="px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-xs font-semibold">
+                  🤖 Assistant
+                </div>
               </div>
 
-              <button
-                className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all group-hover:scale-105"
-                style={{ background: 'rgba(255,255,255,0.95)', color: '#764ba2' }}
-              >
-                <Sparkles size={16} />
-                Ask AI Assistant
+              <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-indigo-600 text-sm font-bold shadow-lg shadow-black/10 transition-transform group-hover:scale-105 active:scale-95">
+                <Sparkles size={16} strokeWidth={2.5} />
+                Ask Assistant
               </button>
             </div>
 
-            <div className="hidden md:flex flex-col items-end gap-2">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${mlServiceStatus === 'online' ? 'bg-green-400' : mlServiceStatus === 'offline' ? 'bg-red-400' : 'bg-yellow-400'} animate-pulse`}></div>
-                <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                  ML: {mlServiceStatus === 'online' ? 'Online' : mlServiceStatus === 'offline' ? 'Offline' : 'Checking...'}
+            <div className="hidden md:flex flex-col items-end gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/20 backdrop-blur-md border border-white/10">
+                <div className={`w-2 h-2 rounded-full ${mlServiceStatus === 'online' ? 'bg-emerald-400' : 'bg-rose-400'} animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]`} />
+                <span className="text-xs font-bold tracking-wide">
+                  {mlServiceStatus === 'online' ? 'ONLINE' : 'OFFLINE'}
                 </span>
               </div>
             </div>
@@ -907,17 +904,17 @@ const AdminDashboard: React.FC = () => {
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Attendance Trends */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-soft border border-neutral-200/50">
+        <div className="lg:col-span-2 glass-card rounded-2xl p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-black">Attendance Trends</h3>
-              <p className="text-sm text-neutral-800">Weekly performance overview</p>
+              <h3 className="text-lg font-bold text-slate-800">Attendance Analytics</h3>
+              <p className="text-sm text-slate-500">Weekly workforce presence vs target</p>
             </div>
             <div className="flex items-center gap-2">
               <select
                 value={selectedTimeRange}
                 onChange={(e) => setSelectedTimeRange(e.target.value)}
-                className="px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all cursor-pointer"
               >
                 <option value="7d">Last 7 days</option>
                 <option value="30d">Last 30 days</option>
@@ -929,94 +926,137 @@ const AdminDashboard: React.FC = () => {
           <div className="h-80">
             {hasAttendanceData ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={attendanceTrendData}>
+                <AreaChart data={attendanceTrendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="attendanceGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.45} />
-                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="day" stroke="#475569" fontSize={12} tickLine={false} axisLine={{ stroke: '#cbd5e1' }} />
-                  <YAxis stroke="#475569" fontSize={12} tickLine={false} axisLine={{ stroke: '#cbd5e1' }} />
-                  <Tooltip content={<AttendanceTooltip />} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis
+                    dataKey="day"
+                    stroke="#64748b"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: '#64748b' }}
+                    dy={10}
+                  />
+                  <YAxis
+                    stroke="#64748b"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: '#64748b' }}
+                    dx={-10}
+                  />
+                  <Tooltip
+                    content={<AttendanceTooltip />}
+                    cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  />
                   <Area
                     type="monotone"
                     dataKey="present"
-                    stroke="#0ea5e9"
+                    stroke="#3b82f6"
                     strokeWidth={3}
                     fill="url(#attendanceGradient)"
-                    activeDot={{ r: 5, fill: '#0ea5e9', stroke: '#fff', strokeWidth: 2 }}
+                    activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 3 }}
                   />
                   <Line
                     type="monotone"
                     dataKey="target"
                     stroke="#f59e0b"
-                    strokeWidth={2.5}
-                    strokeDasharray="6 6"
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
                     dot={false}
+                    opacity={0.7}
                   />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-neutral-800">
-                Attendance data will appear as employees mark in.
+              <div className="flex h-full items-center justify-center flex-col gap-3 text-slate-400">
+                <Database size={32} className="opacity-20" />
+                <p className="text-sm">No attendance data available for this period.</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Department Distribution */}
-        <div className="bg-white rounded-2xl p-6 shadow-soft border border-neutral-200/50">
+        <div className="glass-card rounded-2xl p-6 flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-black">Department Wise</h3>
-              <p className="text-sm text-neutral-800">Workforce distribution</p>
+              <h3 className="text-lg font-bold text-slate-800">Department Wise</h3>
+              <p className="text-sm text-slate-500">Distribution & performance</p>
             </div>
-            <MoreVertical size={20} className="text-neutral-400" />
+            <button className="p-2 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
+              <MoreVertical size={20} />
+            </button>
           </div>
 
-          <div className="h-64 mb-4">
+          <div className="flex-1 relative min-h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={departmentData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
+                  innerRadius={70}
                   outerRadius={100}
-                  paddingAngle={5}
+                  paddingAngle={4}
                   dataKey="value"
+                  stroke="none"
                 >
                   {departmentData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.color}
+                      className="hover:opacity-80 transition-opacity cursor-pointer"
+                    />
                   ))}
                 </Pie>
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'white',
-                    border: '1px solid #e2e8f0',
+                    border: 'none',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                    padding: '12px'
                   }}
+                  itemStyle={{ color: '#1e293b', fontSize: '13px', fontWeight: 600 }}
+                  wrapperStyle={{ outline: 'none' }}
                 />
               </PieChart>
             </ResponsiveContainer>
+            {/* Center Stats */}
+            <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
+              <span className="text-3xl font-bold text-slate-800">{employees.length}</span>
+              <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">Total</span>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            {departmentData.map((dept, index) => (
-              <div key={dept.name} className="flex items-center justify-between">
+          <div className="mt-6 space-y-3">
+            {departmentData.map((dept) => (
+              <div key={dept.name} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-slate-50 rounded-lg transition-colors">
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-3 h-3 rounded-full"
+                    className="w-3 h-3 rounded-full shadow-sm"
                     style={{ backgroundColor: dept.color }}
                   ></div>
-                  <span className="text-sm font-medium text-neutral-800">{dept.name}</span>
+                  <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">{dept.name}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm font-bold text-black">{dept.value}</span>
-                  <div className="text-xs text-neutral-800">{dept.performance}% avg</div>
+                  <div className="flex items-center justify-end gap-2">
+                    <span className="text-sm font-bold text-slate-900">{dept.value}</span>
+                    <span className="text-xs text-slate-400">({Math.round(dept.value / employees.length * 100)}%)</span>
+                  </div>
+                  <div className="w-24 h-1.5 bg-slate-100 rounded-full mt-1 overflow-hidden ml-auto">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${dept.performance}%`, backgroundColor: dept.color, opacity: 0.7 }}
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -1055,25 +1095,25 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Employee Table */}
-        <div className="lg:col-span-3 bg-white rounded-2xl p-6 shadow-soft border border-neutral-200/50">
+        <div className="lg:col-span-3 glass-card rounded-2xl p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-black">Live Employee Status</h3>
-              <p className="text-sm text-neutral-800">Real-time attendance tracking</p>
+              <h3 className="text-lg font-bold text-slate-800">Live Employee Status</h3>
+              <p className="text-sm text-slate-500">Real-time attendance tracking</p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" size={18} />
                 <input
                   type="text"
                   placeholder="Search employees..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none w-64"
+                  className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none w-64 transition-all"
                 />
               </div>
-              <button className="p-2 hover:bg-neutral-100 rounded-xl transition-colors">
-                <Filter size={18} className="text-neutral-800" />
+              <button className="p-2 hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-200 text-slate-500">
+                <Filter size={18} />
               </button>
             </div>
           </div>
@@ -1081,55 +1121,63 @@ const AdminDashboard: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-neutral-200">
-                  <th className="text-left py-3 px-4 font-medium text-neutral-800 text-sm">Employee</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-800 text-sm">Department</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-800 text-sm">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-800 text-sm">Check-in</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-800 text-sm">Performance</th>
+                <tr className="border-b border-slate-100">
+                  <th className="text-left py-4 px-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Employee</th>
+                  <th className="text-left py-4 px-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Department</th>
+                  <th className="text-left py-4 px-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Status</th>
+                  <th className="text-left py-4 px-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Check-in</th>
+                  <th className="text-left py-4 px-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Performance</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-50">
                 {filteredEmployees.slice(0, 8).map((emp) => (
-                  <tr key={emp.id} className="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                  <tr key={emp.id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-primary-100 to-primary-50 rounded-lg flex items-center justify-center text-primary-600 font-bold text-sm">
+                        <div className="w-9 h-9 bg-gradient-to-br from-indigo-100 to-white rounded-full flex items-center justify-center text-indigo-700 font-bold text-xs shadow-sm border border-indigo-50">
                           {emp.name.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-medium text-black text-sm">{emp.name}</p>
-                          <p className="text-xs text-neutral-800">{emp.role}</p>
+                          <p className="font-semibold text-slate-900 text-sm group-hover:text-primary-700 transition-colors">{emp.name}</p>
+                          <p className="text-xs text-slate-500">{emp.role}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="text-sm text-neutral-800">{emp.department}</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                        {emp.department}
+                      </span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`status-badge ${emp.status === 'Present' ? 'status-present' :
-                          emp.status === 'On Leave' ? 'status-leave' : 'status-absent'
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${emp.status === 'Present'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                          : emp.status === 'On Leave'
+                            ? 'bg-amber-50 text-amber-700 border-amber-100'
+                            : 'bg-rose-50 text-rose-700 border-rose-100'
                         }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${emp.status === 'Present' ? 'bg-success-500' :
-                            emp.status === 'On Leave' ? 'bg-warning-500' : 'bg-error-500'
+                        <span className={`w-1.5 h-1.5 rounded-full ${emp.status === 'Present' ? 'bg-emerald-500' :
+                            emp.status === 'On Leave' ? 'bg-amber-500' : 'bg-rose-500'
                           }`}></span>
                         {emp.status}
                       </span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="text-sm text-neutral-800">
+                      <span className="text-sm text-slate-600 font-medium">
                         {emp.attendanceTime || '--'}
                       </span>
                     </td>
                     <td className="py-4 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-12 h-2 bg-neutral-200 rounded-full overflow-hidden">
+                      <div className="flex items-center gap-3">
+                        <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-success-500 to-success-400 rounded-full transition-all"
+                            className={`h-full rounded-full transition-all ${emp.performance.attendanceScore >= 90 ? 'bg-emerald-500' :
+                                emp.performance.attendanceScore >= 75 ? 'bg-blue-500' :
+                                  'bg-amber-500'
+                              }`}
                             style={{ width: `${emp.performance.attendanceScore}%` }}
                           ></div>
                         </div>
-                        <span className="text-xs font-medium text-neutral-800">{emp.performance.attendanceScore}%</span>
+                        <span className="text-xs font-bold text-slate-700">{emp.performance.attendanceScore}%</span>
                       </div>
                     </td>
                   </tr>
@@ -1165,8 +1213,8 @@ const AdminDashboard: React.FC = () => {
                     key={filter}
                     onClick={() => setGrievanceFilter(filter)}
                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${grievanceFilter === filter
-                        ? 'bg-amber-600 text-white shadow-sm'
-                        : 'text-amber-900 hover:bg-amber-100'
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'text-amber-900 hover:bg-amber-100'
                       }`}
                   >
                     {filter === 'all' ? 'All' : filter} ({filter === 'all' ? grievances.length : grievances.filter(g => g.status === filter).length})
@@ -1214,14 +1262,14 @@ const AdminDashboard: React.FC = () => {
                 <div className="flex items-start gap-4">
                   {/* Priority Indicator */}
                   <div className={`w-1 h-full min-h-[60px] rounded-full ${grievance.priority === 'High' ? 'bg-red-500' :
-                      grievance.priority === 'Medium' ? 'bg-amber-500' : 'bg-green-500'
+                    grievance.priority === 'Medium' ? 'bg-amber-500' : 'bg-green-500'
                     }`}></div>
 
                   {/* Main Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${grievance.priority === 'High' ? 'bg-red-100 text-red-700' :
-                          grievance.priority === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                        grievance.priority === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
                         }`}>
                         {grievance.priority}
                       </span>
@@ -1279,8 +1327,8 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
             {/* Header */}
             <div className={`p-4 ${selectedGrievance.priority === 'High' ? 'bg-gradient-to-r from-red-500 to-red-600' :
-                selectedGrievance.priority === 'Medium' ? 'bg-gradient-to-r from-amber-500 to-amber-600' :
-                  'bg-gradient-to-r from-green-500 to-green-600'
+              selectedGrievance.priority === 'Medium' ? 'bg-gradient-to-r from-amber-500 to-amber-600' :
+                'bg-gradient-to-r from-green-500 to-green-600'
               }`}>
               <div className="flex items-center justify-between text-white">
                 <div className="flex items-center gap-3">
@@ -1308,7 +1356,7 @@ const AdminDashboard: React.FC = () => {
                   {selectedGrievance.status}
                 </span>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedGrievance.priority === 'High' ? 'bg-red-100 text-red-700' :
-                    selectedGrievance.priority === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                  selectedGrievance.priority === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
                   }`}>
                   {selectedGrievance.priority} Priority
                 </span>
@@ -1587,12 +1635,12 @@ const AdminDashboard: React.FC = () => {
                 {/* ML Analysis Results */}
                 {mlAnalysisResult && (
                   <div className={`rounded-xl p-4 border ${mlAnalysisResult.type === 'error'
+                    ? 'bg-red-50 border-red-200'
+                    : mlAnalysisResult.data?.risk_level === 'HIGH'
                       ? 'bg-red-50 border-red-200'
-                      : mlAnalysisResult.data?.risk_level === 'HIGH'
-                        ? 'bg-red-50 border-red-200'
-                        : mlAnalysisResult.data?.risk_level === 'MEDIUM'
-                          ? 'bg-yellow-50 border-yellow-200'
-                          : 'bg-green-50 border-green-200'
+                      : mlAnalysisResult.data?.risk_level === 'MEDIUM'
+                        ? 'bg-yellow-50 border-yellow-200'
+                        : 'bg-green-50 border-green-200'
                     }`}>
                     {mlAnalysisResult.type === 'error' ? (
                       <div className="flex items-center gap-3 text-red-700">
@@ -1613,7 +1661,7 @@ const AdminDashboard: React.FC = () => {
                             )}
                           </h4>
                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${mlAnalysisResult.data.risk_level === 'LOW' ? 'bg-green-100 text-green-700' :
-                              mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                            mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
                             }`}>
                             {mlAnalysisResult.data.risk_level} RISK
                           </span>
@@ -1685,7 +1733,7 @@ const AdminDashboard: React.FC = () => {
                             )}
                           </h4>
                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${mlAnalysisResult.data.risk_level === 'LOW' ? 'bg-green-100 text-green-700' :
-                              mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                            mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
                             }`}>
                             {mlAnalysisResult.data.risk_level} RISK
                           </span>

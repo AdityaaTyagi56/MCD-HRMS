@@ -19,7 +19,8 @@ import {
   Users,
   FileText,
   Building,
-  X
+  X,
+  TrendingUp
 } from 'lucide-react';
 import { Grievance } from '../types';
 
@@ -42,23 +43,23 @@ const getCategoryIcon = (category: string) => {
   return iconMap[category] || <MessageSquare size={20} />;
 };
 
-// Category colors mapping
+// Category colors mapping (Refined for premium look)
 const getCategoryColor = (category: string) => {
   const colorMap: Record<string, string> = {
-    'Salary': 'bg-green-100 text-green-700 border-green-200',
-    'Payroll and Salary Issue': 'bg-green-100 text-green-700 border-green-200',
-    'Harassment': 'bg-red-100 text-red-700 border-red-200',
-    'Workplace Harassment': 'bg-red-100 text-red-700 border-red-200',
-    'Equipment': 'bg-purple-100 text-purple-700 border-purple-200',
-    'Sanitation Equipment Shortage': 'bg-purple-100 text-purple-700 border-purple-200',
-    'Leave': 'bg-blue-100 text-blue-700 border-blue-200',
-    'Transfer': 'bg-cyan-100 text-cyan-700 border-cyan-200',
-    'Leave and Transfer Request': 'bg-cyan-100 text-cyan-700 border-cyan-200',
-    'Infrastructure Problem': 'bg-amber-100 text-amber-700 border-amber-200',
-    'General Complaint': 'bg-gray-100 text-gray-700 border-gray-200',
-    'General': 'bg-gray-100 text-gray-700 border-gray-200',
+    'Salary': 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    'Payroll and Salary Issue': 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    'Harassment': 'bg-rose-50 text-rose-700 border-rose-100',
+    'Workplace Harassment': 'bg-rose-50 text-rose-700 border-rose-100',
+    'Equipment': 'bg-violet-50 text-violet-700 border-violet-100',
+    'Sanitation Equipment Shortage': 'bg-violet-50 text-violet-700 border-violet-100',
+    'Leave': 'bg-blue-50 text-blue-700 border-blue-100',
+    'Transfer': 'bg-cyan-50 text-cyan-700 border-cyan-100',
+    'Leave and Transfer Request': 'bg-cyan-50 text-cyan-700 border-cyan-100',
+    'Infrastructure Problem': 'bg-amber-50 text-amber-700 border-amber-100',
+    'General Complaint': 'bg-slate-50 text-slate-700 border-slate-100',
+    'General': 'bg-slate-50 text-slate-700 border-slate-100',
   };
-  return colorMap[category] || 'bg-gray-100 text-gray-700 border-gray-200';
+  return colorMap[category] || 'bg-slate-50 text-slate-700 border-slate-100';
 };
 
 const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
@@ -272,42 +273,41 @@ const GrievanceManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-enter">
       {/* Header */}
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-white p-3 rounded-xl shadow-sm">
-              <MessageSquare className="text-amber-600" size={28} />
+      <div className="glass-header rounded-3xl p-8 border border-white/20 shadow-xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-amber-500/15 transition-all duration-700"></div>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex items-center gap-5">
+            <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-4 rounded-2xl shadow-sm border border-amber-200/50">
+              <MessageSquare className="text-amber-600" size={32} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
                 {currentRole === 'admin' ? 'Employee Grievances' : 'My Grievances'}
               </h1>
-              <p className="text-gray-700">
+              <p className="text-slate-500 font-medium mt-1 text-lg">
                 AI-powered complaint analysis & routing
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full text-sm font-medium text-gray-700 border border-gray-200">
-              <Mic size={14} className="text-green-500" />
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-full text-sm font-bold text-emerald-700 border border-emerald-100 shadow-sm">
+              <Mic size={16} className="text-emerald-500 animate-pulse" />
               Voice NLP Enabled
             </span>
-            <div className="flex bg-white border border-gray-200 rounded-xl p-1">
+            <div className="flex bg-slate-100/50 backdrop-blur-sm border border-slate-200 rounded-xl p-1.5 shadow-inner">
               {(['All', 'Pending', 'Resolved'] as const).map((f) => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${filter === f
-                      ? 'bg-amber-500 text-white shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-50'
+                  className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${filter === f
+                    ? 'bg-white text-slate-900 shadow-md transform scale-[1.02]'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
                     }`}
                 >
-                  {f} {f === 'All' && `(${stats.total})`}
-                  {f === 'Pending' && `(${stats.pending})`}
-                  {f === 'Resolved' && `(${stats.resolved})`}
+                  {f} {f === 'All' ? '' : f === 'Pending' ? ` (${stats.pending})` : ` (${stats.resolved})`}
                 </button>
               ))}
             </div>
@@ -316,78 +316,78 @@ const GrievanceManagement: React.FC = () => {
 
         {/* Stats Cards */}
         {currentRole === 'admin' && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-white/50">
-              <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
-              <div className="text-sm text-gray-600">Total</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+            <div className="bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+              <div className="text-4xl font-bold text-slate-900 mb-1">{stats.total}</div>
+              <div className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total</div>
             </div>
-            <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-white/50">
-              <div className="text-3xl font-bold text-orange-600">{stats.pending}</div>
-              <div className="text-sm text-gray-600">Pending</div>
+            <div className="bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+              <div className="text-4xl font-bold text-amber-600 mb-1">{stats.pending}</div>
+              <div className="text-sm font-bold text-amber-800/60 uppercase tracking-wider">Pending</div>
             </div>
-            <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-white/50">
-              <div className="text-3xl font-bold text-red-600">{stats.highPriority}</div>
-              <div className="text-sm text-gray-600">High Priority</div>
+            <div className="bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+              <div className="text-4xl font-bold text-rose-600 mb-1">{stats.highPriority}</div>
+              <div className="text-sm font-bold text-rose-800/60 uppercase tracking-wider">High Priority</div>
             </div>
-            <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-white/50">
-              <div className="text-3xl font-bold text-green-600">{stats.resolved}</div>
-              <div className="text-sm text-gray-600">Resolved</div>
+            <div className="bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-white/50 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+              <div className="text-4xl font-bold text-emerald-600 mb-1">{stats.resolved}</div>
+              <div className="text-sm font-bold text-emerald-800/60 uppercase tracking-wider">Resolved</div>
             </div>
           </div>
         )}
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      <div className="relative group">
+        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" size={20} />
         <input
           type="text"
           placeholder="Search by description, category, or employee name..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none shadow-sm"
+          className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary-100 focus:border-primary-300 outline-none shadow-sm transition-all text-slate-700 font-medium placeholder:text-slate-400"
         />
       </div>
 
       {/* Bulk Actions Bar */}
       {currentRole === 'admin' && selectedIds.size > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+        <div className="bg-slate-900 text-white rounded-2xl p-4 flex items-center justify-between shadow-2xl animate-fade-in-up border border-slate-800">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 bg-slate-800 px-4 py-2 rounded-xl border border-slate-700">
               <input
                 type="checkbox"
                 checked={selectedIds.size === filteredGrievances.length}
                 onChange={toggleSelectAll}
-                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="w-5 h-5 rounded border-slate-600 text-primary-500 focus:ring-primary-500 bg-slate-700"
               />
-              <span className="font-semibold text-blue-900">{selectedIds.size} selected</span>
+              <span className="font-bold text-slate-200">{selectedIds.size} selected</span>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button
                 onClick={() => { setBulkAction('resolve'); setShowBulkModal(true); }}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-900/20 active:scale-95 flex items-center gap-2"
               >
-                ✓ Mark Resolved
+                <CheckCircle size={18} /> Mark Resolved
               </button>
               <button
                 onClick={() => { setBulkAction('assign'); setShowBulkModal(true); }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-900/20 active:scale-95 flex items-center gap-2"
               >
-                → Assign Department
+                <Users size={18} /> Assign Dept
               </button>
               <button
                 onClick={() => { setBulkAction('escalate'); setShowBulkModal(true); }}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors"
+                className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-amber-900/20 active:scale-95 flex items-center gap-2"
               >
-                ⬆ Escalate
+                <TrendingUp size={18} /> Escalate
               </button>
             </div>
           </div>
 
           <button
             onClick={() => setSelectedIds(new Set())}
-            className="text-blue-700 hover:text-blue-900 font-medium"
+            className="text-slate-400 hover:text-white font-bold px-4 py-2 hover:bg-slate-800 rounded-xl transition-all"
           >
             Clear Selection
           </button>
@@ -395,14 +395,14 @@ const GrievanceManagement: React.FC = () => {
       )}
 
       {/* Grievance List */}
-      <div className="space-y-4">
+      <div className="space-y-5">
         {filteredGrievances.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-200 shadow-sm">
-            <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageSquare className="text-gray-500" size={32} />
+          <div className="text-center py-20 bg-white rounded-3xl border border-slate-200/60 shadow-sm flex flex-col items-center justify-center">
+            <div className="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-iner border border-slate-100">
+              <MessageSquare className="text-slate-300" size={48} />
             </div>
-            <h3 className="text-lg font-medium text-gray-900">No grievances found</h3>
-            <p className="text-gray-500 mt-1">Try adjusting your search or filters</p>
+            <h3 className="text-xl font-bold text-slate-900">No grievances found</h3>
+            <p className="text-slate-500 mt-2 font-medium">Try adjusting your search or filters</p>
           </div>
         ) : (
           filteredGrievances.map((g) => {
@@ -414,80 +414,81 @@ const GrievanceManagement: React.FC = () => {
             return (
               <div
                 key={g.id}
-                className={`bg-white rounded-xl border shadow-sm transition-all duration-300 overflow-hidden ${g.priority === 'High' ? 'border-l-4 border-l-red-500 border-gray-200' :
-                    g.priority === 'Medium' ? 'border-l-4 border-l-orange-500 border-gray-200' :
-                      'border-l-4 border-l-blue-500 border-gray-200'
-                  } ${isExpanded ? 'shadow-lg' : 'hover:shadow-md'}`}
+                className={`glass-card bg-white rounded-2xl border transition-all duration-300 overflow-hidden group ${g.priority === 'High' ? 'border-l-[6px] border-l-rose-500 border-slate-200' :
+                  g.priority === 'Medium' ? 'border-l-[6px] border-l-amber-500 border-slate-200' :
+                    'border-l-[6px] border-l-blue-500 border-slate-200'
+                  } ${isExpanded ? 'shadow-xl ring-1 ring-slate-200' : 'shadow-sm hover:shadow-md'}`}
               >
-                <div className="p-5">
+                <div className="p-6">
                   {/* Top Row: Checkbox + Tags */}
-                  <div className="flex items-start gap-3 mb-3">
+                  <div className="flex items-start gap-4 mb-4">
                     {currentRole === 'admin' && (
                       <input
                         type="checkbox"
                         checked={selectedIds.has(g.id)}
                         onChange={() => toggleSelection(g.id)}
-                        className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="w-5 h-5 mt-1 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
                       />
                     )}
 
-                    <div className="flex flex-wrap items-center gap-2 flex-1">
+                    <div className="flex flex-wrap items-center gap-2.5 flex-1">
                       {/* Priority Badge */}
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${g.priority === 'High' ? 'bg-red-100 text-red-700' :
-                          g.priority === 'Medium' ? 'bg-orange-100 text-orange-700' :
-                            'bg-blue-100 text-blue-700'
+                      <span className={`text-xs px-3 py-1.5 rounded-full font-bold uppercase tracking-wide ${g.priority === 'High' ? 'bg-rose-100 text-rose-700' :
+                        g.priority === 'Medium' ? 'bg-amber-100 text-amber-700' :
+                          'bg-blue-100 text-blue-700'
                         }`}>
                         {g.priority}
                       </span>
 
                       {/* Category Badge */}
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium border flex items-center gap-1 ${getCategoryColor(g.category)}`}>
+                      <span className={`text-xs px-3 py-1.5 rounded-full font-bold border flex items-center gap-1.5 ${getCategoryColor(g.category)}`}>
                         {getCategoryIcon(g.category)}
                         {g.category}
                       </span>
 
                       {/* Status Badge */}
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${g.status === 'Resolved' ? 'bg-green-100 text-green-800' :
-                          g.status === 'Under Review' ? 'bg-purple-100 text-purple-800' :
-                            'bg-yellow-100 text-yellow-800'
+                      <span className={`text-xs px-3 py-1.5 rounded-full font-bold border flex items-center gap-1.5 ${g.status === 'Resolved' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                        g.status === 'Under Review' ? 'bg-violet-50 text-violet-700 border-violet-100' :
+                          'bg-amber-50 text-amber-700 border-amber-100'
                         }`}>
+                        {g.status === 'Resolved' ? <CheckCircle size={12} /> : <Clock size={12} />}
                         {g.status}
                       </span>
                     </div>
                   </div>
 
                   {/* Description */}
-                  <div className="mb-3">
-                    <p className="text-gray-800 text-base leading-relaxed font-medium">
+                  <div className="mb-6">
+                    <p className="text-slate-800 text-lg leading-relaxed font-medium">
                       {g.description}
                     </p>
 
                     {/* Translation Section */}
                     {currentRole === 'admin' && isHindi && (
-                      <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                      <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 relative overflow-hidden">
                         {!hasTranslation && !isTranslating && (
                           <button
                             onClick={() => translateToEnglish(g.id, g.description)}
-                            className="flex items-center gap-2 text-blue-700 hover:text-blue-800 font-medium text-sm"
+                            className="flex items-center gap-2 text-primary-700 hover:text-primary-800 font-bold text-sm bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200 hover:-translate-y-0.5 transition-all"
                           >
-                            <Languages size={16} />
+                            <Languages size={18} />
                             Translate to English
                           </button>
                         )}
                         {isTranslating && (
-                          <div className="flex items-center gap-2 text-blue-700 text-sm">
-                            <Loader2 size={16} className="animate-spin" />
-                            Translating...
+                          <div className="flex items-center gap-3 text-slate-600 text-sm font-medium">
+                            <Loader2 size={18} className="animate-spin text-primary-600" />
+                            Translating content...
                           </div>
                         )}
                         {hasTranslation && !isTranslating && (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-xs text-blue-600 font-medium">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-xs text-primary-600 font-bold uppercase tracking-wider">
                               <Languages size={14} />
-                              English Translation:
+                              English Translation
                             </div>
-                            <p className="text-gray-800 text-sm">
-                              {translations[g.id].english}
+                            <p className="text-slate-700 text-base italic">
+                              "{translations[g.id].english}"
                             </p>
                           </div>
                         )}
@@ -496,46 +497,46 @@ const GrievanceManagement: React.FC = () => {
                   </div>
 
                   {/* Footer Row */}
-                  <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar size={14} />
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-5 text-sm font-medium text-slate-500">
+                      <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                        <Calendar size={16} className="text-slate-400" />
                         <span>{g.date}</span>
                       </div>
                       {currentRole === 'admin' && (
-                        <div className="flex items-center gap-1.5">
-                          <User size={14} />
+                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                          <User size={16} className="text-slate-400" />
                           <span>{g.user} (#{g.userId})</span>
                         </div>
                       )}
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       {currentRole === 'admin' && (
                         <>
                           <button
                             onClick={() => setShowCommentModal(g.id)}
-                            className="flex items-center gap-1.5 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium text-sm hover:bg-blue-200 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
                           >
-                            <MessageSquare size={14} />
-                            Comment ({comments[g.id]?.length || 0})
+                            <MessageSquare size={16} />
+                            Comment {comments[g.id]?.length > 0 && <span className="bg-slate-200 px-1.5 py-0.5 rounded-md text-slate-800 text-xs ml-1">{comments[g.id].length}</span>}
                           </button>
                           {g.status !== 'Resolved' && (
                             <button
                               onClick={() => handleResolve(g.id)}
                               disabled={resolvingId === g.id}
-                              className="flex items-center gap-1.5 px-4 py-2 bg-green-500 text-white rounded-lg font-medium text-sm hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-500 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition-all shadow-lg shadow-emerald-500/20"
                               aria-label={`Mark grievance ${g.id} as resolved`}
                             >
                               {resolvingId === g.id ? (
                                 <>
-                                  <Loader2 size={14} className="animate-spin" />
+                                  <Loader2 size={16} className="animate-spin" />
                                   Resolving...
                                 </>
                               ) : (
                                 <>
-                                  <CheckCircle size={14} />
+                                  <CheckCircle size={16} />
                                   Resolve
                                 </>
                               )}
@@ -545,11 +546,11 @@ const GrievanceManagement: React.FC = () => {
                       )}
                       <button
                         onClick={() => setExpandedId(isExpanded ? null : g.id)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        className={`p-2.5 hover:bg-slate-100 rounded-xl transition-colors border border-transparent hover:border-slate-200 ${isExpanded ? 'bg-slate-100' : ''}`}
                       >
                         <ChevronRight
-                          size={18}
-                          className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                          size={20}
+                          className={`text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}
                         />
                       </button>
                     </div>
@@ -557,16 +558,18 @@ const GrievanceManagement: React.FC = () => {
 
                   {/* Comments Section */}
                   {comments[g.id] && comments[g.id].length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <div className="text-sm font-semibold text-gray-700 mb-2">Comments:</div>
-                      <div className="space-y-2">
+                    <div className="mt-6 pt-6 border-t border-slate-100 animate-slide-up">
+                      <div className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                        <MessageSquare size={16} className="text-slate-400" /> Comments History
+                      </div>
+                      <div className="space-y-3 pl-4 border-l-2 border-slate-100">
                         {comments[g.id].map((comment, idx) => (
-                          <div key={idx} className="bg-gray-50 rounded-lg p-3">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-semibold text-blue-600">{comment.user}</span>
-                              <span className="text-xs text-gray-500">{new Date(comment.timestamp).toLocaleString()}</span>
+                          <div key={idx} className="bg-slate-50 rounded-2xl p-4 border border-slate-100 relative group hover:border-slate-200 transition-colors">
+                            <div className="flex items-center gap-2.5 mb-2">
+                              <span className="text-xs font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md border border-primary-100">{comment.user}</span>
+                              <span className="text-xs text-slate-400 font-medium">{new Date(comment.timestamp).toLocaleString()}</span>
                             </div>
-                            <p className="text-sm text-gray-700">{comment.text}</p>
+                            <p className="text-sm text-slate-700 leading-relaxed font-medium">{comment.text}</p>
                           </div>
                         ))}
                       </div>
@@ -575,26 +578,30 @@ const GrievanceManagement: React.FC = () => {
 
                   {/* Expanded Details */}
                   {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm animate-in slide-in-from-top-2">
-                      <div>
-                        <span className="text-gray-500 block mb-1">Grievance ID</span>
-                        <span className="font-medium">#{g.id}</span>
+                    <div className="mt-6 pt-6 border-t border-slate-100 grid grid-cols-2 md:grid-cols-4 gap-6 text-sm animate-slide-up bg-slate-50/50 -m-6 p-6 mt-6">
+                      <div className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm">
+                        <span className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Grievance ID</span>
+                        <span className="font-bold text-slate-900 text-lg">#{g.id}</span>
                       </div>
-                      <div>
-                        <span className="text-gray-500 block mb-1">Escalation Level</span>
-                        <span className="font-medium">
+                      <div className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm">
+                        <span className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Escalation Level</span>
+                        <span className="font-bold text-slate-900">
                           {g.escalationLevel === 0 ? 'Zonal' : g.escalationLevel === 1 ? 'Deputy Commissioner' : 'Commissioner'}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-gray-500 block mb-1">SLA Status</span>
-                        <span className={`font-medium ${g.slaBreach ? 'text-red-600' : 'text-green-600'}`}>
-                          {g.slaBreach ? 'Breached' : 'Within SLA'}
+                      <div className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm">
+                        <span className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">SLA Status</span>
+                        <span className={`font-bold flex items-center gap-2 ${g.slaBreach ? 'text-rose-600' : 'text-emerald-600'}`}>
+                          {g.slaBreach ? (
+                            <><AlertCircle size={16} /> Breached</>
+                          ) : (
+                            <><CheckCircle size={16} /> Within SLA</>
+                          )}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-gray-500 block mb-1">Language</span>
-                        <span className="font-medium">{isHindi ? 'Hindi (हिंदी)' : 'English'}</span>
+                      <div className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm">
+                        <span className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Language</span>
+                        <span className="font-bold text-slate-900">{isHindi ? 'Hindi (हिंदी)' : 'English'}</span>
                       </div>
                     </div>
                   )}
@@ -607,45 +614,48 @@ const GrievanceManagement: React.FC = () => {
 
       {/* Bulk Action Modal */}
       {showBulkModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl scale-100 animate-scale-in">
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">
               {bulkAction === 'resolve' && 'Mark as Resolved'}
               {bulkAction === 'assign' && 'Assign to Department'}
               {bulkAction === 'escalate' && 'Escalate Grievances'}
             </h3>
 
-            <p className="text-gray-700 mb-4">
-              This action will apply to {selectedIds.size} selected grievance(s).
+            <p className="text-slate-600 mb-6 font-medium">
+              This action will apply to <span className="font-bold text-slate-900">{selectedIds.size}</span> selected grievance(s).
             </p>
 
             {bulkAction === 'assign' && (
-              <select
-                value={bulkDepartment}
-                onChange={(e) => setBulkDepartment(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg mb-4"
-              >
-                <option value="">Select Department</option>
-                <option value="Sanitation">Sanitation</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Administration">Administration</option>
-                <option value="Health">Health</option>
-              </select>
+              <div className="mb-6">
+                <label className="text-sm font-bold text-slate-700 mb-2 block">Select Target Department</label>
+                <select
+                  value={bulkDepartment}
+                  onChange={(e) => setBulkDepartment(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-medium text-slate-700"
+                >
+                  <option value="">Select Department</option>
+                  <option value="Sanitation">Sanitation</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Administration">Administration</option>
+                  <option value="Health">Health</option>
+                </select>
+              </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={() => { setShowBulkModal(false); setBulkAction(''); setBulkDepartment(''); }}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleBulkAction}
                 disabled={bulkAction === 'assign' && !bulkDepartment}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary-500/25"
               >
-                Confirm
+                Confirm Region
               </button>
             </div>
           </div>
@@ -654,13 +664,16 @@ const GrievanceManagement: React.FC = () => {
 
       {/* Comment Modal */}
       {showCommentModal !== null && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Add Comment</h3>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl scale-100 animate-scale-in">
+            <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <MessageSquare className="text-primary-500" />
+                Add Comment
+              </h3>
               <button
                 onClick={() => setShowCommentModal(null)}
-                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
               >
                 <X size={20} />
               </button>
@@ -669,23 +682,23 @@ const GrievanceManagement: React.FC = () => {
             <textarea
               value={newComment[showCommentModal] || ''}
               onChange={(e) => setNewComment(prev => ({ ...prev, [showCommentModal]: e.target.value }))}
-              placeholder="Add your comment here..."
-              className="w-full h-32 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+              placeholder="Type your official comment or response here..."
+              className="w-full h-40 px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl resize-none focus:ring-2 focus:ring-primary-500 outline-none mb-6 font-medium text-slate-700 placeholder:text-slate-400"
             />
 
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={() => setShowCommentModal(null)}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => { addComment(showCommentModal); setShowCommentModal(null); }}
                 disabled={!newComment[showCommentModal]?.trim()}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary-500/25"
               >
-                Add Comment
+                Post Comment
               </button>
             </div>
           </div>
