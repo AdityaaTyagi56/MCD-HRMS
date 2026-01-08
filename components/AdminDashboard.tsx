@@ -1,12 +1,12 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -16,16 +16,16 @@ import {
   LineChart,
   Line
 } from 'recharts';
-import { 
-  Users, 
-  UserCheck, 
-  AlertCircle, 
-  ArrowUpRight, 
-  MapPin, 
-  Search, 
-  TrendingUp, 
-  Database, 
-  Activity, 
+import {
+  Users,
+  UserCheck,
+  AlertCircle,
+  ArrowUpRight,
+  MapPin,
+  Search,
+  TrendingUp,
+  Database,
+  Activity,
   ShieldCheck,
   Siren,
   Radio,
@@ -101,7 +101,7 @@ const AdminDashboard: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState('7d');
   const [grievanceFilter, setGrievanceFilter] = useState<'all' | 'Pending' | 'Resolved'>('all');
   const [selectedGrievance, setSelectedGrievance] = useState<any>(null);
-  
+
   // AI State
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [aiQuery, setAiQuery] = useState("");
@@ -124,7 +124,7 @@ const AdminDashboard: React.FC = () => {
     const delta = present && target ? present.value - target.value : 0;
     return (
       <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-lg">
-        <div className="text-xs font-semibold text-neutral-600">{label}</div>
+        <div className="text-xs font-semibold text-neutral-800">{label}</div>
         <div className="mt-1 flex flex-col gap-1 text-sm">
           <span className="text-sky-600 font-semibold">Present: {present?.value ?? '-'} </span>
           <span className="text-amber-600">Target: {target?.value ?? '-'} </span>
@@ -143,18 +143,18 @@ const AdminDashboard: React.FC = () => {
     "✅ SUCCESS: Monthly payroll processed for all departments"
   ], []);
   const [alerts, setAlerts] = useState<string[]>(fallbackAlerts);
-  
+
   // ML Service State
   const [mlServiceStatus, setMlServiceStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [mlAnalysisResult, setMlAnalysisResult] = useState<any>(null);
   const [mlAnalysisLoading, setMlAnalysisLoading] = useState(false);
-  
+
   // Analytics & SLA State
   const [trendAnalysis, setTrendAnalysis] = useState<any>(null);
   const [slaBreaches, setSlaBreaches] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [showSlaAlert, setShowSlaAlert] = useState(true);
-  
+
   const ML_API_URL = import.meta.env.VITE_ML_SERVICE_URL || 'http://localhost:8002';
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8010';
 
@@ -218,7 +218,7 @@ const AdminDashboard: React.FC = () => {
   }, [selectedGrievance?.id]);
 
   // Filter grievances
-  const filteredGrievances = grievances.filter(g => 
+  const filteredGrievances = grievances.filter(g =>
     grievanceFilter === 'all' ? true : g.status === grievanceFilter
   ).sort((a, b) => {
     // Sort by priority (High first) then by date
@@ -233,7 +233,7 @@ const AdminDashboard: React.FC = () => {
   const absent = employees.filter(e => e.status === 'Absent').length;
   const pendingGrievances = grievances.filter(g => g.status === 'Pending').length;
   const attendancePercentage = Math.round((presentToday / totalEmployees) * 100);
-  
+
   // Enhanced calculations
   const avgPerformanceScore = Math.round(
     employees.reduce((sum, emp) => sum + emp.performance.attendanceScore, 0) / employees.length
@@ -242,7 +242,7 @@ const AdminDashboard: React.FC = () => {
   const monthlySavings = absent * 500; // ₹500 per absent employee
 
   // Filter Employees Logic
-  const filteredEmployees = employees.filter(emp => 
+  const filteredEmployees = employees.filter(emp =>
     emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.role.toLowerCase().includes(searchTerm.toLowerCase())
@@ -284,15 +284,17 @@ const AdminDashboard: React.FC = () => {
       const runResponse = await fetch(`${API_BASE_URL}/api/analytics/run-trends`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': 'demo-admin-key-12345' },
-        body: JSON.stringify({ grievances: grievances.map(g => ({ 
-          id: g.id, 
-          category: g.category, 
-          priority: g.priority, 
-          status: g.status, 
-          submittedAt: g.submittedAt 
-        })) })
+        body: JSON.stringify({
+          grievances: grievances.map(g => ({
+            id: g.id,
+            category: g.category,
+            priority: g.priority,
+            status: g.status,
+            submittedAt: g.submittedAt
+          }))
+        })
       });
-      
+
       if (runResponse.ok) {
         // Fetch stored trends
         const trendsResponse = await fetch(`${API_BASE_URL}/api/analytics/trends`, {
@@ -303,14 +305,14 @@ const AdminDashboard: React.FC = () => {
           setTrendAnalysis(trends);
         }
       }
-      
+
       // Check SLA breaches
       const slaResponse = await fetch(`${API_BASE_URL}/api/analytics/check-sla`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': 'demo-admin-key-12345' },
         body: JSON.stringify({ grievances })
       });
-      
+
       if (slaResponse.ok) {
         const slaData = await slaResponse.json();
         setSlaBreaches(slaData.breached || []);
@@ -494,10 +496,10 @@ const AdminDashboard: React.FC = () => {
   // AI Query Handler - Uses ML Service chat endpoint
   const handleAIQuery = async () => {
     if (!aiQuery.trim()) return;
-    
+
     setAiLoading(true);
     console.log('🤖 AI Query:', aiQuery);
-    
+
     try {
       // Try ML Service chat endpoint first (more reliable)
       const mlResponse = await fetch(`${ML_API_URL}/chat`, {
@@ -513,7 +515,7 @@ const AdminDashboard: React.FC = () => {
           }
         })
       });
-      
+
       if (mlResponse.ok) {
         const data = await mlResponse.json();
         console.log('✅ ML Chat response:', data);
@@ -522,7 +524,7 @@ const AdminDashboard: React.FC = () => {
           return;
         }
       }
-      
+
       // Fallback to aiService
       console.log('⚠️ ML Chat failed, trying aiService...');
       const response = await aiService.askAIAssistant(aiQuery, {
@@ -587,7 +589,7 @@ const AdminDashboard: React.FC = () => {
             <span className="font-bold text-sm">LIVE ALERTS</span>
           </div>
           <div className="flex-1 overflow-hidden">
-            <div 
+            <div
               className="animate-slide-up transition-all duration-500"
               key={tickerIndex}
             >
@@ -605,7 +607,7 @@ const AdminDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsCards.map((card, index) => (
           <div key={card.title} className="group card-hover">
-            <div 
+            <div
               className="rounded-2xl p-6 border flex flex-col justify-between min-h-[160px] relative overflow-hidden"
               style={{ background: ENTERPRISE_COLORS.gray100, borderColor: ENTERPRISE_COLORS.border, boxShadow: 'none' }}
             >
@@ -614,7 +616,7 @@ const AdminDashboard: React.FC = () => {
                   <div className="p-3 rounded-xl border" style={{ background: ENTERPRISE_COLORS.white, borderColor: ENTERPRISE_COLORS.border }}>
                     <card.icon style={{ color: ENTERPRISE_COLORS.primary }} size={24} />
                   </div>
-                  <div 
+                  <div
                     className="flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded-full"
                     style={{ background: ENTERPRISE_COLORS.primaryLight, color: ENTERPRISE_COLORS.primary }}
                   >
@@ -624,7 +626,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold mb-1" style={{ color: ENTERPRISE_COLORS.gray900 }}>{card.value}</h3>
-                  <p className="text-sm text-neutral-700">{card.title}</p>
+                  <p className="text-sm text-neutral-800">{card.title}</p>
                 </div>
               </div>
             </div>
@@ -651,14 +653,14 @@ const AdminDashboard: React.FC = () => {
               <p className="text-red-800 mb-4">
                 {slaBreaches.length} grievance{slaBreaches.length > 1 ? 's' : ''} exceeded 72-hour SLA and {slaBreaches.length > 1 ? 'have been' : 'has been'} auto-escalated
               </p>
-              
+
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {slaBreaches.slice(0, 5).map((breach: any) => (
                   <div key={breach.id} className="bg-white rounded-lg p-3 border border-red-200">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <span className="font-semibold text-red-900">#{breach.id}</span>
-                        <span className="text-sm text-neutral-600 ml-2">{breach.category}</span>
+                        <span className="text-sm text-neutral-800 ml-2">{breach.category}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full">
@@ -672,7 +674,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                 ))}
                 {slaBreaches.length > 5 && (
-                  <p className="text-sm text-neutral-600 text-center pt-2">
+                  <p className="text-sm text-neutral-800 text-center pt-2">
                     +{slaBreaches.length - 5} more breached grievances
                   </p>
                 )}
@@ -709,7 +711,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               ))}
               {(!trendAnalysis.rising_issues || trendAnalysis.rising_issues.length === 0) && (
-                <p className="text-sm text-neutral-600 text-center py-4">No rising trends detected</p>
+                <p className="text-sm text-neutral-800 text-center py-4">No rising trends detected</p>
               )}
             </div>
           </div>
@@ -725,29 +727,28 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-sm text-blue-800">Employee satisfaction</p>
               </div>
             </div>
-            
+
             <div className="mb-4">
               <div className="flex items-end justify-between mb-2">
                 <span className="text-4xl font-bold text-blue-900">
                   {trendAnalysis.sentiment_score || 0}%
                 </span>
-                <span className={`text-sm font-medium px-2 py-1 rounded-full ${
-                  (trendAnalysis.sentiment_score || 0) > 70 ? 'bg-green-100 text-green-700' : 
-                  (trendAnalysis.sentiment_score || 0) > 40 ? 'bg-yellow-100 text-yellow-700' : 
-                  'bg-red-100 text-red-700'
-                }`}>
-                  {(trendAnalysis.sentiment_score || 0) > 70 ? 'Good' : 
-                   (trendAnalysis.sentiment_score || 0) > 40 ? 'Fair' : 'Poor'}
+                <span className={`text-sm font-medium px-2 py-1 rounded-full ${(trendAnalysis.sentiment_score || 0) > 70 ? 'bg-green-100 text-green-700' :
+                    (trendAnalysis.sentiment_score || 0) > 40 ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                  }`}>
+                  {(trendAnalysis.sentiment_score || 0) > 70 ? 'Good' :
+                    (trendAnalysis.sentiment_score || 0) > 40 ? 'Fair' : 'Poor'}
                 </span>
               </div>
               <div className="w-full bg-neutral-200 rounded-full h-2">
-                <div 
+                <div
                   className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-500"
                   style={{ width: `${trendAnalysis.sentiment_score || 0}%` }}
                 ></div>
               </div>
             </div>
-            
+
             {trendAnalysis.predicted_escalations > 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-sm font-medium text-amber-900">
@@ -779,7 +780,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               ))}
               {(!trendAnalysis.priority_actions || trendAnalysis.priority_actions.length === 0) && (
-                <p className="text-sm text-neutral-600 text-center py-4">No priority actions at this time</p>
+                <p className="text-sm text-neutral-800 text-center py-4">No priority actions at this time</p>
               )}
             </div>
           </div>
@@ -801,13 +802,13 @@ const AdminDashboard: React.FC = () => {
       {/* Quick Actions - WhatsApp & AI Integration */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* WhatsApp Messaging Card */}
-        <div 
+        <div
           className="rounded-2xl p-6 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
           style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)' }}
           onClick={() => setShowWhatsAppPanel(true)}
         >
           <div className="absolute top-0 right-0 w-40 h-40 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" style={{ background: 'rgba(255,255,255,0.15)' }}></div>
-          
+
           <div className="relative z-10 flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-4">
@@ -819,7 +820,7 @@ const AdminDashboard: React.FC = () => {
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>Send bulk messages to employees</p>
                 </div>
               </div>
-              
+
               <div className="flex flex-wrap gap-2 mb-4">
                 <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
                   📅 Attendance Reminders
@@ -831,8 +832,8 @@ const AdminDashboard: React.FC = () => {
                   🚨 Emergency Broadcast
                 </span>
               </div>
-              
-              <button 
+
+              <button
                 className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all group-hover:scale-105"
                 style={{ background: 'rgba(255,255,255,0.95)', color: '#128C7E' }}
               >
@@ -840,7 +841,7 @@ const AdminDashboard: React.FC = () => {
                 Open WhatsApp Panel
               </button>
             </div>
-            
+
             <div className="hidden md:flex flex-col items-end gap-2">
               <div className="text-right">
                 <p className="text-3xl font-bold" style={{ color: '#ffffff' }}>{employees.length}</p>
@@ -851,13 +852,13 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* AI Assistant Card */}
-        <div 
+        <div
           className="rounded-2xl p-6 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
           style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
           onClick={() => setShowAIPanel(true)}
         >
           <div className="absolute top-0 right-0 w-40 h-40 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" style={{ background: 'rgba(255,255,255,0.15)' }}></div>
-          
+
           <div className="relative z-10 flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-4">
@@ -869,7 +870,7 @@ const AdminDashboard: React.FC = () => {
                   <p className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>Intelligent workforce analytics</p>
                 </div>
               </div>
-              
+
               <div className="flex flex-wrap gap-2 mb-4">
                 <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
                   🔍 Fraud Detection
@@ -881,8 +882,8 @@ const AdminDashboard: React.FC = () => {
                   🤖 Smart Analysis
                 </span>
               </div>
-              
-              <button 
+
+              <button
                 className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all group-hover:scale-105"
                 style={{ background: 'rgba(255,255,255,0.95)', color: '#764ba2' }}
               >
@@ -890,7 +891,7 @@ const AdminDashboard: React.FC = () => {
                 Ask AI Assistant
               </button>
             </div>
-            
+
             <div className="hidden md:flex flex-col items-end gap-2">
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${mlServiceStatus === 'online' ? 'bg-green-400' : mlServiceStatus === 'offline' ? 'bg-red-400' : 'bg-yellow-400'} animate-pulse`}></div>
@@ -910,10 +911,10 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-black">Attendance Trends</h3>
-              <p className="text-sm text-neutral-600">Weekly performance overview</p>
+              <p className="text-sm text-neutral-800">Weekly performance overview</p>
             </div>
             <div className="flex items-center gap-2">
-              <select 
+              <select
                 value={selectedTimeRange}
                 onChange={(e) => setSelectedTimeRange(e.target.value)}
                 className="px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
@@ -924,33 +925,33 @@ const AdminDashboard: React.FC = () => {
               </select>
             </div>
           </div>
-          
+
           <div className="h-80">
             {hasAttendanceData ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={attendanceTrendData}>
                   <defs>
                     <linearGradient id="attendanceGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.45}/>
-                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.45} />
+                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="day" stroke="#475569" fontSize={12} tickLine={false} axisLine={{ stroke: '#cbd5e1' }} />
                   <YAxis stroke="#475569" fontSize={12} tickLine={false} axisLine={{ stroke: '#cbd5e1' }} />
                   <Tooltip content={<AttendanceTooltip />} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="present" 
-                    stroke="#0ea5e9" 
+                  <Area
+                    type="monotone"
+                    dataKey="present"
+                    stroke="#0ea5e9"
                     strokeWidth={3}
                     fill="url(#attendanceGradient)"
                     activeDot={{ r: 5, fill: '#0ea5e9', stroke: '#fff', strokeWidth: 2 }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="target" 
-                    stroke="#f59e0b" 
+                  <Line
+                    type="monotone"
+                    dataKey="target"
+                    stroke="#f59e0b"
                     strokeWidth={2.5}
                     strokeDasharray="6 6"
                     dot={false}
@@ -958,7 +959,7 @@ const AdminDashboard: React.FC = () => {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-neutral-600">
+              <div className="flex h-full items-center justify-center text-sm text-neutral-800">
                 Attendance data will appear as employees mark in.
               </div>
             )}
@@ -970,11 +971,11 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-black">Department Wise</h3>
-              <p className="text-sm text-neutral-600">Workforce distribution</p>
+              <p className="text-sm text-neutral-800">Workforce distribution</p>
             </div>
             <MoreVertical size={20} className="text-neutral-400" />
           </div>
-          
+
           <div className="h-64 mb-4">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -991,31 +992,31 @@ const AdminDashboard: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e2e8f0', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e2e8f0',
                     borderRadius: '12px',
                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-                  }} 
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
           </div>
-          
+
           <div className="space-y-3">
             {departmentData.map((dept, index) => (
               <div key={dept.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
+                  <div
+                    className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: dept.color }}
                   ></div>
                   <span className="text-sm font-medium text-neutral-800">{dept.name}</span>
                 </div>
                 <div className="text-right">
                   <span className="text-sm font-bold text-black">{dept.value}</span>
-                  <div className="text-xs text-neutral-600">{dept.performance}% avg</div>
+                  <div className="text-xs text-neutral-800">{dept.performance}% avg</div>
                 </div>
               </div>
             ))}
@@ -1030,22 +1031,22 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-black">Performance</h3>
-              <p className="text-sm text-neutral-600">Grade distribution</p>
+              <p className="text-sm text-neutral-800">Grade distribution</p>
             </div>
             <Award size={20} className="text-warning-500" />
           </div>
-          
+
           <div className="space-y-4">
             {performanceDistribution.map((grade) => (
               <div key={grade.grade} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div 
+                  <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold"
                     style={{ backgroundColor: grade.color }}
                   >
                     {grade.grade}
                   </div>
-              <span className="text-sm font-medium text-neutral-700">Grade {grade.grade}</span>
+                  <span className="text-sm font-medium text-neutral-800">Grade {grade.grade}</span>
                 </div>
                 <span className="text-sm font-bold text-black">{grade.count}</span>
               </div>
@@ -1058,34 +1059,34 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-black">Live Employee Status</h3>
-              <p className="text-sm text-neutral-600">Real-time attendance tracking</p>
+              <p className="text-sm text-neutral-800">Real-time attendance tracking</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="Search employees..." 
+                <input
+                  type="text"
+                  placeholder="Search employees..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none w-64"
                 />
               </div>
               <button className="p-2 hover:bg-neutral-100 rounded-xl transition-colors">
-                <Filter size={18} className="text-neutral-600" />
+                <Filter size={18} className="text-neutral-800" />
               </button>
             </div>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-neutral-200">
-                  <th className="text-left py-3 px-4 font-medium text-neutral-600 text-sm">Employee</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-600 text-sm">Department</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-600 text-sm">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-600 text-sm">Check-in</th>
-                  <th className="text-left py-3 px-4 font-medium text-neutral-600 text-sm">Performance</th>
+                  <th className="text-left py-3 px-4 font-medium text-neutral-800 text-sm">Employee</th>
+                  <th className="text-left py-3 px-4 font-medium text-neutral-800 text-sm">Department</th>
+                  <th className="text-left py-3 px-4 font-medium text-neutral-800 text-sm">Status</th>
+                  <th className="text-left py-3 px-4 font-medium text-neutral-800 text-sm">Check-in</th>
+                  <th className="text-left py-3 px-4 font-medium text-neutral-800 text-sm">Performance</th>
                 </tr>
               </thead>
               <tbody>
@@ -1098,7 +1099,7 @@ const AdminDashboard: React.FC = () => {
                         </div>
                         <div>
                           <p className="font-medium text-black text-sm">{emp.name}</p>
-                          <p className="text-xs text-neutral-600">{emp.role}</p>
+                          <p className="text-xs text-neutral-800">{emp.role}</p>
                         </div>
                       </div>
                     </td>
@@ -1106,14 +1107,12 @@ const AdminDashboard: React.FC = () => {
                       <span className="text-sm text-neutral-800">{emp.department}</span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`status-badge ${
-                        emp.status === 'Present' ? 'status-present' : 
-                        emp.status === 'On Leave' ? 'status-leave' : 'status-absent'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          emp.status === 'Present' ? 'bg-success-500' : 
-                          emp.status === 'On Leave' ? 'bg-warning-500' : 'bg-error-500'
-                        }`}></span>
+                      <span className={`status-badge ${emp.status === 'Present' ? 'status-present' :
+                          emp.status === 'On Leave' ? 'status-leave' : 'status-absent'
+                        }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${emp.status === 'Present' ? 'bg-success-500' :
+                            emp.status === 'On Leave' ? 'bg-warning-500' : 'bg-error-500'
+                          }`}></span>
                         {emp.status}
                       </span>
                     </td>
@@ -1125,12 +1124,12 @@ const AdminDashboard: React.FC = () => {
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
                         <div className="w-12 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className="h-full bg-gradient-to-r from-success-500 to-success-400 rounded-full transition-all"
                             style={{ width: `${emp.performance.attendanceScore}%` }}
                           ></div>
                         </div>
-                        <span className="text-xs font-medium text-neutral-700">{emp.performance.attendanceScore}%</span>
+                        <span className="text-xs font-medium text-neutral-800">{emp.performance.attendanceScore}%</span>
                       </div>
                     </td>
                   </tr>
@@ -1165,11 +1164,10 @@ const AdminDashboard: React.FC = () => {
                   <button
                     key={filter}
                     onClick={() => setGrievanceFilter(filter)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                      grievanceFilter === filter
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${grievanceFilter === filter
                         ? 'bg-amber-600 text-white shadow-sm'
                         : 'text-amber-900 hover:bg-amber-100'
-                    }`}
+                      }`}
                   >
                     {filter === 'all' ? 'All' : filter} ({filter === 'all' ? grievances.length : grievances.filter(g => g.status === filter).length})
                   </button>
@@ -1208,39 +1206,36 @@ const AdminDashboard: React.FC = () => {
             </div>
           ) : (
             filteredGrievances.map((grievance) => (
-              <div 
-                key={grievance.id} 
+              <div
+                key={grievance.id}
                 className="p-4 hover:bg-neutral-50 transition-colors cursor-pointer"
                 onClick={() => setSelectedGrievance(grievance)}
               >
                 <div className="flex items-start gap-4">
                   {/* Priority Indicator */}
-                  <div className={`w-1 h-full min-h-[60px] rounded-full ${
-                    grievance.priority === 'High' ? 'bg-red-500' : 
-                    grievance.priority === 'Medium' ? 'bg-amber-500' : 'bg-green-500'
-                  }`}></div>
-                  
+                  <div className={`w-1 h-full min-h-[60px] rounded-full ${grievance.priority === 'High' ? 'bg-red-500' :
+                      grievance.priority === 'Medium' ? 'bg-amber-500' : 'bg-green-500'
+                    }`}></div>
+
                   {/* Main Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        grievance.priority === 'High' ? 'bg-red-100 text-red-700' : 
-                        grievance.priority === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${grievance.priority === 'High' ? 'bg-red-100 text-red-700' :
+                          grievance.priority === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                        }`}>
                         {grievance.priority}
                       </span>
                       <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
                         {grievance.category}
                       </span>
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        grievance.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${grievance.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                        }`}>
                         {grievance.status}
                       </span>
                     </div>
-                    
+
                     <p className="text-sm text-neutral-800 line-clamp-2 mb-2">{grievance.description}</p>
-                    
+
                     <div className="flex items-center gap-4 text-xs text-neutral-500">
                       <span className="flex items-center gap-1">
                         <Clock size={12} />
@@ -1252,7 +1247,7 @@ const AdminDashboard: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                  
+
                   {/* Actions */}
                   <div className="flex items-center gap-2">
                     {grievance.status === 'Pending' && (
@@ -1283,11 +1278,10 @@ const AdminDashboard: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
             {/* Header */}
-            <div className={`p-4 ${
-              selectedGrievance.priority === 'High' ? 'bg-gradient-to-r from-red-500 to-red-600' : 
-              selectedGrievance.priority === 'Medium' ? 'bg-gradient-to-r from-amber-500 to-amber-600' : 
-              'bg-gradient-to-r from-green-500 to-green-600'
-            }`}>
+            <div className={`p-4 ${selectedGrievance.priority === 'High' ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                selectedGrievance.priority === 'Medium' ? 'bg-gradient-to-r from-amber-500 to-amber-600' :
+                  'bg-gradient-to-r from-green-500 to-green-600'
+              }`}>
               <div className="flex items-center justify-between text-white">
                 <div className="flex items-center gap-3">
                   <MessageSquare size={24} />
@@ -1296,7 +1290,7 @@ const AdminDashboard: React.FC = () => {
                     <p className="text-sm opacity-90">{selectedGrievance.category}</p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setSelectedGrievance(null)}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 >
@@ -1304,24 +1298,22 @@ const AdminDashboard: React.FC = () => {
                 </button>
               </div>
             </div>
-            
+
             {/* Content */}
             <div className="p-6 space-y-4">
               {/* Status & Priority */}
               <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  selectedGrievance.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
-                }`}>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedGrievance.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                  }`}>
                   {selectedGrievance.status}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  selectedGrievance.priority === 'High' ? 'bg-red-100 text-red-700' : 
-                  selectedGrievance.priority === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
-                }`}>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedGrievance.priority === 'High' ? 'bg-red-100 text-red-700' :
+                    selectedGrievance.priority === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                  }`}>
                   {selectedGrievance.priority} Priority
                 </span>
               </div>
-              
+
               {/* Description */}
               <div>
                 <label className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Description</label>
@@ -1359,7 +1351,7 @@ const AdminDashboard: React.FC = () => {
                   )}
                 </div>
               )}
-              
+
               {/* NLP Analysis Badge */}
               <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-xl border border-purple-200">
                 <Brain size={18} className="text-purple-600" />
@@ -1368,7 +1360,7 @@ const AdminDashboard: React.FC = () => {
                   <p className="text-xs text-purple-600">Category and priority auto-detected by NLP</p>
                 </div>
               </div>
-              
+
               {/* Meta Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -1382,7 +1374,7 @@ const AdminDashboard: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-neutral-100">
                 {selectedGrievance.status === 'Pending' ? (
@@ -1399,7 +1391,7 @@ const AdminDashboard: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setSelectedGrievance(null)}
-                      className="px-6 py-3 bg-neutral-100 text-neutral-700 font-medium rounded-xl hover:bg-neutral-200 transition-colors"
+                      className="px-6 py-3 bg-neutral-100 text-neutral-800 font-medium rounded-xl hover:bg-neutral-200 transition-colors"
                     >
                       Close
                     </button>
@@ -1407,7 +1399,7 @@ const AdminDashboard: React.FC = () => {
                 ) : (
                   <button
                     onClick={() => setSelectedGrievance(null)}
-                    className="flex-1 py-3 bg-neutral-100 text-neutral-700 font-medium rounded-xl hover:bg-neutral-200 transition-colors"
+                    className="flex-1 py-3 bg-neutral-100 text-neutral-800 font-medium rounded-xl hover:bg-neutral-200 transition-colors"
                   >
                     Close
                   </button>
@@ -1503,19 +1495,19 @@ const AdminDashboard: React.FC = () => {
                 )}
 
                 <div className="grid grid-cols-2 gap-3">
-                  <button 
+                  <button
                     onClick={() => setAiQuery("Analyze attendance patterns for fraud detection")}
                     className="p-3 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200"
                   >
                     <p className="font-medium text-sm text-gray-900">🔍 Fraud Detection</p>
-                    <p className="text-xs text-gray-500">Analyze attendance anomalies</p>
+                    <p className="text-xs text-gray-600">Analyze attendance anomalies</p>
                   </button>
-                  <button 
+                  <button
                     onClick={() => setAiQuery("Generate performance insights report")}
                     className="p-3 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors border border-gray-200"
                   >
                     <p className="font-medium text-sm text-gray-900">📊 Performance Report</p>
-                    <p className="text-xs text-gray-500">Department-wise analysis</p>
+                    <p className="text-xs text-gray-600">Department-wise analysis</p>
                   </button>
                 </div>
               </div>
@@ -1529,7 +1521,7 @@ const AdminDashboard: React.FC = () => {
                     <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Connected</span>
                   )}
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Payroll Scan */}
                   <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
@@ -1539,7 +1531,7 @@ const AdminDashboard: React.FC = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-800">Payroll Integrity Scan</h4>
-                        <p className="text-xs text-gray-500">Detect anomalies in payroll data</p>
+                        <p className="text-xs text-gray-600">Detect anomalies in payroll data</p>
                       </div>
                     </div>
                     <button
@@ -1569,7 +1561,7 @@ const AdminDashboard: React.FC = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-800">Ghost Employee Check</h4>
-                        <p className="text-xs text-gray-500">AI-powered fake employee detection</p>
+                        <p className="text-xs text-gray-600">AI-powered fake employee detection</p>
                       </div>
                     </div>
                     <button
@@ -1594,15 +1586,14 @@ const AdminDashboard: React.FC = () => {
 
                 {/* ML Analysis Results */}
                 {mlAnalysisResult && (
-                  <div className={`rounded-xl p-4 border ${
-                    mlAnalysisResult.type === 'error' 
-                      ? 'bg-red-50 border-red-200' 
-                      : mlAnalysisResult.data?.risk_level === 'HIGH' 
+                  <div className={`rounded-xl p-4 border ${mlAnalysisResult.type === 'error'
+                      ? 'bg-red-50 border-red-200'
+                      : mlAnalysisResult.data?.risk_level === 'HIGH'
                         ? 'bg-red-50 border-red-200'
                         : mlAnalysisResult.data?.risk_level === 'MEDIUM'
                           ? 'bg-yellow-50 border-yellow-200'
                           : 'bg-green-50 border-green-200'
-                  }`}>
+                    }`}>
                     {mlAnalysisResult.type === 'error' ? (
                       <div className="flex items-center gap-3 text-red-700">
                         <AlertCircle size={20} />
@@ -1614,32 +1605,31 @@ const AdminDashboard: React.FC = () => {
                           <h4 className="font-semibold text-gray-800 flex items-center gap-2">
                             <UserX size={18} className={
                               mlAnalysisResult.data.risk_level === 'LOW' ? 'text-green-600' :
-                              mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'text-yellow-600' : 'text-red-600'
+                                mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'text-yellow-600' : 'text-red-600'
                             } />
                             Ghost Employee Detection Results
                             {mlAnalysisResult.data.ai_powered && (
                               <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">AI Powered</span>
                             )}
                           </h4>
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            mlAnalysisResult.data.risk_level === 'LOW' ? 'bg-green-100 text-green-700' :
-                            mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-                          }`}>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${mlAnalysisResult.data.risk_level === 'LOW' ? 'bg-green-100 text-green-700' :
+                              mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                            }`}>
                             {mlAnalysisResult.data.risk_level} RISK
                           </span>
                         </div>
                         <div className="grid grid-cols-3 gap-4 text-center">
                           <div>
                             <p className="text-2xl font-bold text-gray-800">{mlAnalysisResult.data.total_analyzed}</p>
-                            <p className="text-xs text-gray-500">Employees Analyzed</p>
+                            <p className="text-xs text-gray-600">Employees Analyzed</p>
                           </div>
                           <div>
                             <p className="text-2xl font-bold text-orange-600">{mlAnalysisResult.data.ghost_probability}%</p>
-                            <p className="text-xs text-gray-500">Ghost Probability</p>
+                            <p className="text-xs text-gray-600">Ghost Probability</p>
                           </div>
                           <div>
                             <p className="text-2xl font-bold text-red-600">₹{(mlAnalysisResult.data.estimated_monthly_fraud / 1000).toFixed(0)}K</p>
-                            <p className="text-xs text-gray-500">Est. Monthly Fraud</p>
+                            <p className="text-xs text-gray-600">Est. Monthly Fraud</p>
                           </div>
                         </div>
                         {mlAnalysisResult.data.patterns_detected?.length > 0 && (
@@ -1666,9 +1656,8 @@ const AdminDashboard: React.FC = () => {
                                 </div>
                                 <div className="text-right">
                                   <span className="text-xs text-gray-600">{emp.reason}</span>
-                                  <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${
-                                    emp.risk_score > 0.7 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                                  }`}>
+                                  <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${emp.risk_score > 0.7 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                                    }`}>
                                     {Math.round(emp.risk_score * 100)}% risk
                                   </span>
                                 </div>
@@ -1688,32 +1677,31 @@ const AdminDashboard: React.FC = () => {
                           <h4 className="font-semibold text-gray-800 flex items-center gap-2">
                             <CheckCircle size={18} className={
                               mlAnalysisResult.data.risk_level === 'LOW' ? 'text-green-600' :
-                              mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'text-yellow-600' : 'text-red-600'
+                                mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'text-yellow-600' : 'text-red-600'
                             } />
                             Payroll Scan Results
                             {mlAnalysisResult.data.ai_powered && (
                               <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">AI Powered</span>
                             )}
                           </h4>
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            mlAnalysisResult.data.risk_level === 'LOW' ? 'bg-green-100 text-green-700' :
-                            mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-                          }`}>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${mlAnalysisResult.data.risk_level === 'LOW' ? 'bg-green-100 text-green-700' :
+                              mlAnalysisResult.data.risk_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                            }`}>
                             {mlAnalysisResult.data.risk_level} RISK
                           </span>
                         </div>
                         <div className="grid grid-cols-3 gap-4 text-center">
                           <div>
                             <p className="text-2xl font-bold text-gray-800">{mlAnalysisResult.data.total_scanned}</p>
-                            <p className="text-xs text-gray-500">Employees Scanned</p>
+                            <p className="text-xs text-gray-600">Employees Scanned</p>
                           </div>
                           <div>
                             <p className="text-2xl font-bold text-orange-600">{mlAnalysisResult.data.anomalies_found}</p>
-                            <p className="text-xs text-gray-500">Anomalies Found</p>
+                            <p className="text-xs text-gray-600">Anomalies Found</p>
                           </div>
                           <div>
                             <p className="text-2xl font-bold text-green-600">{mlAnalysisResult.data.total_scanned - mlAnalysisResult.data.anomalies_found}</p>
-                            <p className="text-xs text-gray-500">Clean Records</p>
+                            <p className="text-xs text-gray-600">Clean Records</p>
                           </div>
                         </div>
                         {mlAnalysisResult.data.anomalies?.length > 0 && (
