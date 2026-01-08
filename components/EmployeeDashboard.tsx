@@ -37,7 +37,6 @@ const EmployeeDashboard: React.FC = () => {
   // Enhanced Complaint Form State
   const [complaintCategory, setComplaintCategory] = useState('');
   const [complaintLocation, setComplaintLocation] = useState('');
-  const [complaintFile, setComplaintFile] = useState<File | null>(null);
 
   // Attendance State
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
@@ -239,7 +238,6 @@ const EmployeeDashboard: React.FC = () => {
       setManualComplaint('');
       setComplaintCategory('');
       setComplaintLocation('');
-      setComplaintFile(null);
       alert(`${t('complaint_submitted_success')}${complaintCategory || analysis.category}\n${t('priority')}: ${analysis.priority}`);
     } catch (error) {
       console.error('❌ Submit error:', error);
@@ -385,23 +383,6 @@ const EmployeeDashboard: React.FC = () => {
   const pendingCount = myGrievances.filter(g => g.status === 'Pending').length;
   const resolvedCount = myGrievances.filter(g => g.status === 'Resolved').length;
 
-  const categories = ['Salary', 'Leave', 'Equipment', 'Transfer', 'Harassment', 'Safety', 'Infrastructure', 'Other'];
-  const wards = ['Ward 1', 'Ward 2', 'Ward 3', 'Ward 4', 'Ward 5', 'Ward 6', 'Ward 7', 'Ward 8'];
-
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      'Salary': '#22c55e',
-      'Leave': '#3b82f6',
-      'Equipment': '#f59e0b',
-      'Transfer': '#8b5cf6',
-      'Harassment': '#ef4444',
-      'Safety': '#f97316',
-      'Infrastructure': '#06b6d4',
-      'Other': '#64748b'
-    };
-    return colors[category] || '#64748b';
-  };
-
   // Case History View
   if (employeeView === 'case-history') {
     return (
@@ -509,9 +490,9 @@ const EmployeeDashboard: React.FC = () => {
   }
 
   return (
-    <div className="pb-24 space-y-5 max-w-lg mx-auto md:max-w-4xl">
+    <div className="pb-24 space-y-6 max-w-lg mx-auto md:max-w-4xl px-4 md:px-0">
       {/* LANGUAGE TOGGLE HEADER */}
-      <div className="glass-card rounded-2xl p-4 flex items-center justify-between gap-4 border border-slate-200/50 shadow-sm sticky top-0 z-20 backdrop-blur-xl bg-white/90">
+      <div className="glass-card rounded-2xl p-4 flex items-center justify-between gap-4 border border-slate-200/50 shadow-sm sticky top-4 z-20 backdrop-blur-xl bg-white/90">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100">
             {employeeData.name.charAt(0)}
@@ -530,132 +511,117 @@ const EmployeeDashboard: React.FC = () => {
           <span className="text-sm font-bold text-slate-700">
             {language === 'en' ? 'English' : 'हिंदी'}
           </span>
-          <span className="text-xs text-slate-400 font-medium ml-1">
-            {language === 'en' ? 'Change' : 'बदलें'}
-          </span>
         </button>
       </div>
 
-      {/* ATTENDANCE HERO CARD */}
-      <div className="glass-card rounded-3xl overflow-hidden shadow-lg border border-slate-200/60 bg-white">
-        {/* Status Header */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Clock size={16} className="text-slate-400" />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-              {formatTime(currentTime)}
-            </span>
-          </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${isWithinAttendanceWindow() ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
-            }`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${isWithinAttendanceWindow() ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-            {isWithinAttendanceWindow() ? t('time_window_in') : t('time_window_out')}
-          </div>
-        </div>
-
-        {/* Main Action Area */}
-        <div className="p-6 text-center">
-          {!attendanceMarked ? (
-            <button
-              onClick={handleAttendance}
-              disabled={!isWithinAttendanceWindow()}
-              className={`w-full py-8 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all transform active:scale-[0.98] ${isWithinAttendanceWindow()
-                  ? 'bg-gradient-to-b from-blue-600 to-indigo-700 text-white shadow-xl shadow-blue-200'
-                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                }`}
-            >
-              <div className={`p-4 rounded-full ${isWithinAttendanceWindow() ? 'bg-white/20' : 'bg-slate-200 text-slate-300'}`}>
-                <Fingerprint size={48} strokeWidth={1.5} />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-2xl font-bold">{t('mark_attendance_now')}</h3>
-                <p className={`text-sm font-medium ${isWithinAttendanceWindow() ? 'text-blue-100' : 'text-slate-400'}`}>
-                  {t('tap_here') || 'Tap to Verify & Mark'}
-                </p>
-              </div>
-            </button>
-          ) : (
-            <div className="w-full py-8 rounded-2xl bg-emerald-50 border border-emerald-100 flex flex-col items-center justify-center gap-3">
-              <div className="p-4 rounded-full bg-emerald-100 text-emerald-600">
-                <CheckCircle size={48} strokeWidth={2} />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-emerald-800">{t('attendance_complete')}</h3>
-                <p className="text-sm font-medium text-emerald-600">
-                  {t('attendance_marked_at')} {employeeData.checkInTime}
-                </p>
-              </div>
+      {/* MINIMALIST ATTENDANCE CARD */}
+      <div className={`rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all duration-300 ${attendanceMarked ? 'bg-emerald-50 border border-emerald-100' : 'bg-slate-50 border border-slate-100'
+        }`}>
+        {!attendanceMarked ? (
+          <button
+            onClick={handleAttendance}
+            disabled={!isWithinAttendanceWindow()}
+            className="w-full h-full flex flex-col items-center justify-center gap-4 group active:scale-95 transition-transform"
+          >
+            <div className="w-24 h-24 rounded-full bg-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors shadow-inner">
+              <ScanFace size={48} strokeWidth={1.5} />
             </div>
-          )}
-        </div>
+
+            <div className="space-y-1">
+              <h3 className="text-2xl font-bold text-slate-600 group-hover:text-indigo-900 transition-colors">
+                {t('mark_attendance_now')}
+              </h3>
+              <p className="text-base text-slate-400 font-medium group-hover:text-indigo-400">
+                {t('tap_here') || 'Tap here'}
+              </p>
+            </div>
+          </button>
+        ) : (
+          <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
+            <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-inner">
+              <CheckCircle size={48} strokeWidth={2} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-2xl font-bold text-emerald-800">{t('attendance_complete')}</h3>
+              <p className="text-sm text-emerald-600 font-medium">
+                {t('attendance_marked_at')} {employeeData.checkInTime}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Face ID Status */}
+      {/* Face ID Status - Subtle Warning */}
       {!hasEnrolledFace(employeeData.id) && (
         <button
           onClick={() => setShowFaceEnrollment(true)}
-          className="w-full flex items-center justify-between gap-4 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 shadow-sm active:bg-amber-100 transition-colors"
+          className="w-full flex items-center justify-between gap-4 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 shadow-sm active:bg-amber-100 transition-colors"
         >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-              <ScanFace size={24} />
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+              <AlertTriangle size={16} />
             </div>
-            <div className="text-left">
-              <div className="text-base font-bold text-amber-900">{t('setup_face_id') || 'Set up Face ID'}</div>
-              <div className="text-sm text-amber-700 opacity-80">{t('required_for_attendance') || 'Needed for attendance verification'}</div>
-            </div>
+            <span className="text-sm font-bold text-amber-900">{t('setup_face_id') || 'Face ID Required'}</span>
           </div>
-          <span className="text-2xl font-bold text-amber-300">›</span>
+          <span className="text-xs font-bold bg-amber-200 text-amber-800 px-2 py-1 rounded-md">Setup</span>
         </button>
       )}
 
-      {/* BIG BUTTON GRID */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* ACTION GRID - Responsive */}
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
         <button
           onClick={() => setCurrentView('leave')}
-          className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 text-left group"
+          className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 text-left group flex flex-col justify-between min-h-[140px]"
         >
-          <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 mb-3 group-hover:scale-110 transition-transform">
-            <Calendar size={24} />
+          <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+            <Calendar size={20} />
           </div>
-          <h3 className="font-bold text-slate-800 text-lg">{t('leave')}</h3>
-          <p className="text-xs text-slate-500 font-medium mt-1">{employeeData.leaveBalance} days remaining</p>
+          <div>
+            <h3 className="font-bold text-slate-800 text-lg leading-tight">{t('leave')}</h3>
+            <p className="text-xs text-slate-500 font-bold mt-1 bg-slate-100 inline-block px-2 py-0.5 rounded-full">{employeeData.leaveBalance} Remaining</p>
+          </div>
         </button>
 
         <button
           onClick={() => setCurrentView('payroll')}
-          className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 text-left group"
+          className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 text-left group flex flex-col justify-between min-h-[140px]"
         >
-          <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-3 group-hover:scale-110 transition-transform">
-            <IndianRupee size={24} />
+          <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+            <IndianRupee size={20} />
           </div>
-          <h3 className="font-bold text-slate-800 text-lg">{t('salary_slip')}</h3>
-          <p className="text-xs text-slate-500 font-medium mt-1">View & Download</p>
+          <div>
+            <h3 className="font-bold text-slate-800 text-lg leading-tight">{t('salary_slip')}</h3>
+            <p className="text-xs text-emerald-600 font-bold mt-1 bg-emerald-50 inline-block px-2 py-0.5 rounded-full">Available</p>
+          </div>
         </button>
       </div>
 
       {/* Voice Complaint Button - LARGE & ACCESSIBLE */}
       <button
         onClick={() => setShowVoiceModal(true)}
-        className="w-full bg-rose-50 border border-rose-100 rounded-2xl p-6 flex items-center gap-5 active:bg-rose-100 transition-all shadow-sm"
+        className="w-full bg-white border border-slate-200 shadow-sm hover:shadow-md rounded-3xl p-6 flex items-center gap-5 active:scale-[0.98] transition-all group"
       >
-        <div className="w-16 h-16 rounded-full bg-white shadow-sm border border-rose-100 flex items-center justify-center text-rose-500 animate-pulse-slow">
-          <Mic size={32} />
+        <div className="w-14 h-14 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 group-hover:bg-rose-100 transition-colors">
+          <Mic size={28} />
         </div>
         <div className="text-left flex-1">
-          <h3 className="font-bold text-rose-900 text-xl">{t('file_complaint_voice')}</h3>
-          <p className="text-rose-700/80 font-medium mt-1">{t('speak_or_type')}</p>
+          <h3 className="font-bold text-slate-800 text-lg">{t('file_complaint_voice')}</h3>
+          <p className="text-slate-500 text-sm">{t('speak_or_type')}</p>
+        </div>
+        <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
+          <span className="font-bold text-lg">›</span>
         </div>
       </button>
 
       {/* Case History Link */}
-      <button
-        onClick={() => setEmployeeView('case-history')}
-        className="w-full p-4 flex items-center justify-between text-slate-500 hover:text-slate-700 font-medium transition-colors"
-      >
-        <span>View Past Complaints ({myGrievances.length})</span>
-        <span>→</span>
-      </button>
+      <div className="text-center pt-2">
+        <button
+          onClick={() => setEmployeeView('case-history')}
+          className="text-slate-400 hover:text-slate-600 font-medium text-sm py-2 px-4 rounded-full hover:bg-slate-100 transition-colors"
+        >
+          View Past Complaints ({myGrievances.length})
+        </button>
+      </div>
 
       {/* Attendance Modal with Location + Face Verification */}
       {showAttendanceModal && (
